@@ -146,6 +146,7 @@ src/app/
 ```
 
 **라우트 파일 작성 규칙**:
+
 - `_layout.tsx`: navigator 설정 + Provider 주입만. 화면 렌더링 없음
 - 그 외 `*.tsx`: `screens/`의 컴포넌트를 1줄 re-export (`export { default } from '@/screens/...'`)
 
@@ -156,7 +157,7 @@ entities/{domain}/
 ├── specs/                    # ← SDD 핵심. 구현 전 반드시 존재해야 함
 │   └── {domain}.spec.md
 ├── api/                      # 백엔드 통신
-│   ├── queries.ts            
+│   ├── queries.ts
 │   ├── mutations.ts
 │   ├── {domain}.schema.ts    # @repo/contract Zod 스키마 re-export + 검증
 │   └── keys.ts               # 쿼리 키 팩토리
@@ -243,22 +244,18 @@ shared/
 ```
 apps/api/
 ├── app/api/                  # Route Handlers (얇게 — service 호출만)
-│   ├── recipes/route.ts
-│   ├── policies/route.ts
-│   ├── facilities/route.ts
-│   ├── fridge/route.ts
-│   ├── grocery/route.ts
-│   ├── auth/kakao/route.ts
-│   └── ai/chat/route.ts
+│   ├── {domain}/route.ts
+│   ├── {domain}/route.ts
+│   │   └── [id]/
+│   │       └── route.ts      # 필요시
+│   ├── {domain}/route.ts
+│   └── {domain}/{sub}/route.ts # 필요시
 └── src/
-    ├── modules/              # 도메인 모듈
+    ├── services/              # 도메인 모듈
     │   └── {domain}/
     │       ├── specs/
-    │       │   ├── {domain}.api.spec.md  # 엔드포인트 요청/응답 spec
-    │       │   └── {domain}.spec.md      # 도메인 비즈니스 로직 spec
-    │       ├── {domain}.service.ts    # 유스케이스/비즈니스 규칙
-    │       ├── {domain}.repository.ts # Prisma 접근 (@repo/db)
-    │       └── {domain}.dto.ts        # @repo/contract 타입 사용
+    │       │   └── {domain}.spec.md       # 도메인 비즈니스 로직 spec
+    │       └── {domain}.service.ts        # dto, repository, service 로직을 한 번에 처리
     └── shared/
         ├── external/         # 외부 API 클라이언트
         ├── lib/
@@ -266,6 +263,7 @@ apps/api/
 ```
 
 ---
+
 ### shared 구조
 
 ```
@@ -291,10 +289,10 @@ shared/
 
 ## 레이어 간 import 규칙 요약
 
-| From \ To | shared | entities | features | screens | packages/* |
-|-----------|--------|----------|----------|---------|------------|
-| shared | ✗ | ✗ | ✗ | ✗ | ✓ |
-| entities | ✓ | ✗ | ✗ | ✗ | ✓ |
-| features | ✓ | ✓ | ✗ | ✗ | ✓ |
-| screens | ✓ | ✓ | ✓ | ✗ | ✓ |
-| api modules | - | - | - | - | ✓ (db, contract) |
+| From \ To   | shared | entities | features | screens | packages/\*      |
+| ----------- | ------ | -------- | -------- | ------- | ---------------- |
+| shared      | ✗      | ✗        | ✗        | ✗       | ✓                |
+| entities    | ✓      | ✗        | ✗        | ✗       | ✓                |
+| features    | ✓      | ✓        | ✗        | ✗       | ✓                |
+| screens     | ✓      | ✓        | ✓        | ✗       | ✓                |
+| api modules | -      | -        | -        | -       | ✓ (db, contract) |
