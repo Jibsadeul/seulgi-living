@@ -1,7 +1,7 @@
-﻿import { Redirect } from 'expo-router';
+import { Redirect } from 'expo-router';
 
-// TODO: 토큰 유무 확인 후 분기
+// TODO: 실제 토큰 확인 후 교체
 export default function Index() {
-  const isAuthenticated = false;
+  const isAuthenticated = true;
   return <Redirect href={isAuthenticated ? '/(tabs)/' : '/(auth)/login'} />;
 }
