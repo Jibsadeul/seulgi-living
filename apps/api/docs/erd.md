@@ -47,8 +47,8 @@
 **`refresh_token`**
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
-| user_id |	UUID | PK, FK → users.id, NOT NULL |
-| token_hash | VARCHAR(255) |	NOT NULL |
+| user_id | UUID | PK, FK → users.id, NOT NULL |
+| token_hash | VARCHAR(255) | NOT NULL |
 | expires_at | TIMESTAMPTZ | NOT NULL |
 
 ---
