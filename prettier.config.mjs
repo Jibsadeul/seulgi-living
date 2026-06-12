@@ -1,6 +1,11 @@
 const config = {
   singleQuote: true,
   trailingComma: 'all',
+  endOfLine: 'lf',
+  tabWidth: 2,
+  useTabs: false,
+  semi: true,
+  printWidth: 100,
 };
 
 export default config;
