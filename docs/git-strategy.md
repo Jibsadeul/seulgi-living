@@ -20,6 +20,7 @@ develop → feature/* (개발) → develop (PR+리뷰) → main
 ## 핵심 규칙
 
 - **메세지 작성 후 반드시 사용자에게 승인을 받은 후 진행**
+- **main에 push는 절대 거부.**
 - 브랜치 병합 시 항상 `--no-ff` (Fast-Forward 방지)
 - feature 브랜치 완료 후 삭제
 - 모든 메시지는 한국어로 작성
