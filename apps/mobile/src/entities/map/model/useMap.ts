@@ -4,12 +4,20 @@ import Toast from 'react-native-toast-message';
 import type WebView from 'react-native-webview';
 import type { WebViewMessageEvent } from 'react-native-webview';
 import { CATEGORY_LIST } from './map.model';
-import type { CategoryLabel, RNToWebViewMessage, WebViewToRNMessage } from './map.model';
+import type { CategoryLabel, MapPlace, RNToWebViewMessage, WebViewToRNMessage } from './map.model';
 import { useMapStore } from './map.store';
 
 export function useMap() {
   const webViewRef = useRef<WebView>(null);
-  const { setSelectedCategory, setSelectedPlace, selectedCategory } = useMapStore();
+  const {
+    setSelectedCategory,
+    setSelectedPlace,
+    selectedCategory,
+    setSearchResults,
+    setSearchKeyword,
+    setZeroResult,
+    clearSearch,
+  } = useMapStore();
 
   const sendToMap = useCallback((message: RNToWebViewMessage) => {
     // injectJavaScript는 iOS에서 마지막 표현식이 falsy면 오류 발생 → `; true;` 필수
@@ -31,10 +39,9 @@ export function useMap() {
 
     try {
       // 현재 위치 우선. 실패 시 마지막 알려진 위치로 fallback
-      let location = await Location.getCurrentPositionAsync({
+      const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-
       sendToMap({
         type: 'MOVE_TO_LOCATION',
         payload: { lat: location.coords.latitude, lng: location.coords.longitude },
@@ -73,6 +80,12 @@ export function useMap() {
         case 'MARKER_CLICK':
           setSelectedPlace(message.payload);
           break;
+        case 'SEARCH_RESULT':
+          setSearchResults(message.payload.places);
+          break;
+        case 'SEARCH_ZERO_RESULT':
+          setZeroResult();
+          break;
         case 'MAP_ERROR':
           Toast.show({
             type: 'error',
@@ -82,11 +95,13 @@ export function useMap() {
           break;
       }
     },
-    [moveToCurrentLocation, setSelectedPlace],
+    [moveToCurrentLocation, setSelectedPlace, setSearchResults, setZeroResult],
   );
 
   const selectCategory = useCallback(
     (label: CategoryLabel) => {
+      clearSearch(); // 키워드 검색 상태 초기화
+
       if (selectedCategory === label) {
         setSelectedCategory(null);
         sendToMap({ type: 'CLEAR_MARKERS' });
@@ -102,8 +117,38 @@ export function useMap() {
         payload: { code: category.code ?? null, keyword: category.keyword ?? null },
       });
     },
-    [selectedCategory, setSelectedCategory, sendToMap],
+    [selectedCategory, setSelectedCategory, sendToMap, clearSearch],
   );
 
-  return { webViewRef, onWebViewMessage, moveToCurrentLocation, selectCategory };
+  const searchKeyword = useCallback(
+    (keyword: string) => {
+      setSelectedCategory(null); // 카테고리 선택 해제
+      setSearchKeyword(keyword);
+      sendToMap({ type: 'SEARCH_KEYWORD', payload: { keyword } });
+    },
+    [setSelectedCategory, setSearchKeyword, sendToMap],
+  );
+
+  const focusMarker = useCallback(
+    (place: MapPlace) => {
+      setSelectedPlace(place);
+      sendToMap({ type: 'FOCUS_MARKER', payload: { x: place.x, y: place.y } });
+    },
+    [setSelectedPlace, sendToMap],
+  );
+
+  const clearSearchResults = useCallback(() => {
+    clearSearch();
+    sendToMap({ type: 'CLEAR_MARKERS' });
+  }, [clearSearch, sendToMap]);
+
+  return {
+    webViewRef,
+    onWebViewMessage,
+    moveToCurrentLocation,
+    selectCategory,
+    searchKeyword,
+    focusMarker,
+    clearSearchResults,
+  };
 }
