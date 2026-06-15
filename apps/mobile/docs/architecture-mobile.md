@@ -97,7 +97,7 @@ features/{domain}-{feature}/
 
 ---
 
-## Screens 구조
+## Screens 구조(항상 도메인을 따라가지는 않음. 예시: home)
 
 ```
 screens/{domain}/
