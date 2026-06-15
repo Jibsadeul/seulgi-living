@@ -27,7 +27,11 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "router": {}
-    }
+      "router": {},
+      "eas": {
+        "projectId": "f217b402-498c-49ba-84d1-79367c9f00c4"
+      }
+    },
+    "owner": "sammy-seo"
   }
 }
