@@ -93,3 +93,76 @@ iPhone 17 기준 최종 확정본
 | 좌우 패딩                  | 16px              | 16pt                    | 유지 |
 
 > 상태 범례: 유지 = 수치 동일, 단위만 pt 통일 / 수정 = iPhone 17 실측값으로 변경 / 추가 = 기존 미명시 항목 신규 추가
+
+---
+
+### 6. 컬러 팔레트
+
+기준 이미지: `local/design/팔레트.png`
+
+#### Main
+
+| 토큰     | NativeWind | HEX       | 용도                                  |
+| -------- | ---------- | --------- | ------------------------------------- |
+| Main 100 | `main-100` | `#EF7722` | 브랜드 메인, 주요 CTA, AI Camera 버튼 |
+| Main 70  | `main-70`  | `#F4A065` | 메인 컬러 보조 강조                   |
+| Main 50  | `main-50`  | `#F7BB91` | 선택/강조 배경                        |
+| Main 30  | `main-30`  | `#FBD7BD` | 약한 강조 배경                        |
+| Main 10  | `main-10`  | `#FEF2E9` | 가장 약한 메인 틴트 배경              |
+
+#### Background
+
+Background 계열은 NativeWind에서 `bg-*` 유틸리티와 이름이 겹치지 않도록 `surface` 토큰으로 사용한다.
+
+| 토큰       | NativeWind        | HEX       | 용도                  |
+| ---------- | ----------------- | --------- | --------------------- |
+| Bg Default | `surface-default` | `#FFFFFF` | 기본 화면 배경        |
+| Bg Card    | `surface-card`    | `#F8F9FF` | 카드형 기본 배경      |
+| Bg Confirm | `surface-confirm` | `#979593` | 확인/비활성 보조 배경 |
+
+#### Point
+
+| 토큰      | NativeWind  | HEX       | 용도                               |
+| --------- | ----------- | --------- | ---------------------------------- |
+| Point 100 | `point-100` | `#BA1A1A` | 에러, 삭제, 위험 강조              |
+| Point 50  | `point-50`  | `#DD8D8D` | 약한 에러/위험 배경 또는 보조 강조 |
+
+#### Tag Background
+
+| 토큰       | NativeWind   | HEX       |
+| ---------- | ------------ | --------- |
+| Tag Pink   | `tag-pink`   | `#FFE2E5` |
+| Tag Blue   | `tag-blue`   | `#DCE9FF` |
+| Tag Green  | `tag-green`  | `#E1F5EE` |
+| Tag Orange | `tag-orange` | `#FFF0E6` |
+| Tag Yellow | `tag-yellow` | `#FAEEDA` |
+| Tag Grey   | `tag-grey`   | `#F0F0F0` |
+
+#### Tag Text
+
+| 토큰            | NativeWind       | HEX       |
+| --------------- | ---------------- | --------- |
+| Tag Text Pink   | `tagText-pink`   | `#ED3241` |
+| Tag Text Blue   | `tagText-blue`   | `#2563EB` |
+| Tag Text Green  | `tagText-green`  | `#085041` |
+| Tag Text Orange | `tagText-orange` | `#EF7722` |
+| Tag Text Yellow | `tagText-yellow` | `#633806` |
+| Tag Text Grey   | `tagText-grey`   | `#555555` |
+
+#### Grayscale
+
+| 토큰    | NativeWind        | HEX       | 용도                      |
+| ------- | ----------------- | --------- | ------------------------- |
+| White   | `surface-default` | `#FFFFFF` | 흰색 배경                 |
+| Gray 5  | `gray-5`          | `#F8F8F8` | 가장 약한 회색 배경       |
+| Gray 10 | `gray-10`         | `#F0F0F0` | 구분 배경, 태그 회색 배경 |
+| Gray 20 | `gray-20`         | `#E4E4E4` | 약한 보더                 |
+| Gray 30 | `gray-30`         | `#D8D8D8` | 일반 보더                 |
+| Gray 40 | `gray-40`         | `#C6C6C6` | 비활성 보더               |
+| Gray 50 | `gray-50`         | `#8E8E8E` | 보조 텍스트               |
+| Gray 60 | `gray-60`         | `#717171` | 중간 강조 텍스트          |
+| Gray 70 | `gray-70`         | `#555555` | 기본 보조 텍스트          |
+| Gray 80 | `gray-80`         | `#2D2D2D` | 주요 본문 텍스트          |
+| Gray 90 | `gray-90`         | `#1D1D1D` | 최상위 제목/강조 텍스트   |
+
+NativeWind 클래스에서는 용도 접두사를 붙여 사용한다. 예: `bg-main-100`, `text-gray-90`, `border-gray-20`, `bg-surface-card`, `text-tagText-pink`.
