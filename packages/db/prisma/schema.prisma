@@ -1,1 +1,176 @@
-﻿// TODO: Prisma schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+enum RecipeSource {
+  PUBLIC
+  USER
+}
+
+model Sido {
+  id       String    @id @db.VarChar(2)
+  name     String    @db.VarChar(50)
+  sigungus Sigungu[]
+
+  @@map("sido")
+}
+
+model Sigungu {
+  id     String @id @db.VarChar(5)
+  sidoId String @map("sido_id") @db.VarChar(2)
+  name   String @db.VarChar(50)
+
+  sido    Sido     @relation(fields: [sidoId], references: [id])
+  members Member[]
+
+  @@map("sigungu")
+}
+
+model Member {
+  id        String    @id @default(uuid()) @db.Uuid
+  kakaoId   String    @map("kakao_id") @db.VarChar(255)
+  sigunguId String?   @map("sigungu_id") @db.VarChar(5)
+  email     String?   @db.VarChar(255)
+  nickname  String?   @db.VarChar(100)
+  birthday  DateTime? @db.Date
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  sigungu              Sigungu?              @relation(fields: [sigunguId], references: [id])
+  refreshToken         RefreshToken?
+  recipes              Recipe[]
+  recipeScraps         RecipeScrap[]
+  fridgeIngredients    FridgeIngredient[]
+  groceryPurchaseItems GroceryPurchaseItem[]
+  policyScrapFolders   PolicyScrapFolder[]
+  policyScraps         PolicyScrap[]
+
+  @@map("members")
+}
+
+model RefreshToken {
+  userId    String   @id @map("user_id") @db.Uuid
+  tokenHash String   @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+
+  user Member @relation(fields: [userId], references: [id])
+
+  @@map("refresh_token")
+}
+
+model Recipe {
+  id             String       @id @default(uuid()) @db.Uuid
+  source         RecipeSource
+  userId         String?      @map("user_id") @db.Uuid
+  publicRecipeId String?      @map("public_recipe_id") @db.VarChar(255)
+  name           String       @db.VarChar(255)
+  category       String?      @db.VarChar(255)
+  method         String?      @db.VarChar(255)
+  ingredients    String?
+  hashTag        String?      @map("hash_tag") @db.VarChar(255)
+  mainImageUrl   String?      @map("main_image_url")
+  thumbnailUrl   String?      @map("thumbnail_url")
+  calories       Float?
+  carbohydrate   Float?
+  protein        Float?
+  fat            Float?
+  sodium         Float?
+  sodiumTip      String?      @map("sodium_tip")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user          Member?        @relation(fields: [userId], references: [id])
+  recipeSteps   RecipeStep[]
+  recipeScraps  RecipeScrap[]
+
+  @@map("recipes")
+}
+
+model RecipeStep {
+  id         String  @id @default(uuid()) @db.Uuid
+  recipeId   String  @map("recipe_id") @db.Uuid
+  stepNumber Int     @map("step_number")
+  content    String
+  imageUrl   String? @map("image_url")
+
+  recipe Recipe @relation(fields: [recipeId], references: [id])
+
+  @@map("recipe_steps")
+}
+
+model RecipeScrap {
+  recipeId  String   @map("recipe_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  folderId  String?  @map("folder_id") @db.Uuid
+
+  recipe Recipe @relation(fields: [recipeId], references: [id])
+  user   Member @relation(fields: [userId], references: [id])
+
+  @@id([recipeId, userId])
+  @@map("recipe_scraps")
+}
+
+model FridgeIngredient {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String   @db.VarChar(255)
+  quantity  Int
+  unit      String?  @db.VarChar(10)
+  category  String?  @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  user Member @relation(fields: [userId], references: [id])
+
+  @@map("fridge_ingredients")
+}
+
+model GroceryPurchaseItem {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  name         String   @db.VarChar(255)
+  quantityText String?  @map("quantity_text") @db.VarChar(50)
+  price        Int
+  purchasedAt  DateTime @map("purchased_at") @db.Timestamp(6)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  user Member @relation(fields: [userId], references: [id])
+
+  @@map("grocery_purchase_items")
+}
+
+model PolicyScrapFolder {
+  id         BigInt   @id @default(autoincrement())
+  userId     String   @map("user_id") @db.Uuid
+  folderName String   @map("folder_name") @db.VarChar(50)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user          Member        @relation(fields: [userId], references: [id])
+  policyScraps  PolicyScrap[]
+
+  @@map("policy_scrap_folders")
+}
+
+model PolicyScrap {
+  id                   BigInt    @id @default(autoincrement())
+  userId               String    @map("user_id") @db.Uuid
+  policyId             String    @map("policy_id") @db.VarChar(255)
+  policyScrapFolderId  BigInt?   @map("policy_scrap_folder_id")
+  policyName           String    @map("policy_name") @db.VarChar(100)
+  supportType          String?   @map("support_type") @db.VarChar(100)
+  applyStartDate       DateTime? @map("apply_start_date") @db.Date
+  applyEndDate         DateTime? @map("apply_end_date") @db.Date
+  notificationSent     Boolean   @map("notification_sent")
+  createdAt            DateTime? @map("created_at") @db.Timestamptz(6)
+
+  user              Member             @relation(fields: [userId], references: [id])
+  policyScrapFolder PolicyScrapFolder? @relation(fields: [policyScrapFolderId], references: [id])
+
+  @@map("policy_scraps")
+}
