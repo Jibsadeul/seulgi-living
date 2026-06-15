@@ -32,16 +32,17 @@
 
 ## 공통 도메인
 
-| 도메인    | Mobile 경계          | API 경계             | 비고                        |
-| --------- | -------------------- | -------------------- | --------------------------- |
-| members   | `entities/members`   | `services/members`   | 사용자, 프로필, 카카오 인증 |
-| recipes   | `entities/recipes`   | `services/recipes`   | 레시피 검색, 상세, 스크랩   |
-| policies  | `entities/policies`  | `services/policies`  | 청년 정책, 스크랩           |
-| map       | `entities/map`       | `services/map`       | 편의시설 지도               |
-| fridge    | `entities/fridge`    | `services/fridge`    | 냉장고 재료                 |
-| groceries | `entities/groceries` | `services/groceries` | 장보기 내역                 |
-| camera    | `entities/camera`    | `services/camera`    | 이미지/영수증 분석          |
-| chat      | `entities/chat`      | `services/chat`      | AI 채팅                     |
+| 도메인    | Mobile 경계          | API 경계             | 비고                           |
+| --------- | -------------------- | -------------------- | ------------------------------ |
+| members   | `entities/members`   | `services/members`   | 사용자, 프로필, 카카오 인증    |
+| regions   | `entities/regions`   | `services/regions`   | 공용 시/도, 시/군/구 지역 목록 |
+| recipes   | `entities/recipes`   | `services/recipes`   | 레시피 검색, 상세, 스크랩      |
+| policies  | `entities/policies`  | `services/policies`  | 청년 정책, 스크랩              |
+| map       | `entities/map`       | `services/map`       | 편의시설 지도                  |
+| fridge    | `entities/fridge`    | `services/fridge`    | 냉장고 재료                    |
+| groceries | `entities/groceries` | `services/groceries` | 장보기 내역                    |
+| camera    | `entities/camera`    | `services/camera`    | 이미지/영수증 분석             |
+| chat      | `entities/chat`      | `services/chat`      | AI 채팅                        |
 
 도메인 이름은 앱과 패키지 전반에서 가능한 한 위 표를 따른다. 외부 API나 URL 이름이 다를 경우 앱별 `AGENTS.md`에 매핑을 명시한다.
 
@@ -67,8 +68,7 @@
 
 ## SDD 강제 워크플로우
 
-모든 요청은 반드시 요청 파악 -> 관련 spec 확인 -> 없으면 spec 작성/승인 -> local/WORK.md 계획 작성/승인 -> 구현 -> spec 대조 검증 -> local/HISTORY.md 이동
-순서를 따릅니다. 사용자가 명시적으로 예외를 요청한 경우에만 생략할 수 있습니다.
+모든 요청은 반드시 요청 파악 -> 관련 spec 확인 -> 없으면 spec 작성/승인 -> local/WORK.md 계획 작성/승인 -> 구현 -> spec 대조 검증 -> local/HISTORY.md 이동 순서를 따릅니다. 사용자가 명시적으로 예외를 요청한 경우에만 생략할 수 있습니다.
 
 개발 요청이 오면 아래 순서를 따릅니다.
 
