@@ -1,20 +1,31 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import Svg, { Path } from 'react-native-svg';
+import HomeIcon from '../../../assets/icons/Home.svg';
+import RecipeIcon from '../../../assets/icons/Recipe.svg';
+import PolicyIcon from '../../../assets/icons/Policy.svg';
+import MapIcon from '../../../assets/icons/Map.svg';
+import CameraIcon from '../../../assets/icons/Camera.svg';
 
 const ACTIVE_COLOR = '#494a50';
 const INACTIVE_COLOR = '#71727a';
+const BAR_HEIGHT = 69;
+const CONTAINER_HEIGHT = 84;
+const BAR_TOP = CONTAINER_HEIGHT - BAR_HEIGHT; // 15
+const NOTCH_HALF_W = 36;
+const NOTCH_H = 28;
+const NOTCH_CURVE = 14;
 
-// TODO: SVG 빌드 후 아이콘으로 교체
 const LEFT_TABS = [
-  { name: 'index', label: '홈', icon: '🏠' },
-  { name: 'fridge', label: '레시피', icon: '🍳' },
+  { name: 'index', label: '홈', Icon: HomeIcon },
+  { name: 'fridge', label: '레시피', Icon: RecipeIcon },
 ] as const;
 
 const RIGHT_TABS = [
-  { name: 'policies', label: '청년정책', icon: '📋' },
-  { name: 'map', label: '지도', icon: '🗺️' },
+  { name: 'policies', label: '청년정책', Icon: PolicyIcon },
+  { name: 'map', label: '편의시설', Icon: MapIcon },
 ] as const;
 
 type TabConfig = (typeof LEFT_TABS)[number] | (typeof RIGHT_TABS)[number];
@@ -22,6 +33,21 @@ type TabConfig = (typeof LEFT_TABS)[number] | (typeof RIGHT_TABS)[number];
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+
+  const containerHeight = CONTAINER_HEIGHT + insets.bottom;
+  const cx = width / 2;
+
+  const barPath = [
+    `M 0 ${BAR_TOP}`,
+    `L ${cx - NOTCH_HALF_W - NOTCH_CURVE} ${BAR_TOP}`,
+    `C ${cx - NOTCH_HALF_W} ${BAR_TOP} ${cx - NOTCH_HALF_W} ${BAR_TOP + NOTCH_H} ${cx} ${BAR_TOP + NOTCH_H}`,
+    `C ${cx + NOTCH_HALF_W} ${BAR_TOP + NOTCH_H} ${cx + NOTCH_HALF_W} ${BAR_TOP} ${cx + NOTCH_HALF_W + NOTCH_CURVE} ${BAR_TOP}`,
+    `L ${width} ${BAR_TOP}`,
+    `L ${width} ${containerHeight}`,
+    `L 0 ${containerHeight}`,
+    'Z',
+  ].join(' ');
 
   const isActive = (name: string) => state.routes[state.index]?.name === name;
 
@@ -38,32 +64,32 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     }
   };
 
-  const renderTab = ({ name, label, icon }: TabConfig) => {
+  const renderTab = ({ name, label, Icon }: TabConfig) => {
     const active = isActive(name);
     const color = active ? ACTIVE_COLOR : INACTIVE_COLOR;
     return (
       <Pressable key={name} style={styles.tabItem} onPress={() => navigateTo(name)}>
-        <Text style={styles.icon}>{icon}</Text>
+        <Icon width={22} height={22} color={color} />
         <Text style={[styles.label, { color, fontWeight: active ? '600' : '400' }]}>{label}</Text>
       </Pressable>
     );
   };
 
   return (
-    <View style={[styles.container, { height: 84 + insets.bottom }]}>
-      {/* 흰 바 */}
-      <View style={[styles.bar, { height: 69 + insets.bottom }]}>
-        <View style={styles.tabsRow}>
-          <View style={styles.tabGroup}>{LEFT_TABS.map(renderTab)}</View>
-          <View style={styles.centerGap} />
-          <View style={styles.tabGroup}>{RIGHT_TABS.map(renderTab)}</View>
-        </View>
+    <View style={[styles.container, { height: containerHeight }]}>
+      <Svg width={width} height={containerHeight} style={StyleSheet.absoluteFill}>
+        <Path d={barPath} fill="#FFFFFF" />
+      </Svg>
+
+      <View style={[styles.tabsRow, { marginTop: BAR_TOP }]}>
+        <View style={styles.tabGroup}>{LEFT_TABS.map(renderTab)}</View>
+        <View style={styles.centerGap} />
+        <View style={styles.tabGroup}>{RIGHT_TABS.map(renderTab)}</View>
       </View>
 
-      {/* 카메라 버튼 */}
       <View style={styles.cameraWrapper} pointerEvents="box-none">
         <Pressable style={styles.cameraButton} onPress={() => router.push('/(stack)/camera')}>
-          <Text style={styles.cameraIcon}>📷</Text>
+          <CameraIcon width={28} height={28} />
         </Pressable>
       </View>
     </View>
@@ -73,23 +99,14 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   container: {
     position: 'relative',
-  },
-  bar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.05,
     shadowRadius: 12,
-    elevation: 8,
   },
   tabsRow: {
-    height: 69,
+    height: BAR_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
@@ -106,9 +123,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-  },
-  icon: {
-    fontSize: 20,
   },
   label: {
     fontSize: 10,
@@ -127,13 +141,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF7722',
     alignItems: 'center',
     justifyContent: 'center',
+    elevation: 6,
     shadowColor: '#EF7722',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.8,
     shadowRadius: 4,
-    elevation: 6,
-  },
-  cameraIcon: {
-    fontSize: 24,
   },
 });
