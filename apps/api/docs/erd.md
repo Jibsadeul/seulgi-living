@@ -22,13 +22,13 @@
 | sido_id | VARCHAR(2) | FK → sido.id, NOT NULL |
 | name | VARCHAR(50) | NOT NULL |
 
-> ⚠️ 이전 ERD의 `dong` 테이블 제거됨. `users`는 `sigungu`에 직접 연결.
+> ⚠️ 이전 ERD의 `dong` 테이블 제거됨. `members`는 `sigungu`에 직접 연결.
 
 ---
 
 ### 사용자
 
-**`users`**
+**`members`**
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
 | id | UUID | PK, NOT NULL |
@@ -47,7 +47,7 @@
 **`refresh_token`**
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
-| user_id | UUID | PK, FK → users.id, NOT NULL |
+| user_id | UUID | PK, FK → members.id, NOT NULL |
 | token_hash | VARCHAR(255) | NOT NULL |
 | expires_at | TIMESTAMPTZ | NOT NULL |
 
@@ -60,7 +60,7 @@
 |------|------|------|
 | id | UUID | PK, NOT NULL |
 | source | ENUM('PUBLIC','USER') | NOT NULL |
-| user_id | UUID | FK → users.id, NULL (공공 레시피는 NULL) |
+| user_id | UUID | FK → members.id, NULL (공공 레시피는 NULL) |
 | public_recipe_id | VARCHAR(255) | NULL |
 | name | VARCHAR(255) | NOT NULL |
 | category | VARCHAR(255) | NULL |
@@ -91,7 +91,7 @@
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
 | recipe_id | UUID | FK → recipes.id, NOT NULL |
-| user_id | UUID | FK → users.id, NOT NULL |
+| user_id | UUID | FK → members.id, NOT NULL |
 | created_at | TIMESTAMPTZ | NOT NULL |
 | folder_id | UUID | NULL |
 
@@ -103,7 +103,7 @@
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
 | id | UUID | PK, NOT NULL |
-| user_id | UUID | FK → users.id, NOT NULL |
+| user_id | UUID | FK → members.id, NOT NULL |
 | name | VARCHAR(255) | NOT NULL |
 | quantity | INTEGER | NOT NULL |
 | unit | VARCHAR(10) | NULL |
@@ -114,7 +114,7 @@
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
 | id | UUID | PK, NOT NULL |
-| user_id | UUID | FK → users.id, NOT NULL |
+| user_id | UUID | FK → members.id, NOT NULL |
 | name | VARCHAR(255) | NOT NULL |
 | quantity_text | VARCHAR(50) | NULL |
 | price | INTEGER | NOT NULL |
@@ -129,7 +129,7 @@
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
 | id | BIGSERIAL | PK, NOT NULL |
-| user_id | UUID | FK → users.id, NOT NULL |
+| user_id | UUID | FK → members.id, NOT NULL |
 | folder_name | VARCHAR(50) | NOT NULL |
 | created_at | TIMESTAMPTZ | NOT NULL |
 
@@ -137,7 +137,7 @@
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
 | id | BIGSERIAL | PK, NOT NULL |
-| user_id | UUID | FK → users.id, NOT NULL |
+| user_id | UUID | FK → members.id, NOT NULL |
 | policy_id | VARCHAR(255) | NOT NULL (외부 API 정책 ID) |
 | policy_scrap_folder_id | BIGSERIAL | FK → policy_scrap_folders.id, NULL |
 | policy_name | VARCHAR(100) | NOT NULL |
@@ -152,13 +152,13 @@
 ## 관계 다이어그램
 
 ```
-sido ──< sigungu ──< users
+sido ──< sigungu ──< members
                      │
                      ├──< fridge_ingredients
                      ├──< grocery_purchase_items
                      ├──< policy_scraps >── policy_scrap_folders
                      └──< recipe_scraps >── recipes ──< recipe_steps
-                                            (source=USER) ──< users
+                                            (source=USER) ──< members
 ```
 
 ---
@@ -167,5 +167,5 @@ sido ──< sigungu ──< users
 
 - **청년 정책 데이터**: 외부 API 실시간 조회, DB 저장 안 함 (스크랩 메타데이터만 저장)
 - **GPS 좌표**: DB 저장 금지, 편의시설 검색 목적에만 사용
-- **소프트 삭제**: `users.deleted_at`
+- **소프트 삭제**: `members.deleted_at`
 - **지역 단위**: `dong` 제거, `sigungu` 수준까지만 관리
