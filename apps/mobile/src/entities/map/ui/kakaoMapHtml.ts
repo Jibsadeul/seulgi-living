@@ -29,6 +29,7 @@ export const getKakaoMapHtml = (apiKey: string): string => `
     var ps;
     var currentClickedPlace = null;
 
+    // 서울 시청을 중심으로, 확대/축소 레벨 4(기본값)의 지도를 띄움 
     function init() {
       var container = document.getElementById('map');
       var options = {
@@ -42,12 +43,14 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       sendToRN({ type: 'MAP_READY' });
     }
 
+    // web -> RN 보내는 메세지 처리 함수
     function sendToRN(message) {
       if (window.ReactNativeWebView) {
         window.ReactNativeWebView.postMessage(JSON.stringify(message));
       }
     }
 
+    // RN -> Web 메시지 수신부 (RN에서 injectJavaScript로 이 함수를 호출하여 명령 전달)
     window.handleRNMessage = function(message) {
       switch (message.type) {
         case 'SEARCH_CATEGORY':
@@ -62,8 +65,10 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       }
     };
 
+    // 검색 명령 함수 
     function searchCategory(payload) {
       clearMarkers();
+      // useMapBounds: 현재 지도 화면 범위 내로 검색 제한 (viewport 밖 결과 제외)
       var opts = { useMapBounds: true };
 
       if (payload.keyword) {
@@ -73,6 +78,7 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       }
     }
 
+    // 검색 결과 받아서 처리 
     function placesSearchCB(data, status) {
       if (status === kakao.maps.services.Status.OK) {
         displayMarkers(data);
@@ -81,6 +87,7 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       }
     }
 
+    // 검색 결과 마커 표시 
     function displayMarkers(places) {
       places.forEach(function(place) {
         var marker = new kakao.maps.Marker({
@@ -113,6 +120,7 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       });
     }
 
+    // 마커 지우기 
     function clearMarkers() {
       markers.forEach(function(m) { m.setMap(null); });
       markers = [];
@@ -120,11 +128,13 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       currentClickedPlace = null;
     }
 
+    // 지도 중심 이동 
     function moveToLocation(lat, lng) {
       var latLng = new kakao.maps.LatLng(lat, lng);
       map.setCenter(latLng);
     }
 
+    // libraries=services를 URL에 포함하면 SDK가 비동기 로드됨 → load() 콜백 안에서만 services 사용 가능
     kakao.maps.load(init);
   </script>
 </body>

@@ -24,10 +24,12 @@ export function KakaoMapView({ webViewRef, onMessage }: KakaoMapViewProps) {
     <WebView
       ref={webViewRef}
       style={styles.webview}
+      // baseUrl은 카카오 개발자 콘솔 Web 플랫폼에 등록한 도메인과 일치해야 함 (http://localhost)
       source={{ html: MAP_HTML, baseUrl: 'http://localhost' }}
       originWhitelist={['*']}
       javaScriptEnabled
       domStorageEnabled
+      // Android 기본 설정은 HTTPS 페이지에서 HTTP 리소스 로드를 차단 → 카카오 SDK 일부 리소스가 HTTP라 필요
       mixedContentMode="always"
       onMessage={onMessage}
       onError={showNetworkError}

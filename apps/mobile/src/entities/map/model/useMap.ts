@@ -12,6 +12,8 @@ export function useMap() {
   const { setSelectedCategory, setSelectedPlace, selectedCategory } = useMapStore();
 
   const sendToMap = useCallback((message: RNToWebViewMessage) => {
+    // injectJavaScript는 iOS에서 마지막 표현식이 falsy면 오류 발생 → `; true;` 필수
+    // webView.postMessage()는 WebView→RN 방향이라 RN→WebView엔 injectJavaScript 사용
     const js = `window.handleRNMessage(${JSON.stringify(message)}); true;`;
     webViewRef.current?.injectJavaScript(js);
   }, []);
@@ -41,6 +43,7 @@ export function useMap() {
 
       switch (message.type) {
         case 'MAP_READY':
+          // WebView 초기화 완료 후 GPS 요청 → map 객체 생성 전에 MOVE_TO_LOCATION 보내면 무시됨
           moveToCurrentLocation();
           break;
         case 'MARKER_CLICK':

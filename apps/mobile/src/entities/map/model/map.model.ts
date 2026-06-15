@@ -4,7 +4,8 @@ export const CATEGORY_LIST = [
   { label: '편의점', code: 'CS2', keyword: null },
   { label: '마트', code: 'MT1', keyword: null },
   { label: '식당', code: 'FD6', keyword: null },
-  { label: '빨래방', code: null, keyword: '코인빨래방' },
+  // 카카오 카테고리에 코인빨래방 없음 → keyword 검색으로 대체. code가 null이면 searchCategory에서 keywordSearch 분기
+  { label: '빨래방', code: null, keyword: '셀프빨래방' },
   { label: '주민센터', code: 'PO3', keyword: null },
 ] as const;
 
@@ -16,8 +17,8 @@ export interface MapPlace {
   road_address_name: string;
   phone: string;
   place_url: string;
-  x: string;
-  y: string;
+  x: string; // 카카오 API는 경도(longitude)를 string으로 반환
+  y: string; // 카카오 API는 위도(latitude)를 string으로 반환. LatLng(y, x) 순서 주의
 }
 
 export type RNToWebViewMessage =
