@@ -65,11 +65,16 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       }
     };
 
-    // 검색 명령 함수 
+    // 검색 명령 함수
     function searchCategory(payload) {
       clearMarkers();
-      // useMapBounds: 현재 지도 화면 범위 내로 검색 제한 (viewport 밖 결과 제외)
-      var opts = { useMapBounds: true };
+      // useMapBounds 대신 지도 중심 기준 반경 1km 검색 → 줌 레벨과 무관하게 일정 범위 보장
+      var center = map.getCenter();
+      var opts = {
+        location: center,
+        radius: 1000,
+        sort: kakao.maps.services.SortBy.DISTANCE,
+      };
 
       if (payload.keyword) {
         ps.keywordSearch(payload.keyword, placesSearchCB, opts);

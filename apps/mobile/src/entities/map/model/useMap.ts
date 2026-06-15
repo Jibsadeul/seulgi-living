@@ -20,16 +20,40 @@ export function useMap() {
 
   const moveToCurrentLocation = useCallback(async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') return;
+    if (status !== 'granted') {
+      Toast.show({
+        type: 'info',
+        text1: '위치 권한이 없어요.',
+        text2: '설정에서 위치 권한을 허용해주세요.',
+      });
+      return;
+    }
 
-    const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
+    try {
+      // 현재 위치 우선. 실패 시 마지막 알려진 위치로 fallback
+      let location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
 
-    sendToMap({
-      type: 'MOVE_TO_LOCATION',
-      payload: { lat: location.coords.latitude, lng: location.coords.longitude },
-    });
+      sendToMap({
+        type: 'MOVE_TO_LOCATION',
+        payload: { lat: location.coords.latitude, lng: location.coords.longitude },
+      });
+    } catch {
+      const last = await Location.getLastKnownPositionAsync();
+      if (last) {
+        sendToMap({
+          type: 'MOVE_TO_LOCATION',
+          payload: { lat: last.coords.latitude, lng: last.coords.longitude },
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: '현재 위치를 가져올 수 없어요.',
+          text2: '잠시 후 다시 시도해주세요.',
+        });
+      }
+    }
   }, [sendToMap]);
 
   const onWebViewMessage = useCallback(
