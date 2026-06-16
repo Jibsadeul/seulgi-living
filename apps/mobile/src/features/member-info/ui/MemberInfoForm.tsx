@@ -18,6 +18,7 @@ export type MemberInfoFormHandle = {
 };
 
 const toOptions = (items: string[]) => items.map((item) => ({ label: item, value: item }));
+const MAIN_COLOR = '#EF7722';
 
 export const MemberInfoForm = forwardRef<MemberInfoFormHandle, Props>(function MemberInfoForm(
   { initialMember, onCloseStateChange, onSubmitSuccess },
@@ -64,6 +65,8 @@ export const MemberInfoForm = forwardRef<MemberInfoFormHandle, Props>(function M
             maxLength={99}
             placeholder="닉네임 입력"
             placeholderTextColor="#9CA3AF"
+            cursorColor={MAIN_COLOR}
+            selectionColor={MAIN_COLOR}
             value={form.values.nickname}
             onChangeText={form.updateNickname}
           />
