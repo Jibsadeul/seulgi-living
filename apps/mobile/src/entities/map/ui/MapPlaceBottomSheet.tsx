@@ -7,9 +7,15 @@ interface MapPlaceBottomSheetProps {
   place: MapPlace | null;
   isOpen: boolean;
   onClose: () => void;
+  bottomInset?: number;
 }
 
-export function MapPlaceBottomSheet({ place, isOpen, onClose }: MapPlaceBottomSheetProps) {
+export function MapPlaceBottomSheet({
+  place,
+  isOpen,
+  onClose,
+  bottomInset = 0,
+}: MapPlaceBottomSheetProps) {
   const sheetRef = useRef<BottomSheet>(null);
 
   useEffect(() => {
@@ -32,7 +38,7 @@ export function MapPlaceBottomSheet({ place, isOpen, onClose }: MapPlaceBottomSh
     <BottomSheet
       ref={sheetRef}
       index={-1}
-      snapPoints={['28%']}
+      snapPoints={['42%']}
       enablePanDownToClose
       onClose={onClose}
       backgroundStyle={styles.background}
@@ -74,7 +80,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 24,
     paddingTop: 4,
-    paddingBottom: 20,
+    paddingBottom: 80,
     gap: 6,
   },
   placeName: {

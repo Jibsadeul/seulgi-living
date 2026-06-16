@@ -8,6 +8,7 @@ interface MapResultBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectPlace: (place: MapPlace) => void;
+  bottomInset?: number;
 }
 
 function formatDistance(distance?: string): string {
@@ -22,6 +23,7 @@ export function MapResultBottomSheet({
   isOpen,
   onClose,
   onSelectPlace,
+  bottomInset = 0,
 }: MapResultBottomSheetProps) {
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['30%', '60%'], []);
@@ -83,7 +85,7 @@ const styles = StyleSheet.create({
     width: 36,
   },
   listContent: {
-    paddingBottom: 32,
+    paddingBottom: 120,
   },
   item: {
     paddingHorizontal: 20,
