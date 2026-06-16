@@ -9,18 +9,18 @@ import PolicyIcon from '../../../assets/icons/Policy.svg';
 import MapIcon from '../../../assets/icons/Map.svg';
 import CameraIcon from '../../../assets/icons/Camera.svg';
 
-const ACTIVE_COLOR = '#494a50';
-const INACTIVE_COLOR = '#71727a';
-const BAR_HEIGHT = 69;
-const CONTAINER_HEIGHT = 84;
+const ACTIVE_COLOR = '#2D2D2D';
+const INACTIVE_COLOR = '#8E8E8E';
+const BAR_HEIGHT = 72;
+const CONTAINER_HEIGHT = 87;
 const BAR_TOP = CONTAINER_HEIGHT - BAR_HEIGHT; // 15
 const NOTCH_HALF_W = 36;
-const NOTCH_H = 28;
+const NOTCH_H = 32;
 const NOTCH_CURVE = 14;
 
 const LEFT_TABS = [
   { name: 'index', label: '홈', Icon: HomeIcon },
-  { name: 'fridge', label: '레시피', Icon: RecipeIcon },
+  { name: 'recipes', label: '레시피', Icon: RecipeIcon },
 ] as const;
 
 const RIGHT_TABS = [
@@ -47,6 +47,14 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     `L ${width} ${containerHeight}`,
     `L 0 ${containerHeight}`,
     'Z',
+  ].join(' ');
+
+  const borderPath = [
+    `M 0 ${BAR_TOP}`,
+    `L ${cx - NOTCH_HALF_W - NOTCH_CURVE} ${BAR_TOP}`,
+    `C ${cx - NOTCH_HALF_W} ${BAR_TOP} ${cx - NOTCH_HALF_W} ${BAR_TOP + NOTCH_H} ${cx} ${BAR_TOP + NOTCH_H}`,
+    `C ${cx + NOTCH_HALF_W} ${BAR_TOP + NOTCH_H} ${cx + NOTCH_HALF_W} ${BAR_TOP} ${cx + NOTCH_HALF_W + NOTCH_CURVE} ${BAR_TOP}`,
+    `L ${width} ${BAR_TOP}`,
   ].join(' ');
 
   const isActive = (name: string) => state.routes[state.index]?.name === name;
@@ -79,6 +87,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     <View style={[styles.container, { height: containerHeight }]}>
       <Svg width={width} height={containerHeight} style={StyleSheet.absoluteFill}>
         <Path d={barPath} fill="#FFFFFF" />
+        <Path d={borderPath} fill="none" stroke="#E4E4E4" strokeWidth={1} />
       </Svg>
 
       <View style={[styles.tabsRow, { marginTop: BAR_TOP }]}>
@@ -99,7 +108,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   container: {
     position: 'relative',
-    elevation: 8,
+    backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.05,
@@ -135,9 +144,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cameraButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: '#EF7722',
     alignItems: 'center',
     justifyContent: 'center',
