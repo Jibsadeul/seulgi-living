@@ -1,0 +1,50 @@
+name: Sync Monorepo to Personal Deploy Repo
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync-monorepo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout organization repository
+        uses: actions/checkout@v4
+
+      - name: Copy deployable monorepo
+        run: |
+          mkdir deploy-repo
+          rsync -av \
+            --exclude=.git \
+            --exclude=.github \
+            --exclude=.agents \
+            --exclude=.codex \
+            --exclude=.claude \
+            --exclude=node_modules \
+            --exclude=.turbo \
+            --exclude=.next \
+            --exclude=dist \
+            --exclude=out \
+            --exclude=.expo \
+            --exclude=.env \
+            --exclude=.env.* \
+            --exclude=local \
+            --exclude=deploy-repo \
+            ./ deploy-repo/
+
+      - name: Push to personal deploy repository
+        run: |
+          cd deploy-repo
+
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add .
+          git commit -m "Sync monorepo from organization repo: $GITHUB_SHA"
+
+          git branch -M main
+          git remote add origin https://x-access-token:${{ secrets.DEPLOY_REPO_TOKEN }}@github.com/kangansoo/seulgi-living-api.git
+          git push -f origin main

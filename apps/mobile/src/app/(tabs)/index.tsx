@@ -1,2 +1,2 @@
-import { MembersListScreen } from '@/screens/members';
-export default MembersListScreen;
+import { HomeScreen } from '@/screens/home';
+export default HomeScreen;
