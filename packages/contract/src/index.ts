@@ -8,5 +8,6 @@ export * from './domains/fridge';
 export * from './domains/grocery';
 export * from './domains/map';
 export * from './domains/policy';
+export * from './domains/region';
 export * from './domains/recipe';
 export * from './domains/user';
