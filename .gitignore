@@ -26,3 +26,5 @@ local/
 
 # claude 폴더는 개인 컨텍스트를 유지하기 위함이므로 .gitignore에 추가하여 버전 관리에서 제외합니다.
 .claude/
+
+.pnpm-store/
