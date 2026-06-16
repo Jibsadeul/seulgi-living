@@ -49,14 +49,6 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     'Z',
   ].join(' ');
 
-  const borderPath = [
-    `M 0 ${BAR_TOP}`,
-    `L ${cx - NOTCH_HALF_W - NOTCH_CURVE} ${BAR_TOP}`,
-    `C ${cx - NOTCH_HALF_W} ${BAR_TOP} ${cx - NOTCH_HALF_W} ${BAR_TOP + NOTCH_H} ${cx} ${BAR_TOP + NOTCH_H}`,
-    `C ${cx + NOTCH_HALF_W} ${BAR_TOP + NOTCH_H} ${cx + NOTCH_HALF_W} ${BAR_TOP} ${cx + NOTCH_HALF_W + NOTCH_CURVE} ${BAR_TOP}`,
-    `L ${width} ${BAR_TOP}`,
-  ].join(' ');
-
   const isActive = (name: string) => state.routes[state.index]?.name === name;
 
   const navigateTo = (name: string) => {
@@ -87,7 +79,6 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     <View style={[styles.container, { height: containerHeight }]}>
       <Svg width={width} height={containerHeight} style={StyleSheet.absoluteFill}>
         <Path d={barPath} fill="#FFFFFF" />
-        <Path d={borderPath} fill="none" stroke="#E4E4E4" strokeWidth={1} />
       </Svg>
 
       <View style={[styles.tabsRow, { marginTop: BAR_TOP }]}>
@@ -107,8 +98,10 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
 
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
-    backgroundColor: '#FFFFFF',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.05,
