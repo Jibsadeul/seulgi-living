@@ -1,25 +1,51 @@
-import { useEffect } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import type { MemberMe } from '@/entities/members';
 import { birthDays, birthMonths, birthYears, useMemberInfoForm } from '../model/useMemberInfoForm';
-import type { MemberInfoMode } from '../model/type';
+import type { MemberInfoCloseState, MemberInfoMode } from '../model/type';
 import { SelectField } from './SelectField';
 
 type Props = {
   mode: MemberInfoMode;
   initialMember: MemberMe | null;
-  onCanCloseChange: (canClose: boolean) => void;
+  onCloseStateChange: (state: MemberInfoCloseState) => void;
   onSubmitSuccess: (member: MemberMe) => void;
+};
+
+export type MemberInfoFormHandle = {
+  getCloseState: () => MemberInfoCloseState;
+  submit: () => Promise<MemberMe | null>;
 };
 
 const toOptions = (items: string[]) => items.map((item) => ({ label: item, value: item }));
 
-export function MemberInfoForm({ mode, initialMember, onCanCloseChange, onSubmitSuccess }: Props) {
+export const MemberInfoForm = forwardRef<MemberInfoFormHandle, Props>(function MemberInfoForm(
+  { initialMember, onCloseStateChange, onSubmitSuccess },
+  ref,
+) {
   const form = useMemberInfoForm(initialMember);
 
+  const closeState = useMemo<MemberInfoCloseState>(
+    () => ({
+      hasBlankRequiredField: form.hasBlankRequiredField,
+      isDirtyFromStoredProfile: form.isDirtyFromStoredProfile,
+      currentProfile: form.currentProfile,
+    }),
+    [form.currentProfile, form.hasBlankRequiredField, form.isDirtyFromStoredProfile],
+  );
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      getCloseState: () => closeState,
+      submit: form.submit,
+    }),
+    [closeState, form.submit],
+  );
+
   useEffect(() => {
-    onCanCloseChange(mode === 'edit' ? form.canClose : false);
-  }, [form.canClose, mode, onCanCloseChange]);
+    onCloseStateChange(closeState);
+  }, [closeState, onCloseStateChange]);
 
   const nicknameButtonDisabled =
     form.nicknameState === 'checking' ||
@@ -113,7 +139,7 @@ export function MemberInfoForm({ mode, initialMember, onCanCloseChange, onSubmit
       ) : null}
 
       <Pressable
-        className={`h-13 items-center justify-center rounded-lg ${
+        className={`h-12 items-center justify-center rounded-lg ${
           form.canSubmit ? 'bg-main-100' : 'bg-gray-20'
         }`}
         disabled={!form.canSubmit}
@@ -130,4 +156,4 @@ export function MemberInfoForm({ mode, initialMember, onCanCloseChange, onSubmit
       </Pressable>
     </View>
   );
-}
+});

@@ -40,6 +40,23 @@
 - `isBasicInfoComplete`는 `nickname`, `birthday`, `sigunguId`가 모두 존재할 때 `true`로 본다.
 - `sigunguId`가 있을 경우 프론트엔드 초기값 구성을 위해 `sidoId`도 함께 반환한다.
 
+## 클라이언트 기본 정보 store
+
+모바일 앱은 화면 간 즉시 접근이 필요한 사용자 기본 정보를 `entities/members`의 Zustand store에 보관할 수 있다.
+
+| 필드      | 타입           | 설명          |
+| --------- | -------------- | ------------- |
+| nickname  | string \| null | 사용자 닉네임 |
+| birthday  | string \| null | `YYYY-MM-DD`  |
+| sidoId    | string \| null | 시/도 ID      |
+| sigunguId | string \| null | 시/군/구 ID   |
+
+요구사항:
+
+- store 값은 기본 정보 수정 폼의 변경 여부를 판단하는 기준값으로 사용한다.
+- 저장 성공 후 API 응답의 현재 사용자 정보로 store 값을 갱신한다.
+- 저장하지 않고 바텀시트를 닫는 경우 store 값을 변경하지 않는다.
+
 ## 사용자 기본 정보 저장
 
 `PATCH /api/users/me`

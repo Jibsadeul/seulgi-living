@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AppToast } from '@/shared/ui/Toast';
 import '../../global.css';
 
 const queryClient = new QueryClient();
@@ -13,6 +14,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <Stack screenOptions={{ headerShown: false }} />
+          <AppToast />
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

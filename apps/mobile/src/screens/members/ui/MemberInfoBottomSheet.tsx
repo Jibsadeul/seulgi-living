@@ -1,8 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { Alert, Modal, Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { MemberMe } from '@/entities/members';
-import { MemberInfoForm, type MemberInfoMode } from '@/features/member-info';
+import { useMemberStore, type MemberMe } from '@/entities/members';
+import {
+  MemberInfoForm,
+  type MemberInfoCloseState,
+  type MemberInfoFormHandle,
+  type MemberInfoMode,
+} from '@/features/member-info';
+import { showAppToast } from '@/shared/ui/Toast';
 
 type Props = {
   visible: boolean;
@@ -10,6 +17,10 @@ type Props = {
   initialMember: MemberMe | null;
   onClose: () => void;
   onSubmitSuccess: (member: MemberMe) => void;
+};
+
+type WebConfirmGlobal = {
+  confirm?: (message?: string) => boolean;
 };
 
 export function MemberInfoBottomSheet({
@@ -20,19 +31,70 @@ export function MemberInfoBottomSheet({
   onSubmitSuccess,
 }: Props) {
   const insets = useSafeAreaInsets();
-  const [canClose, setCanClose] = useState(mode === 'edit');
+  const formRef = useRef<MemberInfoFormHandle>(null);
+  const setMemberProfileFromMe = useMemberStore((state) => state.setMemberProfileFromMe);
+  const [closeState, setCloseState] = useState<MemberInfoCloseState>({
+    hasBlankRequiredField: true,
+    isDirtyFromStoredProfile: false,
+    currentProfile: {
+      nickname: null,
+      birthday: null,
+      sidoId: null,
+      sigunguId: null,
+    },
+  });
 
-  useEffect(() => {
-    if (visible) {
-      setCanClose(mode === 'edit');
+  const handleSubmitSuccess = useCallback(
+    (member: MemberMe) => {
+      onSubmitSuccess(member);
+      setMemberProfileFromMe(member);
+      showAppToast({ type: 'success', text: '저장되었습니다.' });
+      onClose();
+    },
+    [onClose, onSubmitSuccess, setMemberProfileFromMe],
+  );
+
+  const submitFromConfirm = useCallback(async () => {
+    const member = await formRef.current?.submit();
+
+    if (member) {
+      handleSubmitSuccess(member);
     }
-  }, [mode, visible]);
+  }, [handleSubmitSuccess]);
 
   const requestClose = useCallback(() => {
-    if (mode === 'edit' && canClose) {
-      onClose();
+    if (mode === 'onboarding') {
+      return;
     }
-  }, [canClose, mode, onClose]);
+
+    const latestCloseState = formRef.current?.getCloseState() ?? closeState;
+
+    if (latestCloseState.hasBlankRequiredField || !latestCloseState.isDirtyFromStoredProfile) {
+      onClose();
+      return;
+    }
+
+    if (Platform.OS === 'web') {
+      const webGlobal = globalThis as unknown as WebConfirmGlobal;
+      if (webGlobal.confirm?.('저장하시겠습니까?')) {
+        void submitFromConfirm();
+      } else {
+        onClose();
+      }
+      return;
+    }
+
+    Alert.alert('저장하시겠습니까?', undefined, [
+      { text: '아니요', style: 'cancel', onPress: onClose },
+      { text: '저장', onPress: submitFromConfirm },
+    ]);
+  }, [
+    closeState.hasBlankRequiredField,
+    closeState.isDirtyFromStoredProfile,
+    mode,
+    onClose,
+    submitFromConfirm,
+  ]);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={requestClose}>
@@ -53,23 +115,21 @@ export function MemberInfoBottomSheet({
             </View>
             <Pressable
               className={`h-8 w-8 items-center justify-center rounded-full ${
-                canClose ? 'bg-gray-10' : 'bg-gray-20'
+                mode === 'edit' ? 'bg-gray-10' : 'bg-gray-20'
               }`}
-              disabled={mode === 'onboarding' || !canClose}
+              disabled={mode === 'onboarding'}
               onPress={requestClose}
             >
-              <Text className="text-lg font-bold text-gray-70">x</Text>
+              <Ionicons name="close" size={20} color="#71727A" />
             </Pressable>
           </View>
 
           <MemberInfoForm
+            ref={formRef}
             mode={mode}
             initialMember={initialMember}
-            onCanCloseChange={setCanClose}
-            onSubmitSuccess={(member) => {
-              onSubmitSuccess(member);
-              onClose();
-            }}
+            onCloseStateChange={setCloseState}
+            onSubmitSuccess={handleSubmitSuccess}
           />
         </View>
       </View>
