@@ -1,5 +1,5 @@
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Linking, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { useEffect, useRef } from 'react';
 import type { MapPlace } from '../model/map.model';
 
@@ -32,7 +32,7 @@ export function MapPlaceBottomSheet({ place, isOpen, onClose }: MapPlaceBottomSh
     <BottomSheet
       ref={sheetRef}
       index={-1}
-      snapPoints={['32%']}
+      snapPoints={['28%']}
       enablePanDownToClose
       onClose={onClose}
       backgroundStyle={styles.background}
@@ -41,19 +41,15 @@ export function MapPlaceBottomSheet({ place, isOpen, onClose }: MapPlaceBottomSh
       <BottomSheetView style={styles.content}>
         {place && (
           <>
-            <Text style={styles.placeName}>{place.place_name}</Text>
+            <Text style={styles.placeName} numberOfLines={1}>
+              {place.place_name}
+            </Text>
 
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>주소</Text>
-              <Text style={styles.infoText}>{place.road_address_name || place.address_name}</Text>
-            </View>
+            <Text style={styles.address} numberOfLines={2}>
+              {place.road_address_name || place.address_name}
+            </Text>
 
-            {!!place.phone && (
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>전화</Text>
-                <Text style={styles.infoText}>{place.phone}</Text>
-              </View>
-            )}
+            {!!place.phone && <Text style={styles.phone}>{place.phone}</Text>}
 
             <TouchableOpacity style={styles.button} onPress={openKakaoMap} activeOpacity={0.8}>
               <Text style={styles.buttonText}>카카오맵으로 이동</Text>
@@ -72,44 +68,35 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   handle: {
-    backgroundColor: '#ddd',
+    backgroundColor: '#D8D8D8',
     width: 36,
   },
   content: {
     paddingHorizontal: 24,
-    paddingTop: 8,
-    paddingBottom: 24,
-    gap: 10,
+    paddingTop: 4,
+    paddingBottom: 20,
+    gap: 6,
   },
   placeName: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#1a1a1a',
-    marginBottom: 4,
+    color: '#1D1D1D',
+    marginBottom: 2,
   },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-  },
-  infoLabel: {
+  address: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#888',
-    width: 28,
-    paddingTop: 1,
+    color: '#717171',
+    lineHeight: 18,
   },
-  infoText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#555',
-    lineHeight: 20,
+  phone: {
+    fontSize: 13,
+    color: '#717171',
   },
   button: {
-    marginTop: 12,
+    marginTop: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FF6B35',
+    backgroundColor: '#EF7722',
     borderRadius: 12,
     paddingVertical: 13,
   },
