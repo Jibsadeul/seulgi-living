@@ -84,12 +84,12 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   address: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#717171',
-    lineHeight: 18,
+    lineHeight: 16,
   },
   phone: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#717171',
   },
   button: {

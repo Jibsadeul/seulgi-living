@@ -7,15 +7,21 @@ export const getKakaoMapHtml = (apiKey: string): string => `
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body, #map { width: 100%; height: 100%; overflow: hidden; }
-    .infowindow {
-      padding: 6px 10px;
-      font-size: 13px;
-      font-weight: 600;
-      color: #1a1a1a;
-      background: #fff;
-      border-radius: 8px;
-      white-space: nowrap;
-      cursor: pointer;
+    .place-label {
+      padding: 2px 5px;
+      font-size: 9px;
+      font-weight: 500;
+      color: #1D1D1D;
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 4px;
+      width: 72px;
+      white-space: normal;
+      word-break: keep-all;
+      text-align: center;
+      line-height: 1.3;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+      margin-top: 4px;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -25,15 +31,13 @@ export const getKakaoMapHtml = (apiKey: string): string => `
   <script>
     var map;
     var markers = [];
-    var markerPlaces = []; // [{marker, place}] — FOCUS_MARKER에서 마커 찾기용
-    var infowindow;
+    var overlays = []; // 마커 아래 장소명 레이블 (CustomOverlay)
     var ps;
-    var currentClickedPlace = null;
     var currentSearchKeyword = '';
     var isKeywordSearch = false; // 키워드 검색 시 결과 중심으로 지도 이동 (줌은 유지)
     var locationMarker = null; // 내 위치 마커 — clearMarkers()로 제거되지 않음
 
-    // 서울 시청을 중심으로, 확대/축소 레벨 4(기본값)의 지도를 띄움
+    // 서울 시청을 중심으로, 확대/축소 레벨 3(기본값)의 지도를 띄움
     function init() {
       var container = document.getElementById('map');
       var options = {
@@ -41,7 +45,6 @@ export const getKakaoMapHtml = (apiKey: string): string => `
         level: 3,
       };
       map = new kakao.maps.Map(container, options);
-      infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
       ps = new kakao.maps.services.Places();
 
       sendToRN({ type: 'MAP_READY' });
@@ -108,21 +111,9 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       ps.keywordSearch(keyword, placesSearchCB, opts);
     }
 
-    // 특정 마커 포커스 (리스트 아이템 탭 시)
+    // 특정 마커 포커스 (리스트 아이템 탭 시) — 해당 좌표로 중심 이동
     function focusMarker(x, y) {
-      var lat = parseFloat(y);
-      var lng = parseFloat(x);
-      map.setCenter(new kakao.maps.LatLng(lat, lng));
-
-      for (var i = 0; i < markerPlaces.length; i++) {
-        var mp = markerPlaces[i];
-        var pos = mp.marker.getPosition();
-        if (Math.abs(pos.getLat() - lat) < 0.00001 && Math.abs(pos.getLng() - lng) < 0.00001) {
-          infowindow.setContent('<div class="infowindow">' + mp.place.place_name + '</div>');
-          infowindow.open(map, mp.marker);
-          break;
-        }
-      }
+      map.setCenter(new kakao.maps.LatLng(parseFloat(y), parseFloat(x)));
     }
 
     // 검색 결과 받아서 처리
@@ -153,23 +144,26 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       }
     }
 
-    // 검색 결과 마커 표시
+    // 검색 결과 마커 + 장소명 레이블 표시
     function displayMarkers(places) {
       places.forEach(function(place) {
+        var position = new kakao.maps.LatLng(place.y, place.x);
+
         var marker = new kakao.maps.Marker({
           map: map,
-          position: new kakao.maps.LatLng(place.y, place.x),
+          position: position,
         });
 
-        markerPlaces.push({ marker: marker, place: place });
+        // 마커 아래 항상 보이는 장소명 레이블
+        var overlay = new kakao.maps.CustomOverlay({
+          position: position,
+          content: '<div class="place-label">' + place.place_name + '</div>',
+          xAnchor: 0.5,
+          yAnchor: 0,
+        });
+        overlay.setMap(map);
 
         kakao.maps.event.addListener(marker, 'click', function() {
-          var content = '<div class="infowindow">' + place.place_name + '</div>';
-          infowindow.setContent(content);
-          infowindow.open(map, marker);
-
-          currentClickedPlace = place;
-
           sendToRN({
             type: 'MARKER_CLICK',
             payload: {
@@ -187,16 +181,16 @@ export const getKakaoMapHtml = (apiKey: string): string => `
         });
 
         markers.push(marker);
+        overlays.push(overlay);
       });
     }
 
-    // 마커 지우기
+    // 마커 + 레이블 지우기
     function clearMarkers() {
       markers.forEach(function(m) { m.setMap(null); });
+      overlays.forEach(function(o) { o.setMap(null); });
       markers = [];
-      markerPlaces = [];
-      infowindow.close();
-      currentClickedPlace = null;
+      overlays = [];
     }
 
     // 지도 중심 이동 + 내 위치 마커 표시
