@@ -48,7 +48,6 @@ model Member {
   recipeScraps         RecipeScrap[]
   fridgeIngredients    FridgeIngredient[]
   groceryPurchaseItems GroceryPurchaseItem[]
-  policyScrapFolders   PolicyScrapFolder[]
   policyScraps         PolicyScrap[]
 
   @@map("members")
@@ -145,32 +144,39 @@ model GroceryPurchaseItem {
   @@map("grocery_purchase_items")
 }
 
-model PolicyScrapFolder {
-  id         BigInt   @id @default(autoincrement())
-  userId     String   @map("user_id") @db.Uuid
-  folderName String   @map("folder_name") @db.VarChar(50)
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+model Policy {
+  id              String    @id @db.VarChar(50)
+  name            String    @db.VarChar(255)
+  description     String?
+  keywords        String?   @db.VarChar(500)
+  largeCategory   String?   @map("large_category") @db.VarChar(100)
+  mediumCategory  String?   @map("medium_category") @db.VarChar(100)
+  ageMin          Int?      @map("age_min")
+  ageMax          Int?      @map("age_max")
+  noAgeLimit      Boolean   @default(false) @map("no_age_limit")
+  applyStartDate  DateTime? @map("apply_start_date") @db.Date
+  applyEndDate    DateTime? @map("apply_end_date") @db.Date
+  applyPeriodType String?   @map("apply_period_type") @db.VarChar(20)
+  applyPeriodText String?   @map("apply_period_text") @db.VarChar(100)
+  applicationUrl  String?   @map("application_url")
+  zipCd           String?   @map("zip_cd") @db.VarChar(500)
+  viewCount       Int       @default(0) @map("view_count")
+  syncedAt        DateTime  @map("synced_at") @db.Timestamptz(6)
 
-  user          Member        @relation(fields: [userId], references: [id])
-  policyScraps  PolicyScrap[]
+  scraps PolicyScrap[]
 
-  @@map("policy_scrap_folders")
+  @@map("policies")
 }
 
 model PolicyScrap {
-  id                   BigInt    @id @default(autoincrement())
-  userId               String    @map("user_id") @db.Uuid
-  policyId             String    @map("policy_id") @db.VarChar(255)
-  policyScrapFolderId  BigInt?   @map("policy_scrap_folder_id")
-  policyName           String    @map("policy_name") @db.VarChar(100)
-  supportType          String?   @map("support_type") @db.VarChar(100)
-  applyStartDate       DateTime? @map("apply_start_date") @db.Date
-  applyEndDate         DateTime? @map("apply_end_date") @db.Date
-  notificationSent     Boolean   @map("notification_sent")
-  createdAt            DateTime? @map("created_at") @db.Timestamptz(6)
+  id               BigInt   @id @default(autoincrement())
+  userId           String   @map("user_id") @db.Uuid
+  policyId         String   @map("policy_id") @db.VarChar(50)
+  notificationSent Boolean  @default(false) @map("notification_sent")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user              Member             @relation(fields: [userId], references: [id])
-  policyScrapFolder PolicyScrapFolder? @relation(fields: [policyScrapFolderId], references: [id])
+  user   Member @relation(fields: [userId], references: [id])
+  policy Policy @relation(fields: [policyId], references: [id])
 
   @@map("policy_scraps")
 }
