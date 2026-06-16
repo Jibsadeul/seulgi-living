@@ -1,6 +1,6 @@
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useEffect, useMemo, useRef } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import type { MapPlace } from '../model/map.model';
 
 interface MapResultBottomSheetProps {
@@ -41,81 +41,45 @@ export function MapResultBottomSheet({
       ref={sheetRef}
       index={-1}
       snapPoints={snapPoints}
+      bottomInset={bottomInset}
       enablePanDownToClose
       onClose={onClose}
-      backgroundStyle={styles.background}
-      handleIndicatorStyle={styles.handle}
+      backgroundStyle={{
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        backgroundColor: '#fff',
+      }}
+      handleIndicatorStyle={{ backgroundColor: '#D8D8D8', width: 36 }}
     >
-      <BottomSheetScrollView contentContainerStyle={styles.listContent}>
+      <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 120 }}>
         {places.map((item, index) => (
           <View key={item.id}>
             <Pressable
-              style={styles.item}
+              className="px-5 py-3.5"
               onPress={() => onSelectPlace(item)}
               android_ripple={{ color: '#f0f0f0' }}
             >
-              <View style={styles.itemMain}>
-                <Text style={styles.placeName} numberOfLines={1}>
+              <View className="flex-row items-center justify-between mb-1">
+                <Text
+                  className="flex-1 text-base font-semibold text-gray-90 mr-2"
+                  numberOfLines={1}
+                >
                   {item.place_name}
                 </Text>
                 {!!formatDistance(item.distance) && (
-                  <Text style={styles.distance}>{formatDistance(item.distance)}</Text>
+                  <Text className="text-sm font-medium text-main-100">
+                    {formatDistance(item.distance)}
+                  </Text>
                 )}
               </View>
-              <Text style={styles.address} numberOfLines={1}>
+              <Text className="text-sm text-gray-50" numberOfLines={1}>
                 {item.road_address_name || item.address_name}
               </Text>
             </Pressable>
-            {index < places.length - 1 && <View style={styles.separator} />}
+            {index < places.length - 1 && <View className="h-px bg-gray-10 mx-5" />}
           </View>
         ))}
       </BottomSheetScrollView>
     </BottomSheet>
   );
 }
-
-const styles = StyleSheet.create({
-  background: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    backgroundColor: '#fff',
-  },
-  handle: {
-    backgroundColor: '#ddd',
-    width: 36,
-  },
-  listContent: {
-    paddingBottom: 120,
-  },
-  item: {
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  itemMain: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  placeName: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1a1a1a',
-    marginRight: 8,
-  },
-  distance: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#EF7722',
-  },
-  address: {
-    fontSize: 13,
-    color: '#888',
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#f0f0f0',
-    marginHorizontal: 20,
-  },
-});

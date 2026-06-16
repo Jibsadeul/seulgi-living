@@ -1,4 +1,4 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { CATEGORY_LIST } from '../model/map.model';
 import type { CategoryLabel } from '../model/map.model';
 
@@ -9,22 +9,24 @@ interface MapCategoryFilterProps {
 
 export function MapCategoryFilter({ selected, onSelect }: MapCategoryFilterProps) {
   return (
-    <View style={styles.wrapper}>
+    <View className="absolute top-3 left-0 right-0 z-10">
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.container}
+        contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
       >
         {CATEGORY_LIST.map((category) => {
           const isSelected = selected === category.label;
           return (
             <TouchableOpacity
               key={category.label}
-              style={[styles.chip, isSelected && styles.chipSelected]}
+              className={`px-3.5 py-2 rounded-full shadow-sm ${isSelected ? 'bg-main-100' : 'bg-white'}`}
               onPress={() => onSelect(category.label)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+              <Text
+                className={`text-sm font-medium ${isSelected ? 'text-white font-semibold' : 'text-gray-80'}`}
+              >
                 {category.label}
               </Text>
             </TouchableOpacity>
@@ -34,40 +36,3 @@ export function MapCategoryFilter({ selected, onSelect }: MapCategoryFilterProps
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    position: 'absolute',
-    top: 12,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-  },
-  container: {
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  chipSelected: {
-    backgroundColor: '#EF7722',
-  },
-  chipText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#333',
-  },
-  chipTextSelected: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-});

@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import {
@@ -42,14 +42,14 @@ export function MapListScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
       <MapSearchBar
         onSearch={searchKeyword}
         onClear={clearSearchResults}
         isZeroResult={isZeroResult}
       />
 
-      <View style={styles.mapWrapper}>
+      <View className="flex-1 relative">
         <KakaoMapView webViewRef={webViewRef} onMessage={onWebViewMessage} />
 
         <MapCategoryFilter selected={selectedCategory} onSelect={selectCategory} />
@@ -74,14 +74,3 @@ export function MapListScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  mapWrapper: {
-    flex: 1,
-    position: 'relative',
-  },
-});

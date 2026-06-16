@@ -1,4 +1,4 @@
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import Svg, { Circle, Line } from 'react-native-svg';
 
 interface MapLocationButtonProps {
@@ -7,7 +7,11 @@ interface MapLocationButtonProps {
 
 export function MapLocationButton({ onPress }: MapLocationButtonProps) {
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity
+      className="absolute right-4 bottom-6 w-11 h-11 rounded-full bg-white items-center justify-center shadow z-10"
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
       <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
         <Circle cx="12" cy="12" r="4" stroke="#EF7722" strokeWidth="2" />
         <Circle cx="12" cy="12" r="9" stroke="#EF7722" strokeWidth="1.5" />
@@ -51,23 +55,3 @@ export function MapLocationButton({ onPress }: MapLocationButtonProps) {
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  button: {
-    position: 'absolute',
-    right: 16,
-    bottom: 24,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 5,
-    zIndex: 10,
-  },
-});

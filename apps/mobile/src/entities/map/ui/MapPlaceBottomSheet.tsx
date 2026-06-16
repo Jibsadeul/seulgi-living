@@ -1,5 +1,5 @@
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
-import { Linking, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { Linking, Text, TouchableOpacity, View } from 'react-native';
 import { useEffect, useRef } from 'react';
 import type { MapPlace } from '../model/map.model';
 
@@ -38,77 +38,40 @@ export function MapPlaceBottomSheet({
     <BottomSheet
       ref={sheetRef}
       index={-1}
-      snapPoints={['42%']}
+      snapPoints={['40%']}
+      bottomInset={bottomInset}
       enablePanDownToClose
       onClose={onClose}
-      backgroundStyle={styles.background}
-      handleIndicatorStyle={styles.handle}
+      backgroundStyle={{
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        backgroundColor: '#fff',
+      }}
+      handleIndicatorStyle={{ backgroundColor: '#D8D8D8', width: 36 }}
     >
-      <BottomSheetView style={styles.content}>
+      <BottomSheetView style={{ paddingHorizontal: 24, paddingTop: 4, paddingBottom: 80, gap: 6 }}>
         {place && (
-          <>
-            <Text style={styles.placeName} numberOfLines={1}>
+          <View className="gap-1.5">
+            <Text className="text-[17px] font-bold text-gray-90" numberOfLines={1}>
               {place.place_name}
             </Text>
 
-            <Text style={styles.address} numberOfLines={2}>
+            <Text className="text-[11px] text-gray-60 leading-4" numberOfLines={2}>
               {place.road_address_name || place.address_name}
             </Text>
 
-            {!!place.phone && <Text style={styles.phone}>{place.phone}</Text>}
+            {!!place.phone && <Text className="text-[11px] text-gray-60">{place.phone}</Text>}
 
-            <TouchableOpacity style={styles.button} onPress={openKakaoMap} activeOpacity={0.8}>
-              <Text style={styles.buttonText}>카카오맵으로 이동</Text>
+            <TouchableOpacity
+              className="mt-2.5 items-center justify-center bg-main-100 rounded-xl py-3.5"
+              onPress={openKakaoMap}
+              activeOpacity={0.8}
+            >
+              <Text className="text-[15px] font-semibold text-white">카카오맵으로 이동</Text>
             </TouchableOpacity>
-          </>
+          </View>
         )}
       </BottomSheetView>
     </BottomSheet>
   );
 }
-
-const styles = StyleSheet.create({
-  background: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    backgroundColor: '#fff',
-  },
-  handle: {
-    backgroundColor: '#D8D8D8',
-    width: 36,
-  },
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 4,
-    paddingBottom: 80,
-    gap: 6,
-  },
-  placeName: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1D1D1D',
-    marginBottom: 2,
-  },
-  address: {
-    fontSize: 11,
-    color: '#717171',
-    lineHeight: 16,
-  },
-  phone: {
-    fontSize: 11,
-    color: '#717171',
-  },
-  button: {
-    marginTop: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EF7722',
-    borderRadius: 12,
-    paddingVertical: 13,
-  },
-  buttonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#fff',
-  },
-});
