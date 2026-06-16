@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -68,85 +68,59 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     const active = isActive(name);
     const color = active ? ACTIVE_COLOR : INACTIVE_COLOR;
     return (
-      <Pressable key={name} style={styles.tabItem} onPress={() => navigateTo(name)}>
+      <Pressable
+        key={name}
+        className="flex-1 items-center justify-center gap-[5px]"
+        onPress={() => navigateTo(name)}
+      >
         <Icon width={22} height={22} color={color} />
-        <Text style={[styles.label, { color, fontWeight: active ? '600' : '400' }]}>{label}</Text>
+        <Text className="text-[10px]" style={{ color, fontWeight: active ? '600' : '400' }}>
+          {label}
+        </Text>
       </Pressable>
     );
   };
 
   return (
-    <View style={[styles.container, { height: containerHeight }]}>
-      <Svg width={width} height={containerHeight} style={StyleSheet.absoluteFill}>
+    <View
+      className="absolute bottom-0 left-0 right-0"
+      style={{
+        height: containerHeight,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
+      }}
+    >
+      <Svg
+        width={width}
+        height={containerHeight}
+        style={{ position: 'absolute', top: 0, left: 0, bottom: 0, right: 0 }}
+      >
         <Path d={barPath} fill="#FFFFFF" />
       </Svg>
 
-      <View style={[styles.tabsRow, { marginTop: BAR_TOP }]}>
-        <View style={styles.tabGroup}>{LEFT_TABS.map(renderTab)}</View>
-        <View style={styles.centerGap} />
-        <View style={styles.tabGroup}>{RIGHT_TABS.map(renderTab)}</View>
+      <View className="h-[72px] flex-row items-center px-2" style={{ marginTop: BAR_TOP }}>
+        <View className="flex-1 flex-row">{LEFT_TABS.map(renderTab)}</View>
+        <View className="w-16" />
+        <View className="flex-1 flex-row">{RIGHT_TABS.map(renderTab)}</View>
       </View>
 
-      <View style={styles.cameraWrapper} pointerEvents="box-none">
-        <Pressable style={styles.cameraButton} onPress={() => router.push('/(stack)/camera')}>
+      <View className="absolute top-0 left-0 right-0 items-center" pointerEvents="box-none">
+        <Pressable
+          className="w-16 h-16 rounded-full bg-main-100 items-center justify-center"
+          style={{
+            elevation: 6,
+            shadowColor: '#EF7722',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.8,
+            shadowRadius: 4,
+          }}
+          onPress={() => router.push('/(stack)/camera')}
+        >
           <CameraIcon width={28} height={28} />
         </Pressable>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-  },
-  tabsRow: {
-    height: BAR_HEIGHT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-  },
-  tabGroup: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  centerGap: {
-    width: 64,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-  },
-  label: {
-    fontSize: 10,
-  },
-  cameraWrapper: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  cameraButton: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#EF7722',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 6,
-    shadowColor: '#EF7722',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
-  },
-});
