@@ -31,6 +31,7 @@ export const getKakaoMapHtml = (apiKey: string): string => `
     var currentClickedPlace = null;
     var currentSearchKeyword = '';
     var isKeywordSearch = false; // 키워드 검색 시 결과 중심으로 지도 이동 (줌은 유지)
+    var locationMarker = null; // 내 위치 마커 — clearMarkers()로 제거되지 않음
 
     // 서울 시청을 중심으로, 확대/축소 레벨 4(기본값)의 지도를 띄움
     function init() {
@@ -198,10 +199,27 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       currentClickedPlace = null;
     }
 
-    // 지도 중심 이동
+    // 지도 중심 이동 + 내 위치 마커 표시
     function moveToLocation(lat, lng) {
       var latLng = new kakao.maps.LatLng(lat, lng);
       map.setCenter(latLng);
+
+      if (locationMarker) locationMarker.setMap(null);
+
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">'
+        + '<circle cx="10" cy="10" r="8" fill="#EF7722" stroke="white" stroke-width="2.5"/>'
+        + '</svg>';
+      var markerImage = new kakao.maps.MarkerImage(
+        'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+        new kakao.maps.Size(20, 20),
+        { offset: new kakao.maps.Point(10, 10) }
+      );
+      locationMarker = new kakao.maps.Marker({
+        map: map,
+        position: latLng,
+        image: markerImage,
+        zIndex: 10,
+      });
     }
 
     // libraries=services를 URL에 포함하면 SDK가 비동기 로드됨 → load() 콜백 안에서만 services 사용 가능
