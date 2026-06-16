@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   distance: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#FF6B35',
+    color: '#EF7722',
   },
   address: {
     fontSize: 13,

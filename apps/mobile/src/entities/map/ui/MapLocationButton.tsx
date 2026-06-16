@@ -9,14 +9,14 @@ export function MapLocationButton({ onPress }: MapLocationButtonProps) {
   return (
     <TouchableOpacity style={styles.button} onPress={onPress} activeOpacity={0.8}>
       <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-        <Circle cx="12" cy="12" r="4" stroke="#FF6B35" strokeWidth="2" />
-        <Circle cx="12" cy="12" r="9" stroke="#FF6B35" strokeWidth="1.5" />
+        <Circle cx="12" cy="12" r="4" stroke="#EF7722" strokeWidth="2" />
+        <Circle cx="12" cy="12" r="9" stroke="#EF7722" strokeWidth="1.5" />
         <Line
           x1="12"
           y1="1"
           x2="12"
           y2="5"
-          stroke="#FF6B35"
+          stroke="#EF7722"
           strokeWidth="1.5"
           strokeLinecap="round"
         />
@@ -25,7 +25,7 @@ export function MapLocationButton({ onPress }: MapLocationButtonProps) {
           y1="19"
           x2="12"
           y2="23"
-          stroke="#FF6B35"
+          stroke="#EF7722"
           strokeWidth="1.5"
           strokeLinecap="round"
         />
@@ -34,7 +34,7 @@ export function MapLocationButton({ onPress }: MapLocationButtonProps) {
           y1="12"
           x2="5"
           y2="12"
-          stroke="#FF6B35"
+          stroke="#EF7722"
           strokeWidth="1.5"
           strokeLinecap="round"
         />
@@ -43,7 +43,7 @@ export function MapLocationButton({ onPress }: MapLocationButtonProps) {
           y1="12"
           x2="23"
           y2="12"
-          stroke="#FF6B35"
+          stroke="#EF7722"
           strokeWidth="1.5"
           strokeLinecap="round"
         />

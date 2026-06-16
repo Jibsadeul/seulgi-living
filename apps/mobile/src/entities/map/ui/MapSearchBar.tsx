@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   searchButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#007AFF',
+    color: '#EF7722',
   },
   zeroResult: {
     fontSize: 12,

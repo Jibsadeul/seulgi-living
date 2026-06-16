@@ -146,12 +146,23 @@ export const getKakaoMapHtml = (apiKey: string): string => `
 
     // 검색 결과 마커 + 장소명 레이블 표시
     function displayMarkers(places) {
+      var pinSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="35" viewBox="0 0 24 35">'
+        + '<path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 23 12 23S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#EF7722"/>'
+        + '<circle cx="12" cy="12" r="5" fill="white"/>'
+        + '</svg>';
+      var markerImage = new kakao.maps.MarkerImage(
+        'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(pinSvg),
+        new kakao.maps.Size(24, 35),
+        { offset: new kakao.maps.Point(12, 35) }
+      );
+
       places.forEach(function(place) {
         var position = new kakao.maps.LatLng(place.y, place.x);
 
         var marker = new kakao.maps.Marker({
           map: map,
           position: position,
+          image: markerImage,
         });
 
         // 마커 아래 항상 보이는 장소명 레이블
@@ -201,7 +212,7 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       if (locationMarker) locationMarker.setMap(null);
 
       var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">'
-        + '<circle cx="10" cy="10" r="8" fill="#EF7722" stroke="white" stroke-width="2.5"/>'
+        + '<circle cx="10" cy="10" r="8" fill="#4285F4" stroke="white" stroke-width="2.5"/>'
         + '</svg>';
       var markerImage = new kakao.maps.MarkerImage(
         'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
