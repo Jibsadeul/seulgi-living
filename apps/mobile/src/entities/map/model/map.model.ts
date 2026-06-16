@@ -12,6 +12,7 @@ export const CATEGORY_LIST = [
 export type CategoryLabel = (typeof CATEGORY_LIST)[number]['label'];
 
 export interface MapPlace {
+  id: string; // 카카오 Places API 고유 식별자 — FlatList key로 사용
   place_name: string;
   address_name: string;
   road_address_name: string;

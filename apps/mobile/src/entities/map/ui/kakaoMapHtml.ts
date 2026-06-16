@@ -30,13 +30,14 @@ export const getKakaoMapHtml = (apiKey: string): string => `
     var ps;
     var currentClickedPlace = null;
     var currentSearchKeyword = '';
+    var isKeywordSearch = false; // 키워드 검색 시 결과 중심으로 지도 이동 (줌은 유지)
 
     // 서울 시청을 중심으로, 확대/축소 레벨 4(기본값)의 지도를 띄움
     function init() {
       var container = document.getElementById('map');
       var options = {
         center: new kakao.maps.LatLng(37.5665, 126.9780),
-        level: 4,
+        level: 3,
       };
       map = new kakao.maps.Map(container, options);
       infowindow = new kakao.maps.InfoWindow({ zIndex: 1 });
@@ -73,11 +74,11 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       }
     };
 
-    // 카테고리 검색
+    // 카테고리 검색 — 지도 위치/줌 그대로, 현재 중심 기준 1km 반경
     function searchCategory(payload) {
       clearMarkers();
+      isKeywordSearch = false;
       currentSearchKeyword = payload.keyword || payload.code || '';
-      // useMapBounds 대신 지도 중심 기준 반경 1km 검색 → 줌 레벨과 무관하게 일정 범위 보장
       var center = map.getCenter();
       var opts = {
         location: center,
@@ -92,10 +93,11 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       }
     }
 
-    // 키워드 검색 — radius 없이 location만 지정 (거리순 정렬용)
+    // 키워드 검색 — 결과 첫 번째 장소로 중심 이동 (줌은 유지)
     // radius를 지정하면 지도 중심 반경 내 결과만 반환되어 "논현 약국"처럼 키워드에 지역명이 포함된 경우 0건 발생
     function searchKeyword(keyword) {
       clearMarkers();
+      isKeywordSearch = true;
       currentSearchKeyword = keyword;
       var center = map.getCenter();
       var opts = {
@@ -110,7 +112,6 @@ export const getKakaoMapHtml = (apiKey: string): string => `
       var lat = parseFloat(y);
       var lng = parseFloat(x);
       map.setCenter(new kakao.maps.LatLng(lat, lng));
-      map.setLevel(3);
 
       for (var i = 0; i < markerPlaces.length; i++) {
         var mp = markerPlaces[i];
@@ -127,9 +128,12 @@ export const getKakaoMapHtml = (apiKey: string): string => `
     function placesSearchCB(data, status) {
       if (status === kakao.maps.services.Status.OK) {
         displayMarkers(data);
-        fitBoundsToMarkers(data);
+        if (isKeywordSearch && data.length > 0) {
+          map.setCenter(new kakao.maps.LatLng(parseFloat(data[0].y), parseFloat(data[0].x)));
+        }
         var places = data.map(function(p) {
           return {
+            id: p.id,
             place_name: p.place_name,
             address_name: p.address_name,
             road_address_name: p.road_address_name,
@@ -168,6 +172,7 @@ export const getKakaoMapHtml = (apiKey: string): string => `
           sendToRN({
             type: 'MARKER_CLICK',
             payload: {
+              id: place.id,
               place_name: place.place_name,
               address_name: place.address_name,
               road_address_name: place.road_address_name,
@@ -182,21 +187,6 @@ export const getKakaoMapHtml = (apiKey: string): string => `
 
         markers.push(marker);
       });
-    }
-
-    // 마커가 모두 보이도록 지도 범위 조정
-    function fitBoundsToMarkers(places) {
-      if (places.length === 0) return;
-      if (places.length === 1) {
-        map.setCenter(new kakao.maps.LatLng(parseFloat(places[0].y), parseFloat(places[0].x)));
-        map.setLevel(3);
-        return;
-      }
-      var bounds = new kakao.maps.LatLngBounds();
-      places.forEach(function(p) {
-        bounds.extend(new kakao.maps.LatLng(parseFloat(p.y), parseFloat(p.x)));
-      });
-      map.setBounds(bounds);
     }
 
     // 마커 지우기

@@ -1,4 +1,4 @@
-import BottomSheet, { BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useEffect, useMemo, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { MapPlace } from '../model/map.model';
@@ -44,31 +44,30 @@ export function MapResultBottomSheet({
       backgroundStyle={styles.background}
       handleIndicatorStyle={styles.handle}
     >
-      <BottomSheetFlatList
-        data={places}
-        keyExtractor={(item) => `${item.x}-${item.y}`}
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.item}
-            onPress={() => onSelectPlace(item)}
-            android_ripple={{ color: '#f0f0f0' }}
-          >
-            <View style={styles.itemMain}>
-              <Text style={styles.placeName} numberOfLines={1}>
-                {item.place_name}
+      <BottomSheetScrollView contentContainerStyle={styles.listContent}>
+        {places.map((item, index) => (
+          <View key={item.id}>
+            <Pressable
+              style={styles.item}
+              onPress={() => onSelectPlace(item)}
+              android_ripple={{ color: '#f0f0f0' }}
+            >
+              <View style={styles.itemMain}>
+                <Text style={styles.placeName} numberOfLines={1}>
+                  {item.place_name}
+                </Text>
+                {!!formatDistance(item.distance) && (
+                  <Text style={styles.distance}>{formatDistance(item.distance)}</Text>
+                )}
+              </View>
+              <Text style={styles.address} numberOfLines={1}>
+                {item.road_address_name || item.address_name}
               </Text>
-              {!!formatDistance(item.distance) && (
-                <Text style={styles.distance}>{formatDistance(item.distance)}</Text>
-              )}
-            </View>
-            <Text style={styles.address} numberOfLines={1}>
-              {item.road_address_name || item.address_name}
-            </Text>
-          </Pressable>
-        )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+            </Pressable>
+            {index < places.length - 1 && <View style={styles.separator} />}
+          </View>
+        ))}
+      </BottomSheetScrollView>
     </BottomSheet>
   );
 }
