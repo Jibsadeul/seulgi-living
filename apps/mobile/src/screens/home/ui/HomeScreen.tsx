@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
-import { getCurrentMember, type MemberMe } from '@/entities/members';
+import { getCurrentMember, type MemberMe, useMemberStore } from '@/entities/members';
 import { MemberInfoBottomSheet } from '@/screens/members';
 import { HomeFridgePreview } from './components/HomeFridgePreview';
 import { HomeHeader } from './components/HomeHeader';
@@ -10,6 +10,7 @@ import { HomeRecipeScrap } from './components/HomeRecipeScrap';
 export function HomeScreen() {
   const [member, setMember] = useState<MemberMe | null>(null);
   const [isMemberInfoOpen, setIsMemberInfoOpen] = useState(false);
+  const setMemberProfileFromMe = useMemberStore((state) => state.setMemberProfileFromMe);
 
   useEffect(() => {
     let isMounted = true;
@@ -17,13 +18,14 @@ export function HomeScreen() {
     getCurrentMember().then((currentMember) => {
       if (isMounted) {
         setMember(currentMember);
+        setMemberProfileFromMe(currentMember);
       }
     });
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [setMemberProfileFromMe]);
 
   return (
     <View className="flex-1 bg-surface-card">

@@ -1,23 +1,12 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { Header } from '@/shared/ui';
 
 export function RecipesDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>레시피 상세</Text>
-      <Text style={styles.sub}>ID: {id}</Text>
+    <View className="flex-1 bg-surface-card">
+      <Header title="레시피 상세" variant="detail" />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F9FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: { fontSize: 20, fontWeight: '600', color: '#1A1A1A' },
-  sub: { fontSize: 14, color: '#666', marginTop: 8 },
-});

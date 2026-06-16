@@ -8,10 +8,6 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
-enum RecipeSource {
-  PUBLIC
-  USER
-}
 
 model Sido {
   id       String    @id @db.VarChar(2)
@@ -48,7 +44,6 @@ model Member {
   recipeScraps         RecipeScrap[]
   fridgeIngredients    FridgeIngredient[]
   groceryPurchaseItems GroceryPurchaseItem[]
-  policyScrapFolders   PolicyScrapFolder[]
   policyScraps         PolicyScrap[]
 
   @@map("members")
@@ -70,18 +65,22 @@ model Recipe {
   userId         String?      @map("user_id") @db.Uuid
   publicRecipeId String?      @map("public_recipe_id") @db.VarChar(255)
   name           String       @db.VarChar(255)
-  category       String?      @db.VarChar(255)
-  method         String?      @db.VarChar(255)
-  ingredients    String?
-  hashTag        String?      @map("hash_tag") @db.VarChar(255)
-  mainImageUrl   String?      @map("main_image_url")
+  category       RecipeCategory
+  cookingMethod  CookingMethod  @map("cooking_method")
+  ingredientsRaw String?        @map("ingredients_raw")
+  ingredients    Json           @db.JsonB
+  
+  
+  mainImageUrl   String       @map("main_image_url")
   thumbnailUrl   String?      @map("thumbnail_url")
+  
   calories       Float?
   carbohydrate   Float?
   protein        Float?
   fat            Float?
   sodium         Float?
   sodiumTip      String?      @map("sodium_tip")
+  
   createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -99,9 +98,40 @@ model RecipeStep {
   content    String
   imageUrl   String? @map("image_url")
 
-  recipe Recipe @relation(fields: [recipeId], references: [id])
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
-  @@map("recipe_steps")
+  @@unique([recipeId, stepNumber])
+  @@map("recipe_step")
+}
+
+enum RecipeSource {
+  PUBLIC
+  USER
+
+  @@map("recipe_source")
+}
+
+enum CookingMethod {
+  GRILL
+  BOIL
+  STIR_FRY
+  STEAM
+  FRY
+  BRAISE
+  PAN_FRY
+  OTHER
+
+  @@map("cooking_method")
+}
+
+enum RecipeCategory {
+  SOUP_STEW
+  SIDE_DISH
+  RICE_PORRIDGE
+  DESSERT
+  OTHER
+
+  @@map("recipe_category")
 }
 
 model RecipeScrap {
@@ -110,8 +140,8 @@ model RecipeScrap {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   folderId  String?  @map("folder_id") @db.Uuid
 
-  recipe Recipe @relation(fields: [recipeId], references: [id])
-  user   Member @relation(fields: [userId], references: [id])
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  user   Member @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([recipeId, userId])
   @@map("recipe_scraps")
@@ -120,57 +150,80 @@ model RecipeScrap {
 model FridgeIngredient {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @map("user_id") @db.Uuid
-  name      String   @db.VarChar(255)
+  name      String   @db.VarChar(50)
+  imageKey String @default("DEFAULT") @map("image_key") @db.VarChar(50)
   quantity  Int
-  unit      String?  @db.VarChar(10)
-  category  String?  @db.VarChar(50)
+  unit      String   @db.VarChar(10)
+  category  IngredientCategory
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
-  user Member @relation(fields: [userId], references: [id])
+  user Member @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("fridge_ingredients")
 }
 
+enum IngredientCategory {
+  VEGETABLE
+  FRUIT
+  MEAT
+  SEAFOOD
+  EGG_DAIRY
+  GRAIN_NOODLE
+  PROCESSED
+  SAUCE_SEASONING
+  ETC
+
+  @@map("ingredient_category")
+}
+
+
 model GroceryPurchaseItem {
   id           String   @id @default(uuid()) @db.Uuid
   userId       String   @map("user_id") @db.Uuid
-  name         String   @db.VarChar(255)
-  quantityText String?  @map("quantity_text") @db.VarChar(50)
+  name         String   @db.VarChar(50)
+  quantityText String?  @map("quantity_text") @db.VarChar(20)
   price        Int
   purchasedAt  DateTime @map("purchased_at") @db.Timestamp(6)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user Member @relation(fields: [userId], references: [id])
+  user Member @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("grocery_purchase_items")
 }
 
-model PolicyScrapFolder {
-  id         BigInt   @id @default(autoincrement())
-  userId     String   @map("user_id") @db.Uuid
-  folderName String   @map("folder_name") @db.VarChar(50)
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+model Policy {
+  id              String    @id @db.VarChar(50)
+  name            String    @db.VarChar(255)
+  description     String?
+  keywords        String?   @db.VarChar(500)
+  largeCategory   String?   @map("large_category") @db.VarChar(100)
+  mediumCategory  String?   @map("medium_category") @db.VarChar(100)
+  ageMin          Int?      @map("age_min")
+  ageMax          Int?      @map("age_max")
+  noAgeLimit      Boolean   @default(false) @map("no_age_limit")
+  applyStartDate  DateTime? @map("apply_start_date") @db.Date
+  applyEndDate    DateTime? @map("apply_end_date") @db.Date
+  applyPeriodType String?   @map("apply_period_type") @db.VarChar(20)
+  applyPeriodText String?   @map("apply_period_text") @db.VarChar(100)
+  applicationUrl  String?   @map("application_url")
+  zipCd           String?   @map("zip_cd") @db.VarChar(500)
+  viewCount       Int       @default(0) @map("view_count")
+  syncedAt        DateTime  @map("synced_at") @db.Timestamptz(6)
 
-  user          Member        @relation(fields: [userId], references: [id])
-  policyScraps  PolicyScrap[]
+  scraps PolicyScrap[]
 
-  @@map("policy_scrap_folders")
+  @@map("policies")
 }
 
 model PolicyScrap {
-  id                   BigInt    @id @default(autoincrement())
-  userId               String    @map("user_id") @db.Uuid
-  policyId             String    @map("policy_id") @db.VarChar(255)
-  policyScrapFolderId  BigInt?   @map("policy_scrap_folder_id")
-  policyName           String    @map("policy_name") @db.VarChar(100)
-  supportType          String?   @map("support_type") @db.VarChar(100)
-  applyStartDate       DateTime? @map("apply_start_date") @db.Date
-  applyEndDate         DateTime? @map("apply_end_date") @db.Date
-  notificationSent     Boolean   @map("notification_sent")
-  createdAt            DateTime? @map("created_at") @db.Timestamptz(6)
+  id               BigInt   @id @default(autoincrement())
+  userId           String   @map("user_id") @db.Uuid
+  policyId         String   @map("policy_id") @db.VarChar(50)
+  notificationSent Boolean  @default(false) @map("notification_sent")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user              Member             @relation(fields: [userId], references: [id])
-  policyScrapFolder PolicyScrapFolder? @relation(fields: [policyScrapFolderId], references: [id])
+  user   Member @relation(fields: [userId], references: [id])
+  policy Policy @relation(fields: [policyId], references: [id])
 
   @@map("policy_scraps")
 }
