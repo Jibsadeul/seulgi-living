@@ -8,10 +8,6 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
-enum RecipeSource {
-  PUBLIC
-  USER
-}
 
 model Sido {
   id       String    @id @db.VarChar(2)
@@ -69,18 +65,22 @@ model Recipe {
   userId         String?      @map("user_id") @db.Uuid
   publicRecipeId String?      @map("public_recipe_id") @db.VarChar(255)
   name           String       @db.VarChar(255)
-  category       String?      @db.VarChar(255)
-  method         String?      @db.VarChar(255)
-  ingredients    String?
-  hashTag        String?      @map("hash_tag") @db.VarChar(255)
-  mainImageUrl   String?      @map("main_image_url")
+  category       RecipeCategory
+  cookingMethod  CookingMethod  @map("cooking_method")
+  ingredientsRaw String?        @map("ingredients_raw")
+  ingredients    Json           @db.JsonB
+  
+  
+  mainImageUrl   String       @map("main_image_url")
   thumbnailUrl   String?      @map("thumbnail_url")
+  
   calories       Float?
   carbohydrate   Float?
   protein        Float?
   fat            Float?
   sodium         Float?
   sodiumTip      String?      @map("sodium_tip")
+  
   createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -98,9 +98,40 @@ model RecipeStep {
   content    String
   imageUrl   String? @map("image_url")
 
-  recipe Recipe @relation(fields: [recipeId], references: [id])
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
-  @@map("recipe_steps")
+  @@unique([recipeId, stepNumber])
+  @@map("recipe_step")
+}
+
+enum RecipeSource {
+  PUBLIC
+  USER
+
+  @@map("recipe_source")
+}
+
+enum CookingMethod {
+  GRILL
+  BOIL
+  STIR_FRY
+  STEAM
+  FRY
+  BRAISE
+  PAN_FRY
+  OTHER
+
+  @@map("cooking_method")
+}
+
+enum RecipeCategory {
+  SOUP_STEW
+  SIDE_DISH
+  RICE_PORRIDGE
+  DESSERT
+  OTHER
+
+  @@map("recipe_category")
 }
 
 model RecipeScrap {
@@ -109,8 +140,8 @@ model RecipeScrap {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   folderId  String?  @map("folder_id") @db.Uuid
 
-  recipe Recipe @relation(fields: [recipeId], references: [id])
-  user   Member @relation(fields: [userId], references: [id])
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  user   Member @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([recipeId, userId])
   @@map("recipe_scraps")
@@ -119,27 +150,43 @@ model RecipeScrap {
 model FridgeIngredient {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @map("user_id") @db.Uuid
-  name      String   @db.VarChar(255)
+  name      String   @db.VarChar(50)
+  imageKey String @default("DEFAULT") @map("image_key") @db.VarChar(50)
   quantity  Int
-  unit      String?  @db.VarChar(10)
-  category  String?  @db.VarChar(50)
+  unit      String   @db.VarChar(10)
+  category  IngredientCategory
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
-  user Member @relation(fields: [userId], references: [id])
+  user Member @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("fridge_ingredients")
 }
 
+enum IngredientCategory {
+  VEGETABLE
+  FRUIT
+  MEAT
+  SEAFOOD
+  EGG_DAIRY
+  GRAIN_NOODLE
+  PROCESSED
+  SAUCE_SEASONING
+  ETC
+
+  @@map("ingredient_category")
+}
+
+
 model GroceryPurchaseItem {
   id           String   @id @default(uuid()) @db.Uuid
   userId       String   @map("user_id") @db.Uuid
-  name         String   @db.VarChar(255)
-  quantityText String?  @map("quantity_text") @db.VarChar(50)
+  name         String   @db.VarChar(50)
+  quantityText String?  @map("quantity_text") @db.VarChar(20)
   price        Int
   purchasedAt  DateTime @map("purchased_at") @db.Timestamp(6)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user Member @relation(fields: [userId], references: [id])
+  user Member @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("grocery_purchase_items")
 }

@@ -1,4 +1,4 @@
-import type { MemberMe } from '@/entities/members';
+import type { MemberMe, MemberProfileState } from '@/entities/members';
 
 export type MemberInfoMode = 'onboarding' | 'edit';
 
@@ -14,3 +14,9 @@ export type MemberInfoFormValues = {
 export type NicknameCheckState = 'idle' | 'checking' | 'available' | 'unavailable';
 
 export type MemberInfoSubmitResult = MemberMe;
+
+export type MemberInfoCloseState = {
+  hasBlankRequiredField: boolean;
+  isDirtyFromStoredProfile: boolean;
+  currentProfile: MemberProfileState;
+};
