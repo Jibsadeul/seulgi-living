@@ -1,19 +1,10 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View } from 'react-native';
+import { Header } from '@/shared/ui';
 
 export function RecipesListScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>레시피</Text>
+    <View className="flex-1 bg-surface-card">
+      <Header title="레시피" />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F9FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: { fontSize: 20, fontWeight: '600', color: '#1A1A1A' },
-});
