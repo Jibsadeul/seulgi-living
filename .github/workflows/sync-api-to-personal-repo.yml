@@ -46,5 +46,5 @@ jobs:
           git commit -m "Sync monorepo from organization repo: $GITHUB_SHA"
 
           git branch -M main
-          git remote add origin https://x-access-token:${{ secrets.DEPLOY_REPO_TOKEN }}@github.com/ansoo971/seulgi-living-api.git
+          git remote add origin https://x-access-token:${{ secrets.DEPLOY_REPO_TOKEN }}@github.com/kangansoo/seulgi-living-api.git
           git push -f origin main
