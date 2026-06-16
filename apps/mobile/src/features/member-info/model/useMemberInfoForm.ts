@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { checkNickname, memberBasicInfoSchema, type MemberMe } from '@/entities/members';
+import {
+  checkNickname,
+  memberBasicInfoSchema,
+  type MemberMe,
+  type MemberProfileState,
+  useMemberStore,
+} from '@/entities/members';
 import { getSidoList, getSigunguList, type Sido, type Sigungu } from '@/entities/regions';
 import { submitMemberInfo } from '../api/useMemberInfoSubmit';
 import type { MemberInfoFormValues, MemberInfoSubmitResult, NicknameCheckState } from './type';
@@ -30,7 +36,13 @@ const toInitialValues = (initialMember: MemberMe | null): MemberInfoFormValues =
   };
 };
 
+const normalizeProfileValue = (value: string | null) => value || null;
+
 export function useMemberInfoForm(initialMember: MemberMe | null) {
+  const storedNickname = useMemberStore((state) => state.nickname);
+  const storedBirthday = useMemberStore((state) => state.birthday);
+  const storedSidoId = useMemberStore((state) => state.sidoId);
+  const storedSigunguId = useMemberStore((state) => state.sigunguId);
   const [values, setValues] = useState<MemberInfoFormValues>(() => toInitialValues(initialMember));
   const [sidoList, setSidoList] = useState<Sido[]>([]);
   const [sigunguList, setSigunguList] = useState<Sigungu[]>([]);
@@ -95,6 +107,62 @@ export function useMemberInfoForm(initialMember: MemberMe | null) {
     return `${values.birthYear}-${values.birthMonth}-${values.birthDay}`;
   }, [values.birthDay, values.birthMonth, values.birthYear]);
 
+  const hasBlankRequiredField = useMemo(
+    () =>
+      !values.nickname.trim() ||
+      !values.birthYear ||
+      !values.birthMonth ||
+      !values.birthDay ||
+      !values.sidoId ||
+      !values.sigunguId,
+    [
+      values.birthDay,
+      values.birthMonth,
+      values.birthYear,
+      values.nickname,
+      values.sidoId,
+      values.sigunguId,
+    ],
+  );
+
+  const currentProfile = useMemo<MemberProfileState>(
+    () => ({
+      nickname: normalizeProfileValue(values.nickname.trim()),
+      birthday: normalizeProfileValue(birthday),
+      sidoId: normalizeProfileValue(values.sidoId),
+      sigunguId: normalizeProfileValue(values.sigunguId),
+    }),
+    [birthday, values.nickname, values.sidoId, values.sigunguId],
+  );
+
+  const baselineProfile = useMemo<MemberProfileState>(
+    () => ({
+      nickname: storedNickname ?? initialMember?.nickname ?? null,
+      birthday: storedBirthday ?? initialMember?.birthday ?? null,
+      sidoId: storedSidoId ?? initialMember?.sidoId ?? null,
+      sigunguId: storedSigunguId ?? initialMember?.sigunguId ?? null,
+    }),
+    [
+      initialMember?.birthday,
+      initialMember?.nickname,
+      initialMember?.sidoId,
+      initialMember?.sigunguId,
+      storedBirthday,
+      storedNickname,
+      storedSidoId,
+      storedSigunguId,
+    ],
+  );
+
+  const isDirtyFromStoredProfile = useMemo(
+    () =>
+      currentProfile.nickname !== baselineProfile.nickname ||
+      currentProfile.birthday !== baselineProfile.birthday ||
+      currentProfile.sidoId !== baselineProfile.sidoId ||
+      currentProfile.sigunguId !== baselineProfile.sigunguId,
+    [baselineProfile, currentProfile],
+  );
+
   const parsedInfo = useMemo(
     () =>
       memberBasicInfoSchema.safeParse({
@@ -107,7 +175,6 @@ export function useMemberInfoForm(initialMember: MemberMe | null) {
   );
 
   const canSubmit = parsedInfo.success && nicknameState === 'available' && !isSubmitting;
-  const canClose = parsedInfo.success;
 
   const updateNickname = (nickname: string) => {
     setValues((current) => ({ ...current, nickname }));
@@ -153,7 +220,6 @@ export function useMemberInfoForm(initialMember: MemberMe | null) {
 
     try {
       const result = await submitMemberInfo(parsedInfo.data);
-      setMessage('저장되었습니다.');
       return result;
     } catch {
       setMessage('저장에 실패했습니다. 다시 시도해주세요.');
@@ -172,7 +238,9 @@ export function useMemberInfoForm(initialMember: MemberMe | null) {
     isRegionLoading,
     isSubmitting,
     canSubmit,
-    canClose,
+    currentProfile,
+    hasBlankRequiredField,
+    isDirtyFromStoredProfile,
     updateNickname,
     updateField,
     confirmNickname,
