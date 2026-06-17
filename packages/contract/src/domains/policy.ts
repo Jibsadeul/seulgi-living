@@ -16,7 +16,7 @@ export const policySchema = z.object({
   applyStartDate: z.string().nullable().optional(),
   applyEndDate: z.string().nullable().optional(),
   applicationUrl: z.string().nullable().optional(),
-  viewCount: z.coerce.number().default(0),
+  viewCount: z.number(),
   daysLeft: z.number().nullable(),
   tags: z.array(z.enum(['popular', 'many_scraps', 'deadline_soon'])),
   isScrapped: z.boolean(),
