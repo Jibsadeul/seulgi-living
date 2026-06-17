@@ -22,6 +22,10 @@ export function jsonResponse<T>(data: T, status = 200) {
   return NextResponse.json(data, { status, headers: corsHeaders });
 }
 
+export function noContentResponse() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
+}
+
 export function errorResponse(error: unknown) {
   if (error instanceof AppError) {
     return NextResponse.json(

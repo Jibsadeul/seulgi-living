@@ -241,3 +241,20 @@ export async function getRecipeDetail(
     },
   });
 }
+
+export async function scrapRecipe(memberId: string, recipeId: string): Promise<void> {
+  const recipe = await prisma.recipe.findUnique({ where: { id: recipeId }, select: { id: true } });
+  if (!recipe) throw errors.notFound('레시피를 찾을 수 없습니다.');
+
+  const existing = await prisma.recipeScrap.findFirst({ where: { recipeId, userId: memberId } });
+  if (!existing) {
+    await prisma.recipeScrap.create({ data: { recipeId, userId: memberId } });
+  }
+}
+
+export async function unscrapRecipe(memberId: string, recipeId: string): Promise<void> {
+  const recipe = await prisma.recipe.findUnique({ where: { id: recipeId }, select: { id: true } });
+  if (!recipe) throw errors.notFound('레시피를 찾을 수 없습니다.');
+
+  await prisma.recipeScrap.deleteMany({ where: { recipeId, userId: memberId } });
+}
