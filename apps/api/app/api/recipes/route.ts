@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
-import { getRecipeList, resolveRecipeListMemberId } from '@/services/recipes/recipes.service';
+import { getRecipeList } from '@/services/recipes/recipes.service';
 import { withHandler } from '@/shared/lib/handler';
+import { getCurrentMemberId } from '@/shared/middleware/auth';
 import { jsonResponse, optionsResponse } from '@/shared/lib/response';
 
 function toQueryObject(searchParams: URLSearchParams) {
@@ -15,7 +16,7 @@ function toQueryObject(searchParams: URLSearchParams) {
 }
 
 export const GET = withHandler(async (request: NextRequest) => {
-  const memberId = await resolveRecipeListMemberId(request.headers.get('x-member-id'));
+  const memberId = await getCurrentMemberId(request);
   const recipes = await getRecipeList(toQueryObject(request.nextUrl.searchParams), {
     userId: memberId,
   });
