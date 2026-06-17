@@ -8,10 +8,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, x-member-id',
 };
 
-export function optionsResponse() {
+export function optionsResponse(methods = corsHeaders['Access-Control-Allow-Methods']) {
   return new NextResponse(null, {
     status: 204,
-    headers: corsHeaders,
+    headers: {
+      ...corsHeaders,
+      'Access-Control-Allow-Methods': methods,
+    },
   });
 }
 
@@ -28,11 +31,14 @@ export function errorResponse(error: unknown) {
   }
 
   if (error instanceof ZodError) {
+    const firstError = error.errors[0];
+    const path = firstError?.path.length ? `${firstError.path.join('.')}: ` : '';
+
     return NextResponse.json(
       {
         error: {
           code: 'VALIDATION_ERROR',
-          message: error.errors[0]?.message ?? '요청 값이 올바르지 않습니다.',
+          message: firstError ? `${path}${firstError.message}` : '요청 값이 올바르지 않습니다.',
         },
       },
       { status: 400, headers: corsHeaders },
