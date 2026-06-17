@@ -50,6 +50,7 @@ export function PoliciesListScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const nickname = useMemberStore((s) => s.nickname);
+
   const { data: banner, isError: bannerError } = usePolicyBanner();
   const {
     data: recommended,
