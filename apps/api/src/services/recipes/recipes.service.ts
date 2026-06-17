@@ -6,6 +6,7 @@ import {
   type RecipeListQuery,
 } from '@repo/contract';
 import { prisma } from '@repo/db';
+import { errors } from '@/shared/lib/error';
 
 type ListRecipesContext = {
   userId?: string;
@@ -157,4 +158,14 @@ export async function getRecipeList(queryInput: unknown, context: ListRecipesCon
     totalCount,
     hasNextPage: offset + rows.length < totalCount,
   });
+}
+
+export async function scrapRecipe(memberId: string, recipeId: string): Promise<void> {
+  const recipe = await prisma.recipe.findUnique({ where: { id: recipeId }, select: { id: true } });
+  if (!recipe) throw errors.notFound('레시피를 찾을 수 없습니다.');
+
+  const existing = await prisma.recipeScrap.findFirst({ where: { recipeId, userId: memberId } });
+  if (!existing) {
+    await prisma.recipeScrap.create({ data: { recipeId, userId: memberId } });
+  }
 }
