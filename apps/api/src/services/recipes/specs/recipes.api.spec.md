@@ -14,6 +14,8 @@
 
 인증은 선택이다. 로그인 사용자는 레시피별 실제 스크랩 여부를 응답하고, 비로그인 사용자는 `isSaved`를 `false`로 응답한다.
 
+정식 인증 미들웨어가 아직 구현되지 않았으므로 API는 임시로 `x-member-id` 헤더를 현재 사용자 식별자로 사용한다.
+
 ### 요청 예시
 
 ```text
@@ -109,6 +111,10 @@
 ### 규칙
 
 - 데이터는 DB의 `recipes` 테이블을 기준으로 조회한다.
+- `x-member-id` 헤더가 있으면 해당 member를 현재 사용자로 보고 `recipe_scraps` 기준으로 `isSaved`를 계산한다.
+- `x-member-id` 헤더가 없으면 mock DB 확인을 위해 `deletedAt`이 없는 첫 member를 현재 사용자로 사용한다.
+- 사용할 수 있는 member가 없으면 비로그인 요청으로 보고 모든 레시피의 `isSaved`를 `false`로 응답한다.
+- 정식 인증 도입 시 현재 사용자 확인은 `shared/middleware/auth.ts` 기반으로 교체한다.
 - 기본 목록은 `source`가 `PUBLIC`인 레시피와 `USER`인 레시피를 모두 포함한다.
 - `imageUrl`은 `thumbnailUrl`이 있으면 `thumbnailUrl`, 없으면 `mainImageUrl` 값을 응답한다.
 - `keyword`는 레시피 `name`과 `ingredients`의 `items` 문자열을 대상으로 검색한다.
@@ -129,4 +135,5 @@
 - 요리 방법과 요리 종류 필터는 각각 복수 선택을 지원한다.
 - 로그인 사용자는 각 레시피의 실제 스크랩 여부를 확인할 수 있다.
 - 비로그인 사용자는 모든 레시피의 `isSaved`가 `false`로 응답된다.
+- `x-member-id` 헤더가 없고 DB에 활성 member가 1개 있으면 해당 member의 스크랩 여부가 `isSaved`에 반영된다.
 - 잘못된 페이지네이션 값은 오류로 응답된다.
