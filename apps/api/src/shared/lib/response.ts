@@ -8,10 +8,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, x-member-id',
 };
 
-export function optionsResponse() {
+export function optionsResponse(methods = corsHeaders['Access-Control-Allow-Methods']) {
   return new NextResponse(null, {
     status: 204,
-    headers: corsHeaders,
+    headers: {
+      ...corsHeaders,
+      'Access-Control-Allow-Methods': methods,
+    },
   });
 }
 

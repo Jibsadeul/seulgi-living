@@ -24,5 +24,5 @@ export async function GET(request: Request) {
 }
 
 export function OPTIONS() {
-  return optionsResponse();
+  return optionsResponse('GET, POST, OPTIONS');
 }
