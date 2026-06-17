@@ -206,7 +206,8 @@ model Policy {
   applyPeriodType String?   @map("apply_period_type") @db.VarChar(20)
   applyPeriodText String?   @map("apply_period_text") @db.VarChar(100)
   applicationUrl  String?   @map("application_url")
-  zipCd           String?   @map("zip_cd") @db.VarChar(500)
+  noZipLimit      Boolean   @default(false) @map("no_zip_limit")
+  zipCd           String?   @map("zip_cd")
   viewCount       Int       @default(0) @map("view_count")
   syncedAt        DateTime  @map("synced_at") @db.Timestamptz(6)
 
