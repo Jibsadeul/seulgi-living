@@ -1,5 +1,4 @@
 import { scrapRecipe, unscrapRecipe } from '@/services/recipes/recipes.service';
-import { errors } from '@/shared/lib/error';
 import { withHandler } from '@/shared/lib/handler';
 import { noContentResponse, optionsResponse } from '@/shared/lib/response';
 import { getCurrentMemberId } from '@/shared/middleware/auth';
@@ -11,8 +10,6 @@ export function OPTIONS() {
 
 export const POST = withHandler(async (request: NextRequest, { params }) => {
   const memberId = await getCurrentMemberId(request);
-  if (!memberId) throw errors.unauthorized();
-
   const { recipeId } = await params;
   await scrapRecipe(memberId, recipeId);
 
@@ -21,8 +18,6 @@ export const POST = withHandler(async (request: NextRequest, { params }) => {
 
 export const DELETE = withHandler(async (request: NextRequest, { params }) => {
   const memberId = await getCurrentMemberId(request);
-  if (!memberId) throw errors.unauthorized();
-
   const { recipeId } = await params;
   await unscrapRecipe(memberId, recipeId);
 

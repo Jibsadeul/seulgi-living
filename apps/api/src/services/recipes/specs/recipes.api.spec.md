@@ -268,7 +268,7 @@
 
 `POST /api/recipes/:id/scrap`
 
-인증이 필요하다. `getCurrentMemberId`로 현재 사용자를 확인하고, 반환값이 `undefined`면 `401`을 반환한다.
+인증이 필요하다. `getCurrentMemberId`가 인증 실패 시 `401`을 throw한다.
 
 ### 경로 파라미터
 
@@ -282,7 +282,7 @@
 
 ### 규칙
 
-- `getCurrentMemberId`로 현재 사용자를 확인한다. 반환값이 `undefined`면 `401`을 반환한다.
+- `getCurrentMemberId`로 현재 사용자를 확인한다. 인증 실패 시 `getCurrentMemberId`가 `401`을 throw한다.
 - 존재하지 않는 레시피 ID면 `404`를 반환한다.
 - 이미 스크랩한 레시피를 다시 요청하면 오류 없이 `204`를 반환한다 (멱등).
 - 정식 인증 도입 시 `getCurrentMemberId` 내부 구현을 교체한다.
@@ -292,13 +292,13 @@
 - 유효한 레시피 ID와 유효한 사용자로 요청하면 `recipe_scraps`에 레코드가 생성되고 `204`를 반환한다.
 - 이미 스크랩된 레시피에 재요청해도 `204`를 반환하며 중복 레코드가 생기지 않는다.
 - 존재하지 않는 레시피 ID는 `404`를 반환한다.
-- `getCurrentMemberId`가 `undefined`를 반환하면 `401`을 반환한다.
+- 인증 실패 시 `401`을 반환한다.
 
 ## 레시피 스크랩 해제
 
 `DELETE /api/recipes/:id/scrap`
 
-인증이 필요하다. `getCurrentMemberId`로 현재 사용자를 확인하고, 반환값이 `undefined`면 `401`을 반환한다.
+인증이 필요하다. `getCurrentMemberId`가 인증 실패 시 `401`을 throw한다.
 
 ### 경로 파라미터
 
@@ -312,7 +312,7 @@
 
 ### 규칙
 
-- `getCurrentMemberId`로 현재 사용자를 확인한다. 반환값이 `undefined`면 `401`을 반환한다.
+- `getCurrentMemberId`로 현재 사용자를 확인한다. 인증 실패 시 `getCurrentMemberId`가 `401`을 throw한다.
 - 존재하지 않는 레시피 ID면 `404`를 반환한다.
 - 스크랩 레코드가 없는 경우 오류 없이 `204`를 반환한다 (멱등).
 - 정식 인증 도입 시 `getCurrentMemberId` 내부 구현을 교체한다.
@@ -322,4 +322,4 @@
 - 스크랩된 레시피에 요청하면 `recipe_scraps` 레코드가 삭제되고 `204`를 반환한다.
 - 스크랩하지 않은 레시피에 요청해도 `204`를 반환한다.
 - 존재하지 않는 레시피 ID는 `404`를 반환한다.
-- `getCurrentMemberId`가 `undefined`를 반환하면 `401`을 반환한다.
+- 인증 실패 시 `401`을 반환한다.
