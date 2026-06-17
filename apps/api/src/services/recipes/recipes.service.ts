@@ -3,9 +3,11 @@ import {
   recipeDetailResponseSchema,
   recipeListQuerySchema,
   recipeListResponseSchema,
+  recipeScrapListQuerySchema,
   type CookingMethod,
   type RecipeCategory,
   type RecipeListQuery,
+  type RecipeScrapListQuery,
 } from '@repo/contract';
 import { prisma } from '@repo/db';
 import { errors } from '@/shared/lib/error';
@@ -108,6 +110,13 @@ function getOrderByClause(sort: RecipeListQuery['sort']) {
   return 'r.created_at DESC, r.id DESC';
 }
 
+function toPagination(query: RecipeScrapListQuery) {
+  return {
+    limit: query.size,
+    offset: (query.page - 1) * query.size,
+  };
+}
+
 export async function getRecipeList(queryInput: unknown, context: ListRecipesContext = {}) {
   const query = recipeListQuerySchema.parse(queryInput);
   const { sql: whereClause, values: whereValues } = buildWhereClause(query);
@@ -152,6 +161,57 @@ export async function getRecipeList(queryInput: unknown, context: ListRecipesCon
       OFFSET ${offsetParam}
     `,
     ...rowValues,
+  );
+
+  return recipeListResponseSchema.parse({
+    items: rows.map((row) => ({
+      ...row,
+      scrapCount: toNumber(row.scrapCount),
+    })),
+    page: query.page,
+    size: query.size,
+    totalCount,
+    hasNextPage: offset + rows.length < totalCount,
+  });
+}
+
+export async function getScrappedRecipeList(queryInput: unknown, memberId: string) {
+  const query = recipeScrapListQuerySchema.parse(queryInput);
+  const { limit, offset } = toPagination(query);
+
+  const countRows = await prisma.$queryRawUnsafe<CountRow[]>(
+    `
+      SELECT COUNT(*)::int AS "totalCount"
+      FROM recipe_scraps user_scrap
+      JOIN recipes r ON r.id = user_scrap.recipe_id
+      WHERE user_scrap.user_id = $1::uuid
+    `,
+    memberId,
+  );
+  const totalCount = toNumber(countRows[0]?.totalCount);
+
+  const rows = await prisma.$queryRawUnsafe<RecipeListRow[]>(
+    `
+      SELECT
+        r.id::text AS id,
+        r.name AS name,
+        r.category::text AS category,
+        r.cooking_method::text AS "cookingMethod",
+        COALESCE(r.thumbnail_url, r.main_image_url) AS "imageUrl",
+        COUNT(all_scraps.recipe_id)::int AS "scrapCount",
+        TRUE AS "isSaved"
+      FROM recipe_scraps user_scrap
+      JOIN recipes r ON r.id = user_scrap.recipe_id
+      LEFT JOIN recipe_scraps all_scraps ON all_scraps.recipe_id = r.id
+      WHERE user_scrap.user_id = $1::uuid
+      GROUP BY r.id, user_scrap.created_at
+      ORDER BY user_scrap.created_at DESC, r.id DESC
+      LIMIT $2
+      OFFSET $3
+    `,
+    memberId,
+    limit,
+    offset,
   );
 
   return recipeListResponseSchema.parse({

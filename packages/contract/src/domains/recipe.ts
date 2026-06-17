@@ -30,6 +30,11 @@ export const recipeListQuerySchema = z.object({
   category: z.union([recipeCategorySchema, z.array(recipeCategorySchema)]).optional(),
 });
 
+export const recipeScrapListQuerySchema = recipeListQuerySchema.pick({
+  page: true,
+  size: true,
+});
+
 export const recipePreviewSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1),
@@ -88,6 +93,7 @@ export type CookingMethod = z.infer<typeof cookingMethodSchema>;
 export type RecipeCategory = z.infer<typeof recipeCategorySchema>;
 export type RecipeSort = z.infer<typeof recipeSortSchema>;
 export type RecipeListQuery = z.infer<typeof recipeListQuerySchema>;
+export type RecipeScrapListQuery = z.infer<typeof recipeScrapListQuerySchema>;
 export type RecipePreview = z.infer<typeof recipePreviewSchema>;
 export type RecipeListResponse = z.infer<typeof recipeListResponseSchema>;
 export type RecipeDetailParams = z.infer<typeof recipeDetailParamsSchema>;
