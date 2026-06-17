@@ -1,26 +1,25 @@
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import Svg, { Path } from 'react-native-svg';
 import HomeIcon from '../../../assets/icons/Home.svg';
 import RecipeIcon from '../../../assets/icons/Recipe.svg';
 import PolicyIcon from '../../../assets/icons/Policy.svg';
 import MapIcon from '../../../assets/icons/Map.svg';
-import CameraIcon from '../../../assets/icons/Camera.svg';
+import { CameraCaptureMenu } from '@/features/camera-capture';
 
 const ACTIVE_COLOR = '#2D2D2D';
 const INACTIVE_COLOR = '#8E8E8E';
 const BAR_HEIGHT = 72;
 const CONTAINER_HEIGHT = 87;
-const BAR_TOP = CONTAINER_HEIGHT - BAR_HEIGHT; // 15
+const BAR_TOP = CONTAINER_HEIGHT - BAR_HEIGHT;
 const NOTCH_HALF_W = 36;
 const NOTCH_H = 32;
 const NOTCH_CURVE = 14;
 
 const LEFT_TABS = [
   { name: 'index', label: '홈', Icon: HomeIcon },
-  { name: 'recipes', label: '레시피', Icon: RecipeIcon },
+  { name: 'recipes', label: '요리', Icon: RecipeIcon },
 ] as const;
 
 const RIGHT_TABS = [
@@ -32,7 +31,6 @@ type TabConfig = (typeof LEFT_TABS)[number] | (typeof RIGHT_TABS)[number];
 
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
   const { width } = useWindowDimensions();
 
   const containerHeight = CONTAINER_HEIGHT + insets.bottom;
@@ -54,11 +52,13 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const navigateTo = (name: string) => {
     const route = state.routes.find((r) => r.name === name);
     if (!route) return;
+
     const event = navigation.emit({
       type: 'tabPress',
       target: route.key,
       canPreventDefault: true,
     });
+
     if (!isActive(name) && !event.defaultPrevented) {
       navigation.navigate(name);
     }
@@ -67,6 +67,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const renderTab = ({ name, label, Icon }: TabConfig) => {
     const active = isActive(name);
     const color = active ? ACTIVE_COLOR : INACTIVE_COLOR;
+
     return (
       <Pressable
         key={name}
@@ -106,21 +107,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         <View className="flex-1 flex-row">{RIGHT_TABS.map(renderTab)}</View>
       </View>
 
-      <View className="absolute top-0 left-0 right-0 items-center" pointerEvents="box-none">
-        <Pressable
-          className="w-16 h-16 rounded-full bg-main-100 items-center justify-center"
-          style={{
-            elevation: 6,
-            shadowColor: '#EF7722',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.8,
-            shadowRadius: 4,
-          }}
-          onPress={() => router.push('/(stack)/camera')}
-        >
-          <CameraIcon width={28} height={28} />
-        </Pressable>
-      </View>
+      <CameraCaptureMenu bottomOffset={containerHeight} />
     </View>
   );
 }
