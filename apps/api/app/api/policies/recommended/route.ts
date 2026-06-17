@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getPolicies } from '@/services/policies/policies.service';
+import { getRecommendedPolicies } from '@/services/policies/policies.service';
 import { withHandler } from '@/shared/lib/handler';
 import { jsonResponse, optionsResponse } from '@/shared/lib/response';
 
@@ -11,7 +11,6 @@ export function OPTIONS() {
   return optionsResponse();
 }
 
-export const GET = withHandler(async (request) => {
-  const query = Object.fromEntries(request.nextUrl.searchParams.entries());
-  return jsonResponse(await getPolicies(query, getMemberId(request)));
-});
+export const GET = withHandler(async (request) =>
+  jsonResponse(await getRecommendedPolicies(getMemberId(request))),
+);

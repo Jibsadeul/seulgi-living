@@ -12,10 +12,10 @@
 
 */
 -- DropForeignKey
-ALTER TABLE "policy_scrap_folders" DROP CONSTRAINT "policy_scrap_folders_user_id_fkey";
+ALTER TABLE IF EXISTS "policy_scrap_folders" DROP CONSTRAINT IF EXISTS "policy_scrap_folders_user_id_fkey";
 
 -- DropForeignKey
-ALTER TABLE "policy_scraps" DROP CONSTRAINT "policy_scraps_policy_scrap_folder_id_fkey";
+ALTER TABLE "policy_scraps" DROP CONSTRAINT IF EXISTS "policy_scraps_policy_scrap_folder_id_fkey";
 
 -- AlterTable
 ALTER TABLE "policy_scraps" DROP COLUMN "apply_end_date",
@@ -29,7 +29,7 @@ ALTER COLUMN "created_at" SET NOT NULL,
 ALTER COLUMN "created_at" SET DEFAULT CURRENT_TIMESTAMP;
 
 -- DropTable
-DROP TABLE "policy_scrap_folders";
+DROP TABLE IF EXISTS "policy_scrap_folders";
 
 -- CreateTable
 CREATE TABLE "policies" (
