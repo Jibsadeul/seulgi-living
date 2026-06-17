@@ -113,7 +113,11 @@
 | category | ENUM(ingredient_category: VEGETABLE, FRUIT, MEAT, SEAFOOD, EGG_DAIRY, GRAIN_NOODLE, PROCESSED, SAUCE_SEASONING, ETC) | NOT NULL |
 | created_at | TIMESTAMP | NOT NULL |
 
-**`grocery_purchase_items`** (장 본 목록, 구 `food_expense_items`)
+---
+
+### 장보기 내역
+
+**`grocery_purchase_items`** (구 `food_expense_items`)
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
 | id | UUID | PK, NOT NULL |
@@ -160,7 +164,7 @@ sido ──< sigungu ──< members
                      ├──< fridge_ingredients
                      ├──< grocery_purchase_items
                      ├──< policy_scraps >── policy_scrap_folders
-                     └──< recipe_scraps >── recipes ──< recipe_steps
+                     └──< recipe_scraps >── recipes ──< recipe_step
                                             (source=USER) ──< members
 ```
 
