@@ -1,4 +1,4 @@
-import { getRecipeList } from '@/services/recipes/recipes.service';
+import { getRecipeList, resolveRecipeListMemberId } from '@/services/recipes/recipes.service';
 import { errorResponse, jsonResponse, optionsResponse } from '@/shared/lib/response';
 
 function toQueryObject(searchParams: URLSearchParams) {
@@ -15,7 +15,8 @@ function toQueryObject(searchParams: URLSearchParams) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const recipes = await getRecipeList(toQueryObject(searchParams));
+    const memberId = await resolveRecipeListMemberId(request.headers.get('x-member-id'));
+    const recipes = await getRecipeList(toQueryObject(searchParams), { userId: memberId });
 
     return jsonResponse(recipes);
   } catch (error) {

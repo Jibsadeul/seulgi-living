@@ -25,6 +25,10 @@ type CountRow = {
   totalCount: number | bigint | string;
 };
 
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 function normalizeArray<T>(value: T | T[] | undefined) {
   if (!value) {
     return undefined;
@@ -99,6 +103,29 @@ function getOrderByClause(sort: RecipeListQuery['sort']) {
   }
 
   return 'r.created_at DESC, r.id DESC';
+}
+
+export async function resolveRecipeListMemberId(memberId: string | null) {
+  if (memberId) {
+    if (!isUuid(memberId)) {
+      return undefined;
+    }
+
+    const member = await prisma.member.findFirst({
+      where: { id: memberId, deletedAt: null },
+      select: { id: true },
+    });
+
+    return member?.id;
+  }
+
+  const member = await prisma.member.findFirst({
+    where: { deletedAt: null },
+    orderBy: { createdAt: 'asc' },
+    select: { id: true },
+  });
+
+  return member?.id;
 }
 
 export async function getRecipeList(queryInput: unknown, context: ListRecipesContext = {}) {
