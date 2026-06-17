@@ -59,15 +59,15 @@
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
 | id | UUID | PK, NOT NULL |
-| source | ENUM('PUBLIC','USER') | NOT NULL |
+| source | ENUM(recipe_source: PUBLIC, USER) | NOT NULL |
 | user_id | UUID | FK → members.id, NULL (공공 레시피는 NULL) |
 | public_recipe_id | VARCHAR(255) | NULL |
 | name | VARCHAR(255) | NOT NULL |
-| category | VARCHAR(255) | NULL |
-| method | VARCHAR(255) | NULL |
-| ingredients | TEXT | NULL |
-| hash_tag | VARCHAR(255) | NULL |
-| main_image_url | TEXT | NULL |
+| category | ENUM(recipe_category: SOUP_STEW, SIDE_DISH, RICE_PORRIDGE, DESSERT, OTHER) | NOT NULL |
+| cooking_method | ENUM(cooking_method: GRILL, BOIL, STIR_FRY, STEAM, FRY, BRAISE, PAN_FRY, OTHER) | NOT NULL |
+| ingredients_raw | TEXT | NULL |
+| ingredients | JSONB | NOT NULL |
+| main_image_url | TEXT | NOT NULL |
 | thumbnail_url | TEXT | NULL |
 | calories | DOUBLE | NULL |
 | carbohydrate | DOUBLE | NULL |
@@ -78,7 +78,7 @@
 | created_at | TIMESTAMPTZ | NOT NULL |
 | updated_at | TIMESTAMPTZ | NOT NULL |
 
-**`recipe_steps`**
+**`recipe_step`**
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
 | id | UUID | PK, NOT NULL |
@@ -87,11 +87,13 @@
 | content | TEXT | NOT NULL |
 | image_url | TEXT | NULL |
 
+> UNIQUE(recipe_id, step_number)
+
 **`recipe_scraps`**
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
-| recipe_id | UUID | FK → recipes.id, NOT NULL |
-| user_id | UUID | FK → members.id, NOT NULL |
+| recipe_id | UUID | PK(복합), FK → recipes.id, NOT NULL |
+| user_id | UUID | PK(복합), FK → members.id, NOT NULL |
 | created_at | TIMESTAMPTZ | NOT NULL |
 | folder_id | UUID | NULL |
 
@@ -104,10 +106,11 @@
 |------|------|------|
 | id | UUID | PK, NOT NULL |
 | user_id | UUID | FK → members.id, NOT NULL |
-| name | VARCHAR(255) | NOT NULL |
+| name | VARCHAR(50) | NOT NULL |
+| image_key | VARCHAR(50) | NOT NULL, DEFAULT 'DEFAULT' |
 | quantity | INTEGER | NOT NULL |
-| unit | VARCHAR(10) | NULL |
-| category | ENUM | NULL |
+| unit | VARCHAR(10) | NOT NULL |
+| category | ENUM(ingredient_category: VEGETABLE, FRUIT, MEAT, SEAFOOD, EGG_DAIRY, GRAIN_NOODLE, PROCESSED, SAUCE_SEASONING, ETC) | NOT NULL |
 | created_at | TIMESTAMP | NOT NULL |
 
 **`grocery_purchase_items`** (장 본 목록, 구 `food_expense_items`)
@@ -115,11 +118,11 @@
 |------|------|------|
 | id | UUID | PK, NOT NULL |
 | user_id | UUID | FK → members.id, NOT NULL |
-| name | VARCHAR(255) | NOT NULL |
-| quantity_text | VARCHAR(50) | NULL |
+| name | VARCHAR(50) | NOT NULL |
+| quantity_text | VARCHAR(20) | NULL |
 | price | INTEGER | NOT NULL |
 | purchased_at | TIMESTAMP | NOT NULL |
-| created_at | TIMESTAMP | NOT NULL |
+| created_at | TIMESTAMPTZ | NOT NULL |
 
 ---
 
