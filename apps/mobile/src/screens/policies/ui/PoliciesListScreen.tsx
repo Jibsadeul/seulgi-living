@@ -1,22 +1,40 @@
-import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
+import { FlatList, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   PolicyBannerCard,
   PolicyCard,
   usePolicyBanner,
   useRecommendedPolicies,
 } from '@/entities/policies';
+import { useMemberStore } from '@/entities/members';
 import { Header, SearchBar, SkeletonCard, showAppToast } from '@/shared/ui';
 import { useEffect } from 'react';
+import FireIcon from '@assets/icons/policy/fire.svg';
+import HouseIcon from '@assets/icons/policy/house.svg';
+import FinanceIcon from '@assets/icons/policy/fiance.svg';
+import JobIcon from '@assets/icons/policy/job.svg';
+import WelfareIcon from '@assets/icons/policy/welfare.svg';
+const popularIcon = require('@assets/icons/policy/popular.png') as number;
+import LightIcon from '@assets/icons/policy/light.svg';
+import FilterIcon from '@assets/icons/filter.svg';
 
-const QUICK_CATEGORIES = [
-  { icon: '🔥', label: '마감임박', params: { deadlineOnly: true } },
-  { icon: '🏠', label: '주거', params: { largeCategory: '주거' } },
-  { icon: '💰', label: '금융', params: { largeCategory: '금융' } },
-  { icon: '💼', label: '일자리', params: { largeCategory: '일자리' } },
-  { icon: '🤝', label: '복지', params: { largeCategory: '복지' } },
-  { icon: '🚀', label: '창업', params: { largeCategory: '창업' } },
-  { icon: '📚', label: '교육', params: { largeCategory: '교육' } },
+type QuickCategory = {
+  label: string;
+  params: Record<string, unknown>;
+} & (
+  | { Icon: React.ComponentType<{ width: number; height: number }>; image?: never }
+  | { Icon?: never; image: number }
+);
+
+const QUICK_CATEGORIES: QuickCategory[] = [
+  { Icon: FireIcon, label: '마감임박', params: { deadlineOnly: true } },
+  { Icon: HouseIcon, label: '주거', params: { largeCategory: '주거' } },
+  { Icon: FinanceIcon, label: '금융', params: { largeCategory: '금융' } },
+  { Icon: JobIcon, label: '일자리', params: { largeCategory: '일자리' } },
+  { Icon: WelfareIcon, label: '복지', params: { largeCategory: '복지' } },
+  { image: popularIcon, label: '인기정책', params: { sortBy: 'viewCount' } },
 ];
 
 const FILTER_BUTTONS = [
@@ -26,8 +44,12 @@ const FILTER_BUTTONS = [
   { label: '기간', key: 'period' },
 ];
 
+const TAB_BAR_HEIGHT = 87;
+
 export function PoliciesListScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const nickname = useMemberStore((s) => s.nickname);
   const { data: banner, isError: bannerError } = usePolicyBanner();
   const {
     data: recommended,
@@ -53,63 +75,118 @@ export function PoliciesListScreen() {
 
   return (
     <View className="flex-1 bg-surface-card">
-      <Header title="청년 정책" />
+      <Header title="정책" />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom }}
+      >
         {/* 마감임박 배너 */}
         {banner && (
-          <View className="mt-4">
-            <PolicyBannerCard banner={banner} />
+          <View className="mt-4 mb-5">
+            <PolicyBannerCard banner={banner} nickname={nickname} />
           </View>
         )}
 
         {/* 검색창 */}
-        <View className="mt-4 mb-3">
+        <View className="mb-4 px-3">
           <SearchBar
-            placeholder="일자리, 주거, 금융 등 키워드로 검색해 보세요"
+            placeholder="월세, 통장, 대출 등 키워드를 검색해 보세요"
             onPress={handleSearchPress}
           />
         </View>
 
-        {/* 필터 버튼 */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 mb-4">
+        {/* 필터 칩 */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="mb-5"
+          contentContainerStyle={{ paddingHorizontal: 20, gap: 7, alignItems: 'center' }}
+        >
+          <View
+            className="bg-main-100 rounded-full items-center justify-center"
+            style={{ width: 28, height: 28 }}
+          >
+            <FilterIcon width={14} height={14} color="#FFFFFF" />
+          </View>
           {FILTER_BUTTONS.map((btn) => (
             <Pressable
               key={btn.key}
               onPress={() => handleCategoryPress({ [btn.key]: '' })}
-              className="mr-2 px-4 py-2 bg-surface-default border border-gray-20 rounded-full"
+              className="flex-row items-center bg-surface-default border border-gray-30 rounded-full"
+              style={{ paddingHorizontal: 13, paddingVertical: 6, gap: 5 }}
             >
-              <Text className="text-xs font-medium text-gray-70">{btn.label}</Text>
+              <Text style={{ fontSize: 12, fontWeight: '500', color: '#8F9098', lineHeight: 16 }}>
+                {btn.label}
+              </Text>
+              <Ionicons name="chevron-down" size={13} color="#8F9098" />
             </Pressable>
           ))}
         </ScrollView>
 
-        {/* 빠른 탐색 카테고리 */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 mb-6">
-          {QUICK_CATEGORIES.map((cat) => (
-            <Pressable
-              key={cat.label}
-              onPress={() => handleCategoryPress(cat.params)}
-              className="mr-3 items-center"
-            >
-              <View className="w-14 h-14 bg-surface-default rounded-2xl items-center justify-center mb-1 shadow-sm">
-                <Text className="text-2xl">{cat.icon}</Text>
-              </View>
-              <Text className="text-xs text-gray-70">{cat.label}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+        {/* 빠른 탐색 */}
+        <View className="px-5 mb-5">
+          <Text style={{ fontSize: 18, fontWeight: '600', color: '#24252C', marginBottom: 14 }}>
+            빠른 탐색
+          </Text>
 
-        {/* 맞춤 정책 추천 */}
-        <View className="px-4 mb-6">
-          <Text className="text-base font-bold text-gray-90 mb-3">맞춤 추천</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 16 }}
+          >
+            {QUICK_CATEGORIES.map(({ label, params, ...rest }) => (
+              <Pressable
+                key={label}
+                onPress={() => handleCategoryPress(params)}
+                className="items-center"
+                style={{ gap: 8 }}
+              >
+                <View
+                  className="items-center justify-center bg-surface-default"
+                  style={{
+                    width: 55,
+                    height: 55,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: '#DEC1B2',
+                  }}
+                >
+                  {'Icon' in rest && rest.Icon ? (
+                    <rest.Icon width={28} height={28} />
+                  ) : (
+                    <Image
+                      source={(rest as { image: number }).image}
+                      style={{ width: 28, height: 28 }}
+                    />
+                  )}
+                </View>
+                <Text style={{ fontSize: 10, fontWeight: '500', color: '#574237', lineHeight: 12 }}>
+                  {label}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* 맞춤 추천 */}
+        <View className="mb-6">
+          <View className="flex-row items-center px-5 mb-3" style={{ gap: 6 }}>
+            <LightIcon width={21} height={21} />
+            <Text style={{ fontSize: 18, fontWeight: '600', color: '#24252C' }}>
+              {nickname ? `${nickname}님 맞춤 추천` : '맞춤 추천'}
+            </Text>
+          </View>
 
           {recommendedLoading && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 10, gap: 8 }}
+            >
               {[0, 1, 2].map((i) => (
-                <View key={i} className="mr-3">
-                  <SkeletonCard width={256} height={220} />
-                </View>
+                <SkeletonCard key={i} width={295} height={232} />
               ))}
             </ScrollView>
           )}
@@ -121,6 +198,7 @@ export function PoliciesListScreen() {
               data={recommended}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => <PolicyCard policy={item} />}
+              contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 10 }}
               scrollEventThrottle={16}
             />
           )}
@@ -128,8 +206,8 @@ export function PoliciesListScreen() {
           {!recommendedLoading &&
             (!recommended || recommended.length === 0) &&
             !recommendedError && (
-              <View className="items-center py-8">
-                <Text className="text-sm text-gray-50 mb-3">
+              <View className="items-center py-8 px-5">
+                <Text className="text-sm text-gray-50 mb-3 text-center">
                   아직 맞춤 정책이 없어요. 프로필을 완성해 보세요!
                 </Text>
                 <Pressable

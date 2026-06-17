@@ -1,5 +1,6 @@
 const BASE_URL = 'https://www.youthcenter.go.kr/go/ythip/getPlcy';
 
+// 정책 원본 저장
 export interface YouthPolicyRaw {
   plcyNo: string;
   plcyNm: string;
@@ -21,6 +22,7 @@ export interface YouthPolicyRaw {
   lastMdfcnDt?: string;
 }
 
+// 정책 api 응답 구조
 interface YouthPolicyListResponse {
   resultCode: number;
   result: {
@@ -33,6 +35,7 @@ interface YouthPolicyListResponse {
   };
 }
 
+// 정책 api 데이터 패치
 export async function fetchYouthPolicies(
   pageNum: number,
   pageSize = 100,
@@ -49,7 +52,7 @@ export async function fetchYouthPolicies(
   });
 
   const response = await fetch(`${BASE_URL}?${params}`, {
-    next: { revalidate: 0 },
+    next: { revalidate: 0 }, // 캐싱옵션 -> 초 수만큼 캐시 유지
   });
 
   if (!response.ok) throw new Error(`Youth Policy API error: ${response.status}`);
