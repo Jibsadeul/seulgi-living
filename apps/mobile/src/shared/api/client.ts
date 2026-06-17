@@ -22,14 +22,20 @@ function isApiErrorBody(value: unknown): value is ApiErrorBody {
   return Boolean(value && typeof value === 'object' && 'error' in value);
 }
 
-async function readJson(response: Response): Promise<unknown> {
+async function readJson(response: Response, url: string): Promise<unknown> {
   const text = await response.text();
 
   if (!text) {
     return null;
   }
 
-  return JSON.parse(text) as unknown;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    throw new Error(
+      `API 응답이 JSON이 아닙니다. (${response.status} ${url}) EXPO_PUBLIC_API_BASE_URL과 API 서버 실행 상태를 확인해주세요.`,
+    );
+  }
 }
 
 export async function apiRequest<T>(
@@ -47,12 +53,13 @@ export async function apiRequest<T>(
     headers.set('x-member-id', TEST_MEMBER_ID);
   }
 
-  const response = await fetch(toUrl(path), {
+  const url = toUrl(path);
+  const response = await fetch(url, {
     method: options.method ?? 'GET',
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
   });
-  const json = await readJson(response);
+  const json = await readJson(response, url);
 
   if (!response.ok) {
     const message =
