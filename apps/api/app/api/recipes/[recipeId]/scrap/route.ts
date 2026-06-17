@@ -1,9 +1,9 @@
-import { NextRequest } from 'next/server';
 import { scrapRecipe, unscrapRecipe } from '@/services/recipes/recipes.service';
-import { withHandler } from '@/shared/lib/handler';
-import { getCurrentMemberId } from '@/shared/middleware/auth';
-import { noContentResponse, optionsResponse } from '@/shared/lib/response';
 import { errors } from '@/shared/lib/error';
+import { withHandler } from '@/shared/lib/handler';
+import { noContentResponse, optionsResponse } from '@/shared/lib/response';
+import { getCurrentMemberId } from '@/shared/middleware/auth';
+import { NextRequest } from 'next/server';
 
 export function OPTIONS() {
   return optionsResponse('POST, DELETE, OPTIONS');
@@ -13,8 +13,8 @@ export const POST = withHandler(async (request: NextRequest, { params }) => {
   const memberId = await getCurrentMemberId(request);
   if (!memberId) throw errors.unauthorized();
 
-  const { id } = await params;
-  await scrapRecipe(memberId, id);
+  const { recipeId } = await params;
+  await scrapRecipe(memberId, recipeId);
 
   return noContentResponse();
 });
@@ -23,8 +23,8 @@ export const DELETE = withHandler(async (request: NextRequest, { params }) => {
   const memberId = await getCurrentMemberId(request);
   if (!memberId) throw errors.unauthorized();
 
-  const { id } = await params;
-  await unscrapRecipe(memberId, id);
+  const { recipeId } = await params;
+  await unscrapRecipe(memberId, recipeId);
 
   return noContentResponse();
 });
