@@ -1,4 +1,6 @@
 import {
+  recipeDetailParamsSchema,
+  recipeDetailResponseSchema,
   recipeListQuerySchema,
   recipeListResponseSchema,
   type CookingMethod,
@@ -9,6 +11,10 @@ import { prisma } from '@repo/db';
 import { errors } from '@/shared/lib/error';
 
 type ListRecipesContext = {
+  userId?: string;
+};
+
+type GetRecipeDetailContext = {
   userId?: string;
 };
 
@@ -157,6 +163,82 @@ export async function getRecipeList(queryInput: unknown, context: ListRecipesCon
     size: query.size,
     totalCount,
     hasNextPage: offset + rows.length < totalCount,
+  });
+}
+
+export async function getRecipeDetail(
+  recipeIdInput: unknown,
+  context: GetRecipeDetailContext = {},
+) {
+  const { recipeId } = recipeDetailParamsSchema.parse({ recipeId: recipeIdInput });
+  const recipe = await prisma.recipe.findFirst({
+    where: {
+      id: recipeId,
+      source: { in: ['PUBLIC', 'USER'] },
+    },
+    select: {
+      id: true,
+      name: true,
+      category: true,
+      cookingMethod: true,
+      mainImageUrl: true,
+      ingredients: true,
+      sodiumTip: true,
+      user: {
+        select: {
+          nickname: true,
+        },
+      },
+      recipeSteps: {
+        orderBy: {
+          stepNumber: 'asc',
+        },
+        select: {
+          imageUrl: true,
+          content: true,
+        },
+      },
+      recipeScraps: context.userId
+        ? {
+            where: {
+              userId: context.userId,
+            },
+            select: {
+              userId: true,
+            },
+          }
+        : false,
+      _count: {
+        select: {
+          recipeScraps: true,
+        },
+      },
+    },
+  });
+
+  if (!recipe) {
+    throw errors.notFound('레시피를 찾을 수 없습니다.');
+  }
+
+  return recipeDetailResponseSchema.parse({
+    scrap: {
+      scrapCount: recipe._count.recipeScraps,
+      isSaved: context.userId ? recipe.recipeScraps.length > 0 : false,
+    },
+    recipe: {
+      id: recipe.id,
+      authorNickname: recipe.user?.nickname ?? null,
+      name: recipe.name,
+      category: recipe.category,
+      cookingMethod: recipe.cookingMethod,
+      mainImageUrl: recipe.mainImageUrl,
+      ingredients: recipe.ingredients,
+      steps: recipe.recipeSteps.map((step) => ({
+        imageUrl: step.imageUrl,
+        description: step.content,
+      })),
+      sodiumTip: recipe.sodiumTip,
+    },
   });
 }
 
