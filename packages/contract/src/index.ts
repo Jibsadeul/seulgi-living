@@ -3,6 +3,7 @@ export * from './common/pagination';
 export * from './common/response';
 
 export * from './domains/camera';
+export * from './domains/auth';
 export * from './domains/chat';
 export * from './domains/fridge';
 export * from './domains/grocery';
