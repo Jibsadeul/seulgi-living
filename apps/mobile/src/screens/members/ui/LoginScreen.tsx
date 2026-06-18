@@ -21,7 +21,9 @@ export function LoginScreen() {
           <Text className="text-base font-semibold text-gray-90">로고</Text>
         </View>
       </View>
-      <LoginForm onSuccess={handleSuccess} />
+      <View className="mb-4">
+        <LoginForm onSuccess={handleSuccess} />
+      </View>
     </View>
   );
 }
