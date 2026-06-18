@@ -30,7 +30,7 @@ model Sigungu {
 
 model Member {
   id        String    @id @default(uuid()) @db.Uuid
-  kakaoId   String    @map("kakao_id") @db.VarChar(255)
+  kakaoId   String    @unique @map("kakao_id") @db.VarChar(255)
   sigunguId String?   @map("sigungu_id") @db.VarChar(5)
   email     String?   @db.VarChar(255)
   nickname  String?   @db.VarChar(100)

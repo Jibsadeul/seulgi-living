@@ -1,5 +1,25 @@
-﻿// ⚠️ 이 Feature에서만 필요한 특수 Mutation만 여기에 작성
-//    단순 CRUD는 entities/members/api 에서 직접 사용할 것
-export const useLoginSubmit = () => {
-  // TODO: 카카오 인가코드 → POST /auth/kakao → JWT 저장
+import { kakaoLoginResponseSchema } from '@repo/contract';
+import { apiRequest } from '@/shared/api/client';
+import { saveTokens } from '@/shared/api/authSession';
+
+type SubmitKakaoLoginPayload = {
+  code: string;
+  redirectUri: string;
 };
+
+export async function submitKakaoLogin(payload: SubmitKakaoLoginPayload) {
+  const response = await apiRequest('/api/auth/kakao', kakaoLoginResponseSchema, {
+    method: 'POST',
+    body: payload,
+    skipAuth: true,
+  });
+
+  await saveTokens({
+    accessToken: response.accessToken,
+    refreshToken: response.refreshToken,
+  });
+
+  return response.member;
+}
+
+export const useLoginSubmit = () => submitKakaoLogin;

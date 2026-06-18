@@ -1,7 +1,35 @@
-import { Redirect } from 'expo-router';
+import { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { getCurrentMember, useMemberStore } from '@/entities/members';
 
-// TODO: 실제 토큰 확인 후 교체
 export default function Index() {
-  const isAuthenticated = true;
-  return <Redirect href={isAuthenticated ? '/(tabs)/' : '/(auth)/login'} />;
+  const router = useRouter();
+  const setMemberProfileFromMe = useMemberStore((state) => state.setMemberProfileFromMe);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getCurrentMember()
+      .then((member) => {
+        if (!isMounted) return;
+        setMemberProfileFromMe(member);
+        router.replace(member.isBasicInfoComplete ? '/(tabs)/' : '/(auth)/onboarding');
+      })
+      .catch(() => {
+        if (isMounted) {
+          router.replace('/(auth)/login');
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [router, setMemberProfileFromMe]);
+
+  return (
+    <View className="flex-1 items-center justify-center bg-white">
+      <ActivityIndicator color="#EF7722" />
+    </View>
+  );
 }
