@@ -72,3 +72,62 @@
 - `category`가 enum 범위 밖이면 `400`을 반환한다
 - 인증 실패 시 `401`을 반환한다
 - 같은 이름의 재료를 두 번 추가하면 `fridge_ingredients`에 별도 행 2개가 생성된다
+
+---
+
+## 재료 전체 조회
+
+`GET /api/fridge`
+
+인증이 필요하다. `getCurrentMemberId`가 인증 실패 시 `401`을 throw한다.
+
+쿼리 파라미터 없음.
+
+### 응답
+
+| 필드  | 타입               | 설명      |
+| ----- | ------------------ | --------- |
+| items | FridgeIngredient[] | 재료 목록 |
+
+`FridgeIngredient`는 다음 필드를 포함한다.
+
+| 필드      | 타입               | 설명                |
+| --------- | ------------------ | ------------------- |
+| id        | string             | 재료 ID (UUID)      |
+| name      | string             | 재료명              |
+| imageKey  | string             | 이미지 키           |
+| category  | IngredientCategory | 카테고리            |
+| quantity  | number             | 수량                |
+| unit      | string             | 단위                |
+| createdAt | string             | 추가 일시 (ISO8601) |
+
+### 응답 예시
+
+```json
+{
+  "items": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "우유",
+      "imageKey": "MILK",
+      "category": "EGG_DAIRY",
+      "quantity": 2,
+      "unit": "L",
+      "createdAt": "2025-05-06T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+### 규칙
+
+- `getCurrentMemberId`로 현재 사용자 확인. 인증 실패 시 `401` throw
+- 현재 사용자의 재료만 반환
+- 정렬은 `createdAt DESC` 고정
+- 재료가 없으면 `items`는 빈 배열로 반환
+
+## 검증 기준
+
+- 유효한 요청 시 현재 사용자의 `fridge_ingredients` 전체를 `200`으로 반환
+- 재료가 없으면 `{ "items": [] }`를 반환한다
+- 인증 실패 시 `401`을 반환한다
