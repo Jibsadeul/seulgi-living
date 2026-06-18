@@ -76,6 +76,17 @@ export async function loginWithKakao(body: unknown) {
   });
 }
 
+export async function logout(memberId: string) {
+  await prisma.refreshToken.deleteMany({ where: { userId: memberId } });
+}
+
+export async function withdraw(memberId: string) {
+  await prisma.$transaction([
+    prisma.member.update({ where: { id: memberId }, data: { deletedAt: new Date() } }),
+    prisma.refreshToken.deleteMany({ where: { userId: memberId } }),
+  ]);
+}
+
 export async function refreshAuthToken(body: unknown) {
   const payload = refreshTokenRequestSchema.parse(body);
   const tokenHash = hashRefreshToken(payload.refreshToken);

@@ -78,7 +78,7 @@
 | created_at | TIMESTAMPTZ | NOT NULL |
 | updated_at | TIMESTAMPTZ | NOT NULL |
 
-**`recipe_step`**
+**`recipe_steps`**
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
 | id | UUID | PK, NOT NULL |
@@ -110,7 +110,7 @@
 | image_key | VARCHAR(50) | NOT NULL, DEFAULT 'DEFAULT' |
 | quantity | INTEGER | NOT NULL |
 | unit | VARCHAR(10) | NOT NULL |
-| category | ENUM(ingredient_category: VEGETABLE, FRUIT, MEAT, SEAFOOD, EGG_DAIRY, GRAIN_NOODLE, PROCESSED, SAUCE_SEASONING, ETC) | NOT NULL |
+| category | ENUM(fridge_ingredient_category: VEGETABLE, FRUIT, MEAT, SEAFOOD, EGG_DAIRY, GRAIN_NOODLE, PROCESSED, SAUCE_SEASONING, OTHER) | NOT NULL |
 | created_at | TIMESTAMP | NOT NULL |
 
 ---
@@ -164,7 +164,7 @@ sido ──< sigungu ──< members
                      ├──< fridge_ingredients
                      ├──< grocery_purchase_items
                      ├──< policy_scraps >── policy_scrap_folders
-                     └──< recipe_scraps >── recipes ──< recipe_step
+                     └──< recipe_scraps >── recipes ──< recipe_steps
                                             (source=USER) ──< members
 ```
 
