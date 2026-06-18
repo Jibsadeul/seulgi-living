@@ -1,11 +1,7 @@
-import { NextRequest } from 'next/server';
 import { getPolicies } from '@/services/policies/policies.service';
 import { withHandler } from '@/shared/lib/handler';
 import { jsonResponse, optionsResponse } from '@/shared/lib/response';
-
-function getMemberId(request: NextRequest) {
-  return request.headers.get('x-member-id');
-}
+import { getCurrentMemberId } from '@/shared/middleware/auth';
 
 export function OPTIONS() {
   return optionsResponse();
@@ -13,5 +9,5 @@ export function OPTIONS() {
 
 export const GET = withHandler(async (request) => {
   const query = Object.fromEntries(request.nextUrl.searchParams.entries());
-  return jsonResponse(await getPolicies(query, getMemberId(request)));
+  return jsonResponse(await getPolicies(query, (await getCurrentMemberId(request)) ?? null));
 });

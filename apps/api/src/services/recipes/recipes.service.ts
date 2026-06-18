@@ -1,13 +1,22 @@
 import {
+  recipeDetailParamsSchema,
+  recipeDetailResponseSchema,
   recipeListQuerySchema,
   recipeListResponseSchema,
+  recipeScrapListQuerySchema,
   type CookingMethod,
   type RecipeCategory,
   type RecipeListQuery,
+  type RecipeScrapListQuery,
 } from '@repo/contract';
 import { prisma } from '@repo/db';
+import { errors } from '@/shared/lib/error';
 
 type ListRecipesContext = {
+  userId?: string;
+};
+
+type GetRecipeDetailContext = {
   userId?: string;
 };
 
@@ -101,6 +110,13 @@ function getOrderByClause(sort: RecipeListQuery['sort']) {
   return 'r.created_at DESC, r.id DESC';
 }
 
+function toPagination(query: RecipeScrapListQuery) {
+  return {
+    limit: query.size,
+    offset: (query.page - 1) * query.size,
+  };
+}
+
 export async function getRecipeList(queryInput: unknown, context: ListRecipesContext = {}) {
   const query = recipeListQuerySchema.parse(queryInput);
   const { sql: whereClause, values: whereValues } = buildWhereClause(query);
@@ -157,4 +173,148 @@ export async function getRecipeList(queryInput: unknown, context: ListRecipesCon
     totalCount,
     hasNextPage: offset + rows.length < totalCount,
   });
+}
+
+export async function getScrappedRecipeList(queryInput: unknown, memberId: string) {
+  const query = recipeScrapListQuerySchema.parse(queryInput);
+  const { limit, offset } = toPagination(query);
+
+  const countRows = await prisma.$queryRawUnsafe<CountRow[]>(
+    `
+      SELECT COUNT(*)::int AS "totalCount"
+      FROM recipe_scraps user_scrap
+      JOIN recipes r ON r.id = user_scrap.recipe_id
+      WHERE user_scrap.user_id = $1::uuid
+    `,
+    memberId,
+  );
+  const totalCount = toNumber(countRows[0]?.totalCount);
+
+  const rows = await prisma.$queryRawUnsafe<RecipeListRow[]>(
+    `
+      SELECT
+        r.id::text AS id,
+        r.name AS name,
+        r.category::text AS category,
+        r.cooking_method::text AS "cookingMethod",
+        COALESCE(r.thumbnail_url, r.main_image_url) AS "imageUrl",
+        COUNT(all_scraps.recipe_id)::int AS "scrapCount",
+        TRUE AS "isSaved"
+      FROM recipe_scraps user_scrap
+      JOIN recipes r ON r.id = user_scrap.recipe_id
+      LEFT JOIN recipe_scraps all_scraps ON all_scraps.recipe_id = r.id
+      WHERE user_scrap.user_id = $1::uuid
+      GROUP BY r.id, user_scrap.created_at
+      ORDER BY user_scrap.created_at DESC, r.id DESC
+      LIMIT $2
+      OFFSET $3
+    `,
+    memberId,
+    limit,
+    offset,
+  );
+
+  return recipeListResponseSchema.parse({
+    items: rows.map((row) => ({
+      ...row,
+      scrapCount: toNumber(row.scrapCount),
+    })),
+    page: query.page,
+    size: query.size,
+    totalCount,
+    hasNextPage: offset + rows.length < totalCount,
+  });
+}
+
+export async function getRecipeDetail(
+  recipeIdInput: unknown,
+  context: GetRecipeDetailContext = {},
+) {
+  const { recipeId } = recipeDetailParamsSchema.parse({ recipeId: recipeIdInput });
+  const recipe = await prisma.recipe.findFirst({
+    where: {
+      id: recipeId,
+      source: { in: ['PUBLIC', 'USER'] },
+    },
+    select: {
+      id: true,
+      name: true,
+      category: true,
+      cookingMethod: true,
+      mainImageUrl: true,
+      ingredients: true,
+      sodiumTip: true,
+      user: {
+        select: {
+          nickname: true,
+        },
+      },
+      recipeSteps: {
+        orderBy: {
+          stepNumber: 'asc',
+        },
+        select: {
+          imageUrl: true,
+          content: true,
+        },
+      },
+      recipeScraps: context.userId
+        ? {
+            where: {
+              userId: context.userId,
+            },
+            select: {
+              userId: true,
+            },
+          }
+        : false,
+      _count: {
+        select: {
+          recipeScraps: true,
+        },
+      },
+    },
+  });
+
+  if (!recipe) {
+    throw errors.notFound('레시피를 찾을 수 없습니다.');
+  }
+
+  return recipeDetailResponseSchema.parse({
+    scrap: {
+      scrapCount: recipe._count.recipeScraps,
+      isSaved: context.userId ? recipe.recipeScraps.length > 0 : false,
+    },
+    recipe: {
+      id: recipe.id,
+      authorNickname: recipe.user?.nickname ?? null,
+      name: recipe.name,
+      category: recipe.category,
+      cookingMethod: recipe.cookingMethod,
+      mainImageUrl: recipe.mainImageUrl,
+      ingredients: recipe.ingredients,
+      steps: recipe.recipeSteps.map((step) => ({
+        imageUrl: step.imageUrl,
+        description: step.content,
+      })),
+      sodiumTip: recipe.sodiumTip,
+    },
+  });
+}
+
+export async function scrapRecipe(memberId: string, recipeId: string): Promise<void> {
+  const recipe = await prisma.recipe.findUnique({ where: { id: recipeId }, select: { id: true } });
+  if (!recipe) throw errors.notFound('레시피를 찾을 수 없습니다.');
+
+  const existing = await prisma.recipeScrap.findFirst({ where: { recipeId, userId: memberId } });
+  if (!existing) {
+    await prisma.recipeScrap.create({ data: { recipeId, userId: memberId } });
+  }
+}
+
+export async function unscrapRecipe(memberId: string, recipeId: string): Promise<void> {
+  const recipe = await prisma.recipe.findUnique({ where: { id: recipeId }, select: { id: true } });
+  if (!recipe) throw errors.notFound('레시피를 찾을 수 없습니다.');
+
+  await prisma.recipeScrap.deleteMany({ where: { recipeId, userId: memberId } });
 }

@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { errors } from '@/shared/lib/error';
 
 const GEMINI_MODEL = 'gemini-2.5-flash-lite';
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY ?? process.env.GEMINI_API_KEY ?? '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 function normalizeCategory(value: unknown) {
   const parsed = fridgeCategorySchema.safeParse(value);

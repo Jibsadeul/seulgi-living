@@ -25,7 +25,7 @@ function parseBirthday(value: string) {
   return new Date(`${value}T00:00:00.000Z`);
 }
 
-function toMemberMe(member: MemberWithRegion) {
+export function toMemberMe(member: MemberWithRegion) {
   return memberMeSchema.parse({
     id: member.id,
     nickname: member.nickname,
@@ -37,22 +37,12 @@ function toMemberMe(member: MemberWithRegion) {
 }
 
 async function findCurrentMember(memberId: string | null) {
-  if (memberId) {
-    const member = await prisma.member.findFirst({
-      where: { id: memberId, deletedAt: null },
-      include: { sigungu: true },
-    });
-
-    if (!member) {
-      throw errors.unauthorized();
-    }
-
-    return member;
+  if (!memberId) {
+    throw errors.unauthorized();
   }
 
   const member = await prisma.member.findFirst({
-    where: { deletedAt: null },
-    orderBy: { createdAt: 'asc' },
+    where: { id: memberId, deletedAt: null },
     include: { sigungu: true },
   });
 

@@ -1,5 +1,8 @@
+import { NextRequest } from 'next/server';
 import { getRecipeList } from '@/services/recipes/recipes.service';
-import { errorResponse, jsonResponse, optionsResponse } from '@/shared/lib/response';
+import { withHandler } from '@/shared/lib/handler';
+import { getCurrentMemberId } from '@/shared/middleware/auth';
+import { jsonResponse, optionsResponse } from '@/shared/lib/response';
 
 function toQueryObject(searchParams: URLSearchParams) {
   const query: Record<string, string | string[]> = {};
@@ -12,16 +15,14 @@ function toQueryObject(searchParams: URLSearchParams) {
   return query;
 }
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const recipes = await getRecipeList(toQueryObject(searchParams));
+export const GET = withHandler(async (request: NextRequest) => {
+  const memberId = await getCurrentMemberId(request);
+  const recipes = await getRecipeList(toQueryObject(request.nextUrl.searchParams), {
+    userId: memberId,
+  });
 
-    return jsonResponse(recipes);
-  } catch (error) {
-    return errorResponse(error);
-  }
-}
+  return jsonResponse(recipes);
+});
 
 export function OPTIONS() {
   return optionsResponse('GET, POST, OPTIONS');

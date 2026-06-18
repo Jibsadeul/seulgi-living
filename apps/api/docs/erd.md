@@ -32,7 +32,7 @@
 | 컬럼 | 타입 | 제약 |
 |------|------|------|
 | id | UUID | PK, NOT NULL |
-| kakao_id | VARCHAR(255) | NOT NULL |
+| kakao_id | VARCHAR(255) | unique |
 | sigungu_id | VARCHAR(5) | FK → sigungu.id, NULL |
 | email | VARCHAR(255) | NULL |
 | nickname | VARCHAR(100) | NULL |
