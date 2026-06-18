@@ -1,11 +1,11 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import {
   analyzeCameraImage,
   getCameraAnalysisSource,
   getCameraCaptureLabel,
   isCameraCaptureMode,
-  type CameraAnalyzeResponse,
+  useCameraStore,
   type CameraCaptureMode,
 } from '@/entities/camera';
 import {
@@ -23,7 +23,9 @@ type CameraAnalysisTestScreenProps = {
 export function CameraAnalysisTestScreen({ mode, imageUri }: CameraAnalysisTestScreenProps) {
   const selectedMode: CameraCaptureMode | undefined = isCameraCaptureMode(mode) ? mode : undefined;
   const title = selectedMode ? getCameraCaptureLabel(selectedMode) : '카메라';
-  const [result, setResult] = useState<CameraAnalyzeResponse | null>(null);
+  const analysisResult = useCameraStore((state) => state.analysisResult);
+  const setAnalysisResult = useCameraStore((state) => state.setAnalysisResult);
+  const clearAnalysisResult = useCameraStore((state) => state.clearAnalysisResult);
   const [currentImageUri, setCurrentImageUri] = useState(imageUri);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -39,7 +41,7 @@ export function CameraAnalysisTestScreen({ mode, imageUri }: CameraAnalysisTestS
 
     setIsAnalyzing(true);
     setErrorMessage(null);
-    setResult(null);
+    clearAnalysisResult();
 
     try {
       const base64 = await readImageUriAsBase64(currentImageUri);
@@ -50,7 +52,7 @@ export function CameraAnalysisTestScreen({ mode, imageUri }: CameraAnalysisTestS
         base64,
       });
 
-      setResult(analysis);
+      setAnalysisResult(analysis);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '분석 중 오류가 발생했습니다.');
     } finally {
@@ -67,7 +69,7 @@ export function CameraAnalysisTestScreen({ mode, imageUri }: CameraAnalysisTestS
 
     setCurrentImageUri(pickedImageUri);
     setErrorMessage(null);
-    setResult(null);
+    clearAnalysisResult();
   };
 
   const canAnalyze = Boolean(selectedMode && currentImageUri && !isAnalyzing);
@@ -160,11 +162,11 @@ export function CameraAnalysisTestScreen({ mode, imageUri }: CameraAnalysisTestS
         </View>
       ) : null}
 
-      {result ? (
+      {analysisResult ? (
         <View className="mt-4 gap-2.5 rounded-[10px] bg-gray-90 p-3.5">
           <Text className="text-sm font-bold text-white">분석 결과</Text>
           <Text selectable className="text-xs leading-[18px] text-[#D1FAE5]">
-            {JSON.stringify(result, null, 2)}
+            {JSON.stringify(analysisResult, null, 2)}
           </Text>
         </View>
       ) : null}
