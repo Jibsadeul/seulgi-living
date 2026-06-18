@@ -63,3 +63,19 @@ export async function updateFridgeIngredient(
     throw errors.notFound('냉장고 재료를 찾을 수 없습니다.');
   }
 }
+
+export async function deleteFridgeIngredient(
+  memberId: string,
+  ingredientId: string,
+): Promise<void> {
+  const result = await prisma.fridgeIngredient.deleteMany({
+    where: {
+      id: ingredientId,
+      userId: memberId,
+    },
+  });
+
+  if (result.count === 0) {
+    throw errors.notFound('냉장고 재료를 찾을 수 없습니다.');
+  }
+}
