@@ -1,11 +1,7 @@
-import { NextRequest } from 'next/server';
 import { scrapPolicy, unscrapPolicy } from '@/services/policies/policies.service';
 import { withHandler } from '@/shared/lib/handler';
 import { jsonResponse, optionsResponse } from '@/shared/lib/response';
-
-function getMemberId(request: NextRequest) {
-  return request.headers.get('x-member-id');
-}
+import { getCurrentMemberId } from '@/shared/middleware/auth';
 
 export function OPTIONS() {
   return optionsResponse();
@@ -13,12 +9,12 @@ export function OPTIONS() {
 
 export const POST = withHandler(async (request, { params }) => {
   const { id } = await params;
-  await scrapPolicy(getMemberId(request), id);
+  await scrapPolicy((await getCurrentMemberId(request)) ?? null, id);
   return jsonResponse({ ok: true });
 });
 
 export const DELETE = withHandler(async (request, { params }) => {
   const { id } = await params;
-  await unscrapPolicy(getMemberId(request), id);
+  await unscrapPolicy((await getCurrentMemberId(request)) ?? null, id);
   return jsonResponse({ ok: true });
 });
