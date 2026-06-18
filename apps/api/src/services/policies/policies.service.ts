@@ -11,11 +11,26 @@ import { calcAge, calcDaysLeft } from './policies.utils';
 import {
   buildRegionFilter,
   buildScrapsInclude,
+  collectZipCodes,
   rawToUpsertData,
   toPolicy,
+  type PolicyRow,
 } from './policies.mapper';
 
 const SYNC_BATCH_SIZE = 50;
+
+// 정책 목록에 노출할 지역명을 한 번에 조회해 zipCd -> 시군구명 맵으로 만든다.
+async function buildSigunguNameMap(rows: Pick<PolicyRow, 'zipCd'>[]): Promise<Map<string, string>> {
+  const codes = collectZipCodes(rows);
+  if (codes.length === 0) return new Map();
+
+  const sigungus = await prisma.sigungu.findMany({
+    where: { id: { in: codes } },
+    select: { id: true, name: true },
+  });
+
+  return new Map(sigungus.map((s) => [s.id, s.name]));
+}
 
 // 정책 upsert 작업
 export async function syncPolicies(): Promise<{ synced: number; total: number }> {
@@ -163,7 +178,8 @@ export async function getRecommendedPolicies(memberId: string | null): Promise<P
     },
   });
 
-  return rows.map(toPolicy);
+  const sigunguNameMap = await buildSigunguNameMap(rows);
+  return rows.map((row) => toPolicy(row, sigunguNameMap));
 }
 
 // 정책 목록/검색 화면 (사용자 직접 검색)
@@ -171,7 +187,7 @@ export async function getPolicies(
   query: unknown,
   memberId: string | null,
 ): Promise<{ items: Policy[]; total: number; page: number; limit: number }> {
-  const { keyword, largeCategory, zipCd, applyPeriodType, deadlineOnly, page, limit } =
+  const { keyword, largeCategory, zipCd, supportType, applyPeriodType, deadlineOnly, page, limit } =
     policyListQuerySchema.parse(query);
 
   const today = new Date();
@@ -191,20 +207,28 @@ export async function getPolicies(
         ]
       : []),
     ...(zipCd ? [buildRegionFilter(zipCd)] : []),
+    ...(supportType ? [{ keywords: { contains: supportType } }] : []),
     ...(deadlineOnly ? [{ applyEndDate: { gte: today, lte: in7Days } }] : []),
   ];
 
   // where 객체를 동적으로 하여 불필요한 필터 붙지 않게끔 함
+  // largeCategory는 "금융·복지·문화"처럼 복합 카테고리 문자열로 저장되어 있어 부분 일치로 매칭한다.
   const where = {
-    ...(largeCategory && { largeCategory }),
+    ...(largeCategory && { largeCategory: { contains: largeCategory } }),
     ...(applyPeriodType && { applyPeriodType }),
     ...(andConditions.length > 0 && { AND: andConditions }),
   };
 
+  // "마감기한순"(0057001) 또는 마감임박 빠른탐색일 때만 마감일 오름차순, 그 외에는 조회수 내림차순
+  const orderBy =
+    applyPeriodType === '0057001' || deadlineOnly
+      ? [{ applyEndDate: 'asc' as const }]
+      : [{ viewCount: 'desc' as const }];
+
   const [rows, total] = await prisma.$transaction([
     prisma.policy.findMany({
       where,
-      orderBy: [{ applyEndDate: 'asc' }, { viewCount: 'desc' }],
+      orderBy,
       skip: (page - 1) * limit,
       take: limit,
       include: {
@@ -215,7 +239,8 @@ export async function getPolicies(
     prisma.policy.count({ where }),
   ]);
 
-  return { items: rows.map(toPolicy), total, page, limit };
+  const sigunguNameMap = await buildSigunguNameMap(rows);
+  return { items: rows.map((row) => toPolicy(row, sigunguNameMap)), total, page, limit };
 }
 
 // 정책 스크랩

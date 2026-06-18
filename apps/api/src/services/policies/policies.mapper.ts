@@ -18,11 +18,40 @@ export type PolicyRow = {
   applyEndDate: Date | null;
   applicationUrl: string | null;
   viewCount: number;
+  noZipLimit: boolean;
+  zipCd: string | null;
   _count: { scraps: number };
   scraps: { id: bigint }[];
 };
 
-export function toPolicy(row: PolicyRow): Policy {
+export function collectZipCodes(rows: Pick<PolicyRow, 'zipCd'>[]): string[] {
+  const codes = new Set<string>();
+  for (const row of rows) {
+    if (!row.zipCd) continue;
+    for (const code of row.zipCd.split(',')) {
+      if (code) codes.add(code);
+    }
+  }
+  return [...codes];
+}
+
+export function buildRegionLabel(
+  row: Pick<PolicyRow, 'noZipLimit' | 'zipCd'>,
+  sigunguNameMap: Map<string, string>,
+): string | null {
+  if (row.noZipLimit) return '전국';
+  if (!row.zipCd) return null;
+
+  const codes = row.zipCd.split(',').filter(Boolean);
+  const names = codes
+    .map((code) => sigunguNameMap.get(code))
+    .filter((name): name is string => !!name);
+  if (names.length === 0) return null;
+  if (names.length === 1) return names[0];
+  return `${names[0]} 외 ${names.length - 1}곳`;
+}
+
+export function toPolicy(row: PolicyRow, sigunguNameMap: Map<string, string>): Policy {
   const daysLeft = calcDaysLeft(row.applyEndDate);
   const tags = calcTags(row.viewCount, row._count.scraps, daysLeft);
   return policySchema.parse({
@@ -44,6 +73,7 @@ export function toPolicy(row: PolicyRow): Policy {
     daysLeft,
     tags,
     isScrapped: row.scraps.length > 0,
+    region: buildRegionLabel(row, sigunguNameMap),
   });
 }
 

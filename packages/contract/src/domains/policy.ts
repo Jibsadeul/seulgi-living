@@ -20,6 +20,7 @@ export const policySchema = z.object({
   daysLeft: z.number().nullable(),
   tags: z.array(z.enum(['popular', 'many_scraps', 'deadline_soon'])),
   isScrapped: z.boolean(),
+  region: z.string().nullable(),
 });
 export type Policy = z.infer<typeof policySchema>;
 
@@ -44,3 +45,12 @@ export const policyListQuerySchema = z.object({
   limit: z.coerce.number().min(1).max(50).default(10),
 });
 export type PolicyListQuery = z.infer<typeof policyListQuerySchema>;
+
+// 정책 목록 응답 (BFF → 앱)
+export const policyListResponseSchema = z.object({
+  items: z.array(policySchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+});
+export type PolicyListResponse = z.infer<typeof policyListResponseSchema>;

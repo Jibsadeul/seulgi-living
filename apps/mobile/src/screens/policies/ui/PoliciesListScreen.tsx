@@ -1,6 +1,5 @@
-import { FlatList, Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   PolicyBannerCard,
@@ -16,17 +15,16 @@ import HouseIcon from '@assets/icons/policy/house.svg';
 import FinanceIcon from '@assets/icons/policy/fiance.svg';
 import JobIcon from '@assets/icons/policy/job.svg';
 import WelfareIcon from '@assets/icons/policy/welfare.svg';
-const popularIcon = require('@assets/icons/policy/popular.png') as number;
+import EducationIcon from '@assets/icons/policy/education.svg';
+import CultureIcon from '@assets/icons/policy/culture.svg';
+import ParticipationIcon from '@assets/icons/policy/participation.svg';
 import LightIcon from '@assets/icons/policy/light.svg';
-import FilterIcon from '@assets/icons/filter.svg';
 
 type QuickCategory = {
+  Icon: React.ComponentType<{ width: number; height: number }>;
   label: string;
   params: Record<string, unknown>;
-} & (
-  | { Icon: React.ComponentType<{ width: number; height: number }>; image?: never }
-  | { Icon?: never; image: number }
-);
+};
 
 const QUICK_CATEGORIES: QuickCategory[] = [
   { Icon: FireIcon, label: '마감임박', params: { deadlineOnly: true } },
@@ -34,14 +32,9 @@ const QUICK_CATEGORIES: QuickCategory[] = [
   { Icon: FinanceIcon, label: '금융', params: { largeCategory: '금융' } },
   { Icon: JobIcon, label: '일자리', params: { largeCategory: '일자리' } },
   { Icon: WelfareIcon, label: '복지', params: { largeCategory: '복지' } },
-  { image: popularIcon, label: '인기정책', params: { sortBy: 'viewCount' } },
-];
-
-const FILTER_BUTTONS = [
-  { label: '카테고리', key: 'largeCategory' },
-  { label: '지역', key: 'zipCd' },
-  { label: '지원유형', key: 'supportType' },
-  { label: '기간', key: 'period' },
+  { Icon: EducationIcon, label: '교육', params: { largeCategory: '교육' } },
+  { Icon: CultureIcon, label: '문화', params: { largeCategory: '문화' } },
+  { Icon: ParticipationIcon, label: '참여', params: { largeCategory: '참여' } },
 ];
 
 const TAB_BAR_HEIGHT = 87;
@@ -98,34 +91,6 @@ export function PoliciesListScreen() {
           />
         </View>
 
-        {/* 필터 칩 */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="mb-5"
-          contentContainerStyle={{ paddingHorizontal: 20, gap: 7, alignItems: 'center' }}
-        >
-          <View
-            className="bg-main-100 rounded-full items-center justify-center"
-            style={{ width: 28, height: 28 }}
-          >
-            <FilterIcon width={14} height={14} color="#FFFFFF" />
-          </View>
-          {FILTER_BUTTONS.map((btn) => (
-            <Pressable
-              key={btn.key}
-              onPress={() => handleCategoryPress({ [btn.key]: '' })}
-              className="flex-row items-center bg-surface-default border border-gray-30 rounded-full"
-              style={{ paddingHorizontal: 13, paddingVertical: 6, gap: 5 }}
-            >
-              <Text style={{ fontSize: 12, fontWeight: '500', color: '#8F9098', lineHeight: 16 }}>
-                {btn.label}
-              </Text>
-              <Ionicons name="chevron-down" size={13} color="#8F9098" />
-            </Pressable>
-          ))}
-        </ScrollView>
-
         {/* 빠른 탐색 */}
         <View className="px-5 mb-5">
           <Text style={{ fontSize: 18, fontWeight: '600', color: '#24252C', marginBottom: 14 }}>
@@ -137,7 +102,7 @@ export function PoliciesListScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: 16 }}
           >
-            {QUICK_CATEGORIES.map(({ label, params, ...rest }) => (
+            {QUICK_CATEGORIES.map(({ Icon, label, params }) => (
               <Pressable
                 key={label}
                 onPress={() => handleCategoryPress(params)}
@@ -154,14 +119,7 @@ export function PoliciesListScreen() {
                     borderColor: '#DEC1B2',
                   }}
                 >
-                  {'Icon' in rest && rest.Icon ? (
-                    <rest.Icon width={28} height={28} />
-                  ) : (
-                    <Image
-                      source={(rest as { image: number }).image}
-                      style={{ width: 28, height: 28 }}
-                    />
-                  )}
+                  <Icon width={28} height={28} />
                 </View>
                 <Text style={{ fontSize: 10, fontWeight: '500', color: '#574237', lineHeight: 12 }}>
                   {label}
