@@ -9,7 +9,7 @@ import {
 import { z } from 'zod';
 import { errors } from '@/shared/lib/error';
 
-const GEMINI_MODEL = 'gemini-2.5-flash-lite';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 function normalizeCategory(value: unknown) {
@@ -30,6 +30,7 @@ const looseGeminiItemSchema = z.object({
 });
 
 const looseGeminiResponseSchema = z.object({
+  date: z.unknown().optional().nullable(),
   items: z.array(looseGeminiItemSchema),
 });
 
@@ -49,6 +50,7 @@ const commonOutputRule = `
 반드시 설명, 마크다운, 코드블록 없이 순수 JSON 객체 하나만 반환한다.
 반환 형식은 다음 구조를 정확히 따른다.
 {
+  "date": null,
   "items": [
     {
       "name": "항목명",
@@ -60,6 +62,8 @@ const commonOutputRule = `
   ]
 }
 
+date는 ISO 8601 timestamp 문자열 또는 null로 반환한다.
+
 category는 아래 enum 값 중 하나만 사용한다.
 ${categoryGuide}
 `;
@@ -68,6 +72,7 @@ const prompts: Record<CameraAnalysisSource, string> = {
   RECEIPT: `
 너는 영수증 이미지에서 장보기 항목을 추출하는 분석기다.
 영수증의 구매 항목을 빠짐없이 찾아 name, category, quantity, unit, price를 반환한다.
+영수증의 구매일 또는 결제일을 찾아 date로 반환하고, 읽을 수 없으면 null로 둔다.
 price는 해당 항목의 총 금액을 숫자로 입력하고, 읽을 수 없으면 null로 둔다.
 할인, 합계, 결제수단, 매장명은 items에 넣지 않는다.
 ${commonOutputRule}
@@ -76,9 +81,49 @@ ${commonOutputRule}
 너는 식재료 사진에서 냉장고에 등록할 식재료를 추출하는 분석기다.
 사진에 보이는 식재료를 빠짐없이 찾아 name, category, quantity, unit을 반환한다.
 식재료 사진은 가격 정보가 없으므로 모든 item의 price는 반드시 null로 둔다.
+식재료 사진은 영수증이 아니므로 date는 반드시 null로 둔다.
 ${commonOutputRule}
 `,
 };
+
+function normalizeReceiptDate(value: unknown): string | null {
+  if (value == null || value === '') {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value.toISOString();
+  }
+
+  const rawDate = String(value).trim();
+  const dateOnlyMatch = rawDate.match(/^(\d{2,4})[./-](\d{1,2})[./-](\d{1,2})$/);
+
+  if (dateOnlyMatch) {
+    const [, rawYear, rawMonth, rawDay] = dateOnlyMatch;
+    const year = Number(rawYear.length === 2 ? `20${rawYear}` : rawYear);
+    const month = Number(rawMonth);
+    const day = Number(rawDay);
+    const date = new Date(Date.UTC(year, month - 1, day));
+
+    if (
+      date.getUTCFullYear() === year &&
+      date.getUTCMonth() === month - 1 &&
+      date.getUTCDate() === day
+    ) {
+      return date.toISOString();
+    }
+
+    return null;
+  }
+
+  const date = new Date(rawDate);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date.toISOString();
+}
 
 function extractJsonObject(text: string): unknown {
   const start = text.indexOf('{');
@@ -103,6 +148,7 @@ function normalizeGeminiResponse(
 
   return cameraAnalyzeResponseSchema.parse({
     source,
+    date: source === 'INGREDIENT' ? null : normalizeReceiptDate(parsed.date),
     items: parsed.items.map((item) => ({
       ...item,
       price: source === 'INGREDIENT' ? null : (item.price ?? null),

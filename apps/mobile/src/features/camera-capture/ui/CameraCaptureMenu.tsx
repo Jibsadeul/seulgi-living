@@ -1,15 +1,14 @@
 import { useState } from 'react';
-import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
 import { CAMERA_CAPTURE_OPTIONS, type CameraCaptureMode } from '@/entities/camera';
+import { pickImageUri, type ImagePickSource } from '@/shared/lib/image';
 import CameraIcon from '../../../../assets/icons/Camera.svg';
 
 type CameraCaptureMenuProps = {
   bottomOffset: number;
 };
 
-type ImageSource = 'camera' | 'library';
 type MenuStep = 'mode' | 'source';
 
 export function CameraCaptureMenu({ bottomOffset }: CameraCaptureMenuProps) {
@@ -37,45 +36,14 @@ export function CameraCaptureMenu({ bottomOffset }: CameraCaptureMenuProps) {
     });
   };
 
-  const pickImage = async (mode: CameraCaptureMode, source: ImageSource) => {
-    const permission =
-      source === 'camera'
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const pickImage = async (mode: CameraCaptureMode, source: ImagePickSource) => {
+    const pickedImageUri = await pickImageUri(source);
 
-    if (!permission.granted) {
-      Alert.alert(
-        source === 'camera' ? '카메라 권한 필요' : '앨범 권한 필요',
-        source === 'camera'
-          ? '촬영을 위해 카메라 권한을 허용해주세요.'
-          : '이미지 선택을 위해 사진 접근 권한을 허용해주세요.',
-      );
+    if (!pickedImageUri) {
       return;
     }
 
-    const result =
-      source === 'camera'
-        ? await ImagePicker.launchCameraAsync({
-            mediaTypes: ['images'],
-            allowsEditing: false,
-            quality: 1,
-          })
-        : await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            allowsEditing: false,
-            quality: 1,
-          });
-
-    if (result.canceled) {
-      return;
-    }
-
-    const asset = result.assets[0];
-    if (!asset) {
-      return;
-    }
-
-    openResult(mode, asset.uri);
+    openResult(mode, pickedImageUri);
   };
 
   const handleSelect = (mode: CameraCaptureMode) => {
@@ -83,7 +51,7 @@ export function CameraCaptureMenu({ bottomOffset }: CameraCaptureMenuProps) {
     setMenuStep('source');
   };
 
-  const handleSourceSelect = (source: ImageSource) => {
+  const handleSourceSelect = (source: ImagePickSource) => {
     if (!selectedMode) {
       closeMenu();
       return;

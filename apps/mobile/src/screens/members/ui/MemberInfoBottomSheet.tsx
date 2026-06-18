@@ -1,8 +1,10 @@
 import { useCallback, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert, Modal, Platform, Pressable, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useMemberStore, type MemberMe } from '@/entities/members';
+import { logout, withdraw, useMemberStore, type MemberMe } from '@/entities/members';
+import { clearTokens } from '@/shared/api/authSession';
 import {
   MemberInfoForm,
   type MemberInfoCloseState,
@@ -31,8 +33,10 @@ export function MemberInfoBottomSheet({
   onSubmitSuccess,
 }: Props) {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const formRef = useRef<MemberInfoFormHandle>(null);
   const setMemberProfileFromMe = useMemberStore((state) => state.setMemberProfileFromMe);
+  const clearMemberProfile = useMemberStore((state) => state.clearMemberProfile);
   const [closeState, setCloseState] = useState<MemberInfoCloseState>({
     hasBlankRequiredField: true,
     isDirtyFromStoredProfile: false,
@@ -61,6 +65,44 @@ export function MemberInfoBottomSheet({
       handleSubmitSuccess(member);
     }
   }, [handleSubmitSuccess]);
+
+  const handleLogout = useCallback(() => {
+    Alert.alert('로그아웃 하시겠습니까?', undefined, [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '로그아웃',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await logout();
+          } catch {}
+          await clearTokens();
+          clearMemberProfile();
+          router.replace('/(auth)/login');
+        },
+      },
+    ]);
+  }, [clearMemberProfile, router]);
+
+  const handleWithdraw = useCallback(() => {
+    Alert.alert('탈퇴하시겠습니까?', '모든 데이터가 삭제됩니다.', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '탈퇴',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await withdraw();
+            await clearTokens();
+            clearMemberProfile();
+            router.replace('/(auth)/login');
+          } catch {
+            Alert.alert('오류', '탈퇴 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+          }
+        },
+      },
+    ]);
+  }, [clearMemberProfile, router]);
 
   const requestClose = useCallback(() => {
     if (mode === 'onboarding') {
@@ -102,7 +144,7 @@ export function MemberInfoBottomSheet({
         <Pressable className="flex-1" onPress={requestClose} />
         <View
           className="rounded-t-2xl bg-surface-default px-5 pt-5"
-          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+          style={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
         >
           <View className="mb-5 flex-row items-start justify-between">
             <View className="flex-1 pr-4">
@@ -131,6 +173,18 @@ export function MemberInfoBottomSheet({
             onCloseStateChange={setCloseState}
             onSubmitSuccess={handleSubmitSuccess}
           />
+
+          {mode === 'edit' && (
+            <>
+              <View className="my-5 h-px bg-gray-20" />
+              <Pressable className="items-center py-2" onPress={handleLogout}>
+                <Text className="text-sm text-gray-50">로그아웃</Text>
+              </Pressable>
+              <Pressable className="mt-2 items-center py-2" onPress={handleWithdraw}>
+                <Text className="text-xs text-red-400">회원탈퇴</Text>
+              </Pressable>
+            </>
+          )}
         </View>
       </View>
     </Modal>
