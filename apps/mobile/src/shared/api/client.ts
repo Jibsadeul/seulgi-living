@@ -1,10 +1,13 @@
 import type { ZodType } from 'zod';
+import { refreshTokenResponseSchema } from '@repo/contract';
 import { API_BASE_URL, TEST_MEMBER_ID } from '@/shared/config/constants';
+import { clearTokens, getStoredTokens, saveTokens } from './authSession';
 
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   body?: unknown;
   headers?: Record<string, string>;
+  skipAuth?: boolean;
 };
 
 type ApiErrorBody = {
@@ -43,13 +46,57 @@ export async function apiRequest<T>(
   responseSchema: ZodType<T>,
   options: RequestOptions = {},
 ): Promise<T> {
+  return apiRequestInternal(path, responseSchema, options, false);
+}
+
+async function refreshStoredTokens() {
+  const tokens = await getStoredTokens();
+
+  if (!tokens) {
+    return false;
+  }
+
+  const url = toUrl('/api/auth/refresh');
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ refreshToken: tokens.refreshToken }),
+  });
+  const json = await readJson(response, url);
+
+  if (!response.ok) {
+    await clearTokens();
+    return false;
+  }
+
+  const nextTokens = refreshTokenResponseSchema.parse(json);
+  await saveTokens(nextTokens);
+
+  return true;
+}
+
+async function apiRequestInternal<T>(
+  path: string,
+  responseSchema: ZodType<T>,
+  options: RequestOptions,
+  didRefresh: boolean,
+): Promise<T> {
   const headers = new Headers(options.headers ?? {});
 
   if (options.body !== undefined) {
     headers.set('Content-Type', 'application/json');
   }
 
-  if (TEST_MEMBER_ID) {
+  if (!options.skipAuth) {
+    const tokens = await getStoredTokens();
+    if (tokens) {
+      headers.set('Authorization', `Bearer ${tokens.accessToken}`);
+    }
+  }
+
+  if (TEST_MEMBER_ID && !headers.has('Authorization')) {
     headers.set('x-member-id', TEST_MEMBER_ID);
   }
 
@@ -60,6 +107,14 @@ export async function apiRequest<T>(
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
   });
   const json = await readJson(response, url);
+
+  if (response.status === 401 && !options.skipAuth && !didRefresh) {
+    const refreshed = await refreshStoredTokens();
+
+    if (refreshed) {
+      return apiRequestInternal(path, responseSchema, options, true);
+    }
+  }
 
   if (!response.ok) {
     const message =
