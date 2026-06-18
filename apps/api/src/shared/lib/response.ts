@@ -2,10 +2,24 @@ import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
 import { AppError } from './error';
 
+function allowsDevMemberHeader() {
+  return process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_MEMBER_HEADER === 'true';
+}
+
+function getAllowedHeaders() {
+  const headers = ['Content-Type', 'Authorization'];
+
+  if (allowsDevMemberHeader()) {
+    headers.push('x-member-id');
+  }
+
+  return headers.join(', ');
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, x-member-id',
+  'Access-Control-Allow-Headers': getAllowedHeaders(),
 };
 
 export function optionsResponse(methods = corsHeaders['Access-Control-Allow-Methods']) {
