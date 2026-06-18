@@ -40,6 +40,7 @@ export function PoliciesSearchScreen() {
   });
   const [isFilterSheetOpen, setFilterSheetOpen] = useState(false);
   const [filterSheetSection, setFilterSheetSection] = useState<FilterSection | null>(null);
+  const [hasOpenedFilterSheet, setHasOpenedFilterSheet] = useState(false);
 
   const { recentSearches, addSearch, removeSearch, clearAll } =
     useRecentSearches(RECENT_SEARCHES_KEY);
@@ -85,6 +86,7 @@ export function PoliciesSearchScreen() {
   }
 
   function openFilterSheet(section: FilterSection | null) {
+    setHasOpenedFilterSheet(true);
     setFilterSheetSection(section);
     setFilterSheetOpen(true);
   }
@@ -246,13 +248,15 @@ export function PoliciesSearchScreen() {
         />
       )}
 
-      <PolicyFilterBottomSheet
-        isOpen={isFilterSheetOpen}
-        onClose={() => setFilterSheetOpen(false)}
-        initialValues={filterValues}
-        initialSection={filterSheetSection}
-        onApply={setFilterValues}
-      />
+      {hasOpenedFilterSheet && (
+        <PolicyFilterBottomSheet
+          isOpen={isFilterSheetOpen}
+          onClose={() => setFilterSheetOpen(false)}
+          initialValues={filterValues}
+          initialSection={filterSheetSection}
+          onApply={setFilterValues}
+        />
+      )}
     </View>
   );
 }
