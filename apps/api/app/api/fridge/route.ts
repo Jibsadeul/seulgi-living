@@ -1,4 +1,5 @@
 import { addFridgeIngredient, getFridgeIngredients } from '@/services/fridge/fridge.service';
+import { errors } from '@/shared/lib/error';
 import { withHandler } from '@/shared/lib/handler';
 import { jsonResponse, noContentResponse, optionsResponse } from '@/shared/lib/response';
 import { getCurrentMemberId } from '@/shared/middleware/auth';
@@ -10,6 +11,8 @@ export function OPTIONS() {
 
 export const GET = withHandler(async (request: NextRequest) => {
   const memberId = await getCurrentMemberId(request);
+  if (!memberId) throw errors.unauthorized();
+
   const result = await getFridgeIngredients(memberId);
 
   return jsonResponse(result);
@@ -17,6 +20,8 @@ export const GET = withHandler(async (request: NextRequest) => {
 
 export const POST = withHandler(async (request: NextRequest) => {
   const memberId = await getCurrentMemberId(request);
+  if (!memberId) throw errors.unauthorized();
+
   const body = await request.json();
   await addFridgeIngredient(memberId, body);
 
