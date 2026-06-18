@@ -14,5 +14,5 @@ export {
 } from './api/members.schema';
 
 export { checkNickname, getCurrentMember } from './api/queries';
-export { updateMemberBasicInfo } from './api/mutations';
+export { updateMemberBasicInfo, logout, withdraw } from './api/mutations';
 export { useMemberStore } from './model/members.store';

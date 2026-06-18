@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
+import KakaoIcon from '../../../../assets/kakao.svg';
 import type { MemberMe } from '@/entities/members';
 import { useLogin } from '../model/useLogin';
 
@@ -16,9 +17,9 @@ export const LoginForm: React.FC<Props> = ({ onSuccess }) => {
         <Text className="text-center text-xs font-medium text-main-100">{login.message}</Text>
       ) : null}
       <Pressable
-        className={`h-[68px] items-center justify-center ${
-          login.isLoading ? 'bg-gray-20' : 'bg-[#FEE500]'
-        }`}
+        accessibilityLabel="카카오 로그인"
+        accessibilityRole="button"
+        className="relative h-[45px] w-full flex-row items-center justify-center rounded-[4px] mb-12 bg-[#FFEB00]"
         disabled={login.isLoading}
         onPress={async () => {
           const member = await login.login();
@@ -26,10 +27,12 @@ export const LoginForm: React.FC<Props> = ({ onSuccess }) => {
             onSuccess(member);
           }
         }}
+        style={{ opacity: login.isLoading ? 0.6 : 1 }}
       >
-        <Text className="text-sm font-semibold text-gray-90">
-          {login.isLoading ? '로그인 중' : '카카오 로그인'}
-        </Text>
+        <View className="absolute left-[15px]">
+          <KakaoIcon width={22} height={21} />
+        </View>
+        <Text className="text-sm font-semibold text-gray-90">카카오 로그인</Text>
       </Pressable>
     </View>
   );
