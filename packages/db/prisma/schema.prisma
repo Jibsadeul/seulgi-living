@@ -101,7 +101,7 @@ model RecipeStep {
   recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
 
   @@unique([recipeId, stepNumber])
-  @@map("recipe_step")
+  @@map("recipe_steps")
 }
 
 enum RecipeSource {
@@ -154,7 +154,7 @@ model FridgeIngredient {
   imageKey String @default("DEFAULT") @map("image_key") @db.VarChar(50)
   quantity  Int
   unit      String   @db.VarChar(10)
-  category  IngredientCategory
+  category  FridgeIngredientCategory
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
 
   user Member @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -162,7 +162,7 @@ model FridgeIngredient {
   @@map("fridge_ingredients")
 }
 
-enum IngredientCategory {
+enum FridgeIngredientCategory {
   VEGETABLE
   FRUIT
   MEAT
@@ -171,9 +171,9 @@ enum IngredientCategory {
   GRAIN_NOODLE
   PROCESSED
   SAUCE_SEASONING
-  ETC
+  OTHER
 
-  @@map("ingredient_category")
+  @@map("fridge_ingredient_category")
 }
 
 
