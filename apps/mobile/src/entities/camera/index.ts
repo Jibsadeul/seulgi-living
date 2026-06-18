@@ -7,7 +7,9 @@ export {
   getCameraCaptureLabel,
   isCameraCaptureMode,
 } from './model/camera.model';
+export { useCameraStore } from './model/camera.store';
 export {
+  cameraAnalysisDateSchema,
   cameraAnalysisItemSchema,
   cameraAnalysisSourceSchema,
   cameraAnalyzeRequestSchema,
@@ -16,6 +18,7 @@ export {
 } from './api/camera.schema';
 export { analyzeCameraImage } from './api/mutations';
 export type {
+  CameraAnalysisDate,
   CameraAnalysisItem,
   CameraAnalysisSource,
   CameraAnalyzeRequest,

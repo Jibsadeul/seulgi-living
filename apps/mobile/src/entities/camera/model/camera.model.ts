@@ -3,6 +3,7 @@ export const CAMERA_CAPTURE_MODES = ['receipt', 'ingredient'] as const;
 export type CameraCaptureMode = (typeof CAMERA_CAPTURE_MODES)[number];
 
 export type {
+  CameraAnalysisDate,
   CameraAnalysisItem,
   CameraAnalysisSource,
   CameraAnalyzeRequest,

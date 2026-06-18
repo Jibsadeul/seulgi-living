@@ -1,14 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import {
   analyzeCameraImage,
   getCameraAnalysisSource,
   getCameraCaptureLabel,
   isCameraCaptureMode,
-  type CameraAnalyzeResponse,
+  useCameraStore,
   type CameraCaptureMode,
 } from '@/entities/camera';
-import { inferImageMimeType, readImageUriAsBase64 } from '@/shared/lib/image';
+import {
+  inferImageMimeType,
+  pickImageUri,
+  readImageUriAsBase64,
+  type ImagePickSource,
+} from '@/shared/lib/image';
 
 type CameraAnalysisTestScreenProps = {
   mode?: string;
@@ -18,29 +23,36 @@ type CameraAnalysisTestScreenProps = {
 export function CameraAnalysisTestScreen({ mode, imageUri }: CameraAnalysisTestScreenProps) {
   const selectedMode: CameraCaptureMode | undefined = isCameraCaptureMode(mode) ? mode : undefined;
   const title = selectedMode ? getCameraCaptureLabel(selectedMode) : '카메라';
-  const [result, setResult] = useState<CameraAnalyzeResponse | null>(null);
+  const analysisResult = useCameraStore((state) => state.analysisResult);
+  const setAnalysisResult = useCameraStore((state) => state.setAnalysisResult);
+  const clearAnalysisResult = useCameraStore((state) => state.clearAnalysisResult);
+  const [currentImageUri, setCurrentImageUri] = useState(imageUri);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  useEffect(() => {
+    setCurrentImageUri(imageUri);
+  }, [imageUri]);
+
   const handleAnalyze = async () => {
-    if (!selectedMode || !imageUri) {
+    if (!selectedMode || !currentImageUri) {
       return;
     }
 
     setIsAnalyzing(true);
     setErrorMessage(null);
-    setResult(null);
+    clearAnalysisResult();
 
     try {
-      const base64 = await readImageUriAsBase64(imageUri);
+      const base64 = await readImageUriAsBase64(currentImageUri);
       const analysis = await analyzeCameraImage({
         source: getCameraAnalysisSource(selectedMode),
-        imageUri,
-        mimeType: inferImageMimeType(imageUri),
+        imageUri: currentImageUri,
+        mimeType: inferImageMimeType(currentImageUri),
         base64,
       });
 
-      setResult(analysis);
+      setAnalysisResult(analysis);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '분석 중 오류가 발생했습니다.');
     } finally {
@@ -48,7 +60,20 @@ export function CameraAnalysisTestScreen({ mode, imageUri }: CameraAnalysisTestS
     }
   };
 
-  const canAnalyze = Boolean(selectedMode && imageUri && !isAnalyzing);
+  const handleReplaceImage = async (source: ImagePickSource) => {
+    const pickedImageUri = await pickImageUri(source);
+
+    if (!pickedImageUri) {
+      return;
+    }
+
+    setCurrentImageUri(pickedImageUri);
+    setErrorMessage(null);
+    clearAnalysisResult();
+  };
+
+  const canAnalyze = Boolean(selectedMode && currentImageUri && !isAnalyzing);
+  const canReplaceImage = Boolean(selectedMode && !isAnalyzing);
 
   return (
     <ScrollView className="flex-1 bg-surface-card" contentContainerClassName="px-5 pt-14 pb-10">
@@ -61,9 +86,9 @@ export function CameraAnalysisTestScreen({ mode, imageUri }: CameraAnalysisTestS
         ) : null}
       </View>
 
-      {imageUri ? (
+      {currentImageUri ? (
         <Image
-          source={{ uri: imageUri }}
+          source={{ uri: currentImageUri }}
           className="w-full rounded-xl bg-gray-20"
           style={{ aspectRatio: 3 / 4 }}
           resizeMode="cover"
@@ -74,7 +99,42 @@ export function CameraAnalysisTestScreen({ mode, imageUri }: CameraAnalysisTestS
         </View>
       )}
 
-      {imageUri ? (
+      {currentImageUri ? (
+        <View className="mt-3 flex-row gap-2.5">
+          <Pressable
+            className={`min-h-11 flex-1 items-center justify-center rounded-[10px] border ${
+              canReplaceImage ? 'border-gray-30 bg-surface-default' : 'border-gray-20 bg-gray-10'
+            }`}
+            disabled={!canReplaceImage}
+            onPress={() => {
+              void handleReplaceImage('camera');
+            }}
+          >
+            <Text
+              className={`text-sm font-bold ${canReplaceImage ? 'text-gray-90' : 'text-gray-50'}`}
+            >
+              재촬영
+            </Text>
+          </Pressable>
+          <Pressable
+            className={`min-h-11 flex-1 items-center justify-center rounded-[10px] border ${
+              canReplaceImage ? 'border-gray-30 bg-surface-default' : 'border-gray-20 bg-gray-10'
+            }`}
+            disabled={!canReplaceImage}
+            onPress={() => {
+              void handleReplaceImage('library');
+            }}
+          >
+            <Text
+              className={`text-sm font-bold ${canReplaceImage ? 'text-gray-90' : 'text-gray-50'}`}
+            >
+              앨범에서 선택
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {currentImageUri ? (
         <Pressable
           className={`mt-4 min-h-[52px] items-center justify-center rounded-[10px] ${
             canAnalyze ? 'bg-main-100' : 'bg-gray-30'
@@ -102,11 +162,11 @@ export function CameraAnalysisTestScreen({ mode, imageUri }: CameraAnalysisTestS
         </View>
       ) : null}
 
-      {result ? (
+      {analysisResult ? (
         <View className="mt-4 gap-2.5 rounded-[10px] bg-gray-90 p-3.5">
           <Text className="text-sm font-bold text-white">분석 결과</Text>
           <Text selectable className="text-xs leading-[18px] text-[#D1FAE5]">
-            {JSON.stringify(result, null, 2)}
+            {JSON.stringify(analysisResult, null, 2)}
           </Text>
         </View>
       ) : null}
