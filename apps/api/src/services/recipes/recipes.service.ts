@@ -1,16 +1,18 @@
+import { errors } from '@/shared/lib/error';
 import {
   recipeDetailParamsSchema,
   recipeDetailResponseSchema,
   recipeListQuerySchema,
   recipeListResponseSchema,
+  recipeRecommendationQuerySchema,
   recipeScrapListQuerySchema,
   type CookingMethod,
   type RecipeCategory,
   type RecipeListQuery,
+  type RecipeRecommendationType,
   type RecipeScrapListQuery,
 } from '@repo/contract';
 import { prisma } from '@repo/db';
-import { errors } from '@/shared/lib/error';
 
 type ListRecipesContext = {
   userId?: string;
@@ -317,4 +319,174 @@ export async function unscrapRecipe(memberId: string, recipeId: string): Promise
   if (!recipe) throw errors.notFound('레시피를 찾을 수 없습니다.');
 
   await prisma.recipeScrap.deleteMany({ where: { recipeId, userId: memberId } });
+}
+
+type SimpleRecommendationType = Exclude<RecipeRecommendationType, 'fridge'>;
+
+function getSimpleRecommendationCondition(type: SimpleRecommendationType): string {
+  if (type === 'speed')
+    return '(SELECT COUNT(*) FROM recipe_steps s WHERE s.recipe_id = r.id) BETWEEN 1 AND 3';
+  if (type === 'diet')
+    return 'r.calories IS NOT NULL AND r.protein IS NOT NULL AND r.calories <= 150 AND r.protein >= 20';
+  return 'r.calories IS NOT NULL AND r.calories >= 400';
+}
+
+function getSimpleRecommendationOrderBy(type: SimpleRecommendationType): string {
+  if (type === 'diet') return 'r.calories ASC, "scrapCount" DESC, r.id DESC';
+  if (type === 'speed')
+    return '(SELECT COUNT(*) FROM recipe_steps s WHERE s.recipe_id = r.id) ASC, "scrapCount" DESC, r.id DESC';
+  return 'r.created_at DESC, "scrapCount" DESC, r.id DESC';
+}
+
+async function getSimpleRecommendations(
+  type: SimpleRecommendationType,
+  userId: string,
+  page: number,
+  size: number,
+) {
+  const offset = (page - 1) * size;
+  const condition = getSimpleRecommendationCondition(type);
+  const orderBy = getSimpleRecommendationOrderBy(type);
+
+  const countRows = await prisma.$queryRawUnsafe<CountRow[]>(
+    `SELECT COUNT(*)::int AS "totalCount" FROM recipes r WHERE ${condition}`,
+  );
+  const totalCount = toNumber(countRows[0]?.totalCount);
+
+  const rows = await prisma.$queryRawUnsafe<RecipeListRow[]>(
+    `
+      SELECT
+        r.id::text AS id,
+        r.name AS name,
+        r.category::text AS category,
+        r.cooking_method::text AS "cookingMethod",
+        COALESCE(r.thumbnail_url, r.main_image_url) AS "imageUrl",
+        COUNT(rs.recipe_id)::int AS "scrapCount",
+        EXISTS (
+          SELECT 1 FROM recipe_scraps saved
+          WHERE saved.recipe_id = r.id AND saved.user_id = $1::uuid
+        ) AS "isSaved"
+      FROM recipes r
+      LEFT JOIN recipe_scraps rs ON rs.recipe_id = r.id
+      WHERE ${condition}
+      GROUP BY r.id
+      ORDER BY ${orderBy}
+      LIMIT $2
+      OFFSET $3
+    `,
+    userId,
+    size,
+    offset,
+  );
+
+  return recipeListResponseSchema.parse({
+    items: rows.map((row) => ({ ...row, scrapCount: toNumber(row.scrapCount) })),
+    page,
+    size,
+    totalCount,
+    hasNextPage: offset + rows.length < totalCount,
+  });
+}
+
+async function getFridgeRecommendations(userId: string, page: number, size: number) {
+  const offset = (page - 1) * size;
+
+  const safeIngredientsExpr = `
+    CASE WHEN jsonb_typeof(r.ingredients) = 'array' THEN r.ingredients ELSE '[]'::jsonb END
+  `;
+  const safeItemsExpr = `
+    CASE WHEN jsonb_typeof(sec->'items') = 'array' THEN sec->'items' ELSE '[]'::jsonb END
+  `;
+
+  const countRows = await prisma.$queryRawUnsafe<CountRow[]>(
+    `
+      WITH user_fridge AS (
+        SELECT DISTINCT name FROM fridge_ingredients WHERE user_id = $1::uuid
+      ),
+      recipe_matched_fridge AS (
+        SELECT DISTINCT r.id
+        FROM recipes r
+        JOIN user_fridge f ON true,
+        LATERAL jsonb_array_elements(${safeIngredientsExpr}) AS sec,
+        LATERAL jsonb_array_elements_text(${safeItemsExpr}) AS item_val
+        WHERE item_val ILIKE '%' || f.name || '%'
+      )
+      SELECT COUNT(*)::int AS "totalCount" FROM recipe_matched_fridge
+    `,
+    userId,
+  );
+  const totalCount = toNumber(countRows[0]?.totalCount);
+
+  if (totalCount === 0) {
+    return recipeListResponseSchema.parse({
+      items: [],
+      page,
+      size,
+      totalCount: 0,
+      hasNextPage: false,
+    });
+  }
+
+  const rows = await prisma.$queryRawUnsafe<RecipeListRow[]>(
+    `
+      WITH user_fridge AS (
+        SELECT DISTINCT name FROM fridge_ingredients WHERE user_id = $1::uuid
+      ),
+      fridge_count AS (
+        SELECT COUNT(*)::int AS total FROM user_fridge
+      ),
+      recipe_matched_fridge AS (
+        SELECT
+          r.id,
+          COUNT(DISTINCT f.name)::int AS matched_count
+        FROM recipes r
+        JOIN user_fridge f ON true,
+        LATERAL jsonb_array_elements(${safeIngredientsExpr}) AS sec,
+        LATERAL jsonb_array_elements_text(${safeItemsExpr}) AS item_val
+        WHERE item_val ILIKE '%' || f.name || '%'
+        GROUP BY r.id
+      )
+      SELECT
+        r.id::text AS id,
+        r.name AS name,
+        r.category::text AS category,
+        r.cooking_method::text AS "cookingMethod",
+        COALESCE(r.thumbnail_url, r.main_image_url) AS "imageUrl",
+        COUNT(rs.recipe_id)::int AS "scrapCount",
+        EXISTS (
+          SELECT 1 FROM recipe_scraps saved
+          WHERE saved.recipe_id = r.id AND saved.user_id = $1::uuid
+        ) AS "isSaved"
+      FROM recipes r
+      JOIN recipe_matched_fridge rmf ON rmf.id = r.id
+      CROSS JOIN fridge_count fc
+      LEFT JOIN recipe_scraps rs ON rs.recipe_id = r.id
+      GROUP BY r.id, rmf.matched_count, fc.total
+      ORDER BY (rmf.matched_count::float / NULLIF(fc.total, 0)) DESC, "scrapCount" DESC, r.id DESC
+      LIMIT $2
+      OFFSET $3
+    `,
+    userId,
+    size,
+    offset,
+  );
+
+  return recipeListResponseSchema.parse({
+    items: rows.map((row) => ({ ...row, scrapCount: toNumber(row.scrapCount) })),
+    page,
+    size,
+    totalCount,
+    hasNextPage: offset + rows.length < totalCount,
+  });
+}
+
+export async function getRecommendedRecipes(queryInput: unknown, userId: string) {
+  const query = recipeRecommendationQuerySchema.parse(queryInput);
+  const { type, page, size } = query;
+
+  if (type === 'fridge') {
+    return getFridgeRecommendations(userId, page, size);
+  }
+
+  return getSimpleRecommendations(type, userId, page, size);
 }
