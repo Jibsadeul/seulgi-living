@@ -14,7 +14,7 @@
 
 인증은 선택이다. 로그인 사용자는 레시피별 실제 스크랩 여부를 응답하고, 비로그인 사용자는 `isSaved`를 `false`로 응답한다.
 
-정식 인증 미들웨어가 아직 구현되지 않았으므로 API는 임시로 `x-member-id` 헤더를 현재 사용자 식별자로 사용한다.
+인증은 `shared/middleware/auth.ts`의 `getCurrentMemberId`로 처리한다.
 
 ### 요청 예시
 
@@ -125,10 +125,10 @@
 ### 규칙
 
 - 데이터는 DB의 `recipes` 테이블을 기준으로 조회한다.
-- `x-member-id` 헤더가 있으면 해당 member를 현재 사용자로 보고 `recipe_scraps` 기준으로 `isSaved`를 계산한다.
-- `x-member-id` 헤더가 없으면 mock DB 확인을 위해 `deletedAt`이 없는 첫 member를 현재 사용자로 사용한다.
-- 사용할 수 있는 member가 없으면 비로그인 요청으로 보고 모든 레시피의 `isSaved`를 `false`로 응답한다.
-- 정식 인증 도입 시 현재 사용자 확인은 `shared/middleware/auth.ts` 기반으로 교체한다.
+- `Authorization: Bearer <token>` 헤더가 있으면 JWT를 검증해 현재 사용자를 식별하고 `recipe_scraps` 기준으로 `isSaved`를 계산한다.
+- 유효하지 않은 토큰이면 `401`을 반환한다.
+- 헤더가 없으면 비로그인으로 처리하고 모든 레시피의 `isSaved`를 `false`로 응답한다.
+- 개발 환경(`ALLOW_DEV_MEMBER_HEADER=true`)에서는 `x-member-id` 헤더로도 사용자를 식별할 수 있다.
 - 기본 목록은 `source`가 `PUBLIC`인 레시피와 `USER`인 레시피를 모두 포함한다.
 - `imageUrl`은 `thumbnailUrl`이 있으면 `thumbnailUrl`, 없으면 `mainImageUrl` 값을 응답한다.
 - `keyword`는 레시피 `name`과 `ingredients`의 `items` 문자열을 대상으로 검색한다.
@@ -151,7 +151,6 @@
 - 요리 방법과 요리 종류 필터는 각각 복수 선택을 지원한다.
 - 로그인 사용자는 각 레시피의 실제 스크랩 여부를 확인할 수 있다.
 - 비로그인 사용자는 모든 레시피의 `isSaved`가 `false`로 응답된다.
-- `x-member-id` 헤더가 없고 DB에 활성 member가 1개 있으면 해당 member의 스크랩 여부가 `isSaved`에 반영된다.
 - 잘못된 페이지네이션 값은 오류로 응답된다.
 
 ## 레시피 단건 조회
@@ -160,7 +159,7 @@
 
 인증은 선택이다. 로그인 사용자는 해당 레시피의 실제 스크랩 여부를 응답하고, 비로그인 사용자는 `isSaved`를 `false`로 응답한다.
 
-정식 인증 미들웨어가 아직 구현되지 않았으므로 API는 임시로 `x-member-id` 헤더를 현재 사용자 식별자로 사용한다.
+인증은 `shared/middleware/auth.ts`의 `getCurrentMemberId`로 처리한다.
 
 ### 요청 예시
 
@@ -262,9 +261,10 @@
 - 공개 레시피와 사용자 작성 레시피를 모두 조회 대상에 포함한다.
 - `scrapCount`는 `recipe_scraps` 관계를 집계해서 계산한다.
 - `isSaved`는 현재 사용자 기준 `recipe_scraps` 존재 여부로 계산한다.
-- `x-member-id` 헤더가 있으면 해당 member를 현재 사용자로 본다.
-- `x-member-id` 헤더가 없으면 mock DB 확인을 위해 `deletedAt`이 없는 첫 member를 현재 사용자로 사용한다.
-- 사용할 수 있는 member가 없으면 비로그인 요청으로 보고 `isSaved`를 `false`로 응답한다.
+- `Authorization: Bearer <token>` 헤더가 있으면 JWT를 검증해 현재 사용자를 식별한다.
+- 유효하지 않은 토큰이면 `401`을 반환한다.
+- 헤더가 없으면 비로그인으로 처리하고 `isSaved`를 `false`로 응답한다.
+- 개발 환경(`ALLOW_DEV_MEMBER_HEADER=true`)에서는 `x-member-id` 헤더로도 사용자를 식별할 수 있다.
 - `authorNickname`은 작성자 정보가 있으면 작성자 닉네임, 없으면 `null`로 응답한다.
 - `sodiumTip`이 없으면 `null`로 응답한다.
 - 존재하지 않는 `recipeId`는 `404` 오류로 응답한다.
@@ -276,7 +276,6 @@
 - 레시피 재료는 `section`, `items` 구조로 반환한다.
 - 조리 단계는 `imageUrl`, `description` 구조로 반환하며 이미지가 없으면 `imageUrl: null`로 응답한다.
 - 로그인 사용자는 해당 레시피의 실제 스크랩 여부를 확인할 수 있다.
-- `x-member-id` 헤더가 없고 DB에 활성 member가 1개 있으면 해당 member의 스크랩 여부가 `isSaved`에 반영된다.
 - 비로그인 사용자는 `isSaved`가 `false`로 응답된다.
 - 존재하지 않는 레시피 ID는 `404` 오류로 응답된다.
 
@@ -599,7 +598,6 @@ null
 - `getCurrentMemberId`로 현재 사용자를 확인한다. 인증 실패 시 `getCurrentMemberId`가 `401`을 throw한다.
 - 존재하지 않는 레시피 ID면 `404`를 반환한다.
 - 이미 스크랩한 레시피를 다시 요청하면 오류 없이 `204`를 반환한다 (멱등).
-- 정식 인증 도입 시 `getCurrentMemberId` 내부 구현을 교체한다.
 
 ### 검증 기준
 
@@ -629,7 +627,6 @@ null
 - `getCurrentMemberId`로 현재 사용자를 확인한다. 인증 실패 시 `getCurrentMemberId`가 `401`을 throw한다.
 - 존재하지 않는 레시피 ID면 `404`를 반환한다.
 - 스크랩 레코드가 없는 경우 오류 없이 `204`를 반환한다 (멱등).
-- 정식 인증 도입 시 `getCurrentMemberId` 내부 구현을 교체한다.
 
 ### 검증 기준
 
