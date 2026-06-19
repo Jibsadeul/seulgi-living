@@ -7,6 +7,7 @@ import { policyKeys } from './keys';
 
 const okSchema = z.object({ ok: z.boolean() });
 
+// 정책 스크랩 기능
 export function usePolicyScrap() {
   const queryClient = useQueryClient();
 

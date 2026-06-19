@@ -190,6 +190,11 @@ export async function getPolicies(
   const { keyword, largeCategory, zipCd, supportType, applyPeriodType, deadlineOnly, page, limit } =
     policyListQuerySchema.parse(query);
 
+  // 쉼표로 구분된 다중 선택값을 배열로 분리한다.
+  const categories = largeCategory ? largeCategory.split(',').filter(Boolean) : [];
+  const regions = zipCd ? zipCd.split(',').filter(Boolean) : [];
+  const supportTypes = supportType ? supportType.split(',').filter(Boolean) : [];
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const in7Days = new Date(today.getTime() + 7 * 86400000);
@@ -206,15 +211,20 @@ export async function getPolicies(
           },
         ]
       : []),
-    ...(zipCd ? [buildRegionFilter(zipCd)] : []),
-    ...(supportType ? [{ keywords: { contains: supportType } }] : []),
+    // largeCategory는 "금융·복지·문화"처럼 복합 카테고리 문자열로 저장되어 있어 부분 일치로 매칭한다.
+    // 여러 카테고리를 선택하면 그중 하나라도 포함되면 매칭한다(OR).
+    ...(categories.length > 0
+      ? [{ OR: categories.map((category) => ({ largeCategory: { contains: category } })) }]
+      : []),
+    ...(regions.length > 0 ? [buildRegionFilter(regions)] : []),
+    ...(supportTypes.length > 0
+      ? [{ OR: supportTypes.map((type) => ({ keywords: { contains: type } })) }]
+      : []),
     ...(deadlineOnly ? [{ applyEndDate: { gte: today, lte: in7Days } }] : []),
   ];
 
   // where 객체를 동적으로 하여 불필요한 필터 붙지 않게끔 함
-  // largeCategory는 "금융·복지·문화"처럼 복합 카테고리 문자열로 저장되어 있어 부분 일치로 매칭한다.
   const where = {
-    ...(largeCategory && { largeCategory: { contains: largeCategory } }),
     ...(applyPeriodType && { applyPeriodType }),
     ...(andConditions.length > 0 && { AND: andConditions }),
   };

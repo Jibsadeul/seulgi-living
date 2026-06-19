@@ -6,9 +6,15 @@ import FilterIcon from '@assets/icons/filter.svg';
 
 type Props = {
   filterValues: PolicyFilterValues;
-  regionLabel?: string;
+  regionLabels?: string[];
   onOpenSection: (section: FilterSection | null) => void;
 };
+
+function buildMultiLabel(values: string[] | undefined, placeholder: string): string {
+  if (!values || values.length === 0) return placeholder;
+  if (values.length === 1) return values[0];
+  return `${values[0]} 외 ${values.length - 1}`;
+}
 
 function FilterChipButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
@@ -23,7 +29,7 @@ function FilterChipButton({ label, onPress }: { label: string; onPress: () => vo
   );
 }
 
-export function PoliciesSearchFilterChips({ filterValues, regionLabel, onOpenSection }: Props) {
+export function PoliciesSearchFilterChips({ filterValues, regionLabels, onOpenSection }: Props) {
   return (
     <ScrollView
       horizontal
@@ -38,12 +44,15 @@ export function PoliciesSearchFilterChips({ filterValues, regionLabel, onOpenSec
         <FilterIcon width={14} height={14} color="#FFFFFF" />
       </Pressable>
       <FilterChipButton
-        label={filterValues.largeCategory ?? '카테고리'}
+        label={buildMultiLabel(filterValues.largeCategory, '카테고리')}
         onPress={() => onOpenSection('category')}
       />
-      <FilterChipButton label={regionLabel ?? '지역'} onPress={() => onOpenSection('region')} />
       <FilterChipButton
-        label={filterValues.supportType ?? '지원유형'}
+        label={buildMultiLabel(regionLabels, '지역')}
+        onPress={() => onOpenSection('region')}
+      />
+      <FilterChipButton
+        label={buildMultiLabel(filterValues.supportType, '지원유형')}
         onPress={() => onOpenSection('supportType')}
       />
       <FilterChipButton

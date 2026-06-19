@@ -77,10 +77,16 @@ export function toPolicy(row: PolicyRow, sigunguNameMap: Map<string, string>): P
   });
 }
 
-export function buildRegionFilter(sigunguId: string | null | undefined) {
-  if (!sigunguId) return {};
+export function buildRegionFilter(sigunguId: string | string[] | null | undefined) {
+  const ids = Array.isArray(sigunguId) ? sigunguId : sigunguId ? [sigunguId] : [];
+  if (ids.length === 0) return {};
+
   return {
-    OR: [{ noZipLimit: true }, { zipCd: null }, { zipCd: { contains: sigunguId } }],
+    OR: [
+      { noZipLimit: true },
+      { zipCd: null },
+      { OR: ids.map((id) => ({ zipCd: { contains: id } })) },
+    ],
   };
 }
 

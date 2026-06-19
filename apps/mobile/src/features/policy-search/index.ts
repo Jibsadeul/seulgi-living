@@ -1,1 +1,6 @@
-export { usePolicySearch, PERIOD_LABEL, type FilterSection } from './model/usePolicySearch';
+export { usePolicySearchEntry } from './model/usePolicySearchEntry';
+export {
+  usePolicySearchResults,
+  PERIOD_LABEL,
+  type FilterSection,
+} from './model/usePolicySearchResults';

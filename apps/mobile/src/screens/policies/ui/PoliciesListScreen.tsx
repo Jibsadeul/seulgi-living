@@ -64,7 +64,7 @@ export function PoliciesListScreen() {
   }
 
   function handleCategoryPress(params: Record<string, unknown>) {
-    router.push({ pathname: '/(stack)/policies/search', params } as never);
+    router.push({ pathname: '/(tabs)/policies-results', params } as never);
   }
 
   return (

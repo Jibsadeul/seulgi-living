@@ -30,9 +30,9 @@ export function useRecommendedPolicies() {
 
 export type PolicySearchParams = {
   keyword?: string;
-  largeCategory?: string;
-  zipCd?: string;
-  supportType?: string;
+  largeCategory?: string[];
+  zipCd?: string[];
+  supportType?: string[];
   applyPeriodType?: '0057001' | '0057002';
   deadlineOnly?: boolean;
 };
@@ -40,9 +40,9 @@ export type PolicySearchParams = {
 function buildSearchQueryString(params: PolicySearchParams, page: number): string {
   const search = new URLSearchParams();
   if (params.keyword) search.set('keyword', params.keyword);
-  if (params.largeCategory) search.set('largeCategory', params.largeCategory);
-  if (params.zipCd) search.set('zipCd', params.zipCd);
-  if (params.supportType) search.set('supportType', params.supportType);
+  if (params.largeCategory?.length) search.set('largeCategory', params.largeCategory.join(','));
+  if (params.zipCd?.length) search.set('zipCd', params.zipCd.join(','));
+  if (params.supportType?.length) search.set('supportType', params.supportType.join(','));
   if (params.applyPeriodType) search.set('applyPeriodType', params.applyPeriodType);
   if (params.deadlineOnly) search.set('deadlineOnly', 'true');
   search.set('page', String(page));

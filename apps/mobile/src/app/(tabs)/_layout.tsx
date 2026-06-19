@@ -18,6 +18,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{ title: '홈' }} />
       <Tabs.Screen name="recipes" options={{ title: '레시피' }} />
       <Tabs.Screen name="policies" options={{ title: '청년정책' }} />
+      <Tabs.Screen name="policies-results" options={{ href: null }} />
       <Tabs.Screen name="map" options={{ title: '편의시설' }} />
     </Tabs>
   );

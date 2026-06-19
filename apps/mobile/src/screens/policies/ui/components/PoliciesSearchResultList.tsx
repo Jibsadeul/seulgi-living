@@ -11,7 +11,7 @@ type Props = {
   isFetchingNextPage: boolean;
   onEndReached: () => void;
   filterValues: PolicyFilterValues;
-  regionLabel?: string;
+  regionLabels?: string[];
   onOpenFilterSection: (section: FilterSection | null) => void;
 };
 
@@ -22,7 +22,7 @@ export function PoliciesSearchResultList({
   isFetchingNextPage,
   onEndReached,
   filterValues,
-  regionLabel,
+  regionLabels,
   onOpenFilterSection,
 }: Props) {
   return (
@@ -41,7 +41,7 @@ export function PoliciesSearchResultList({
         <View>
           <PoliciesSearchFilterChips
             filterValues={filterValues}
-            regionLabel={regionLabel}
+            regionLabels={regionLabels}
             onOpenSection={onOpenFilterSection}
           />
           {totalCount !== undefined && (

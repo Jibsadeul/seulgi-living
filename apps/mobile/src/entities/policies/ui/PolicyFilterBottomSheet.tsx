@@ -39,9 +39,9 @@ const PERIOD_OPTIONS: { label: string; value: '0057001' | '0057002' | undefined 
 ];
 
 export type PolicyFilterValues = {
-  largeCategory?: string;
-  zipCd?: string;
-  supportType?: string;
+  largeCategory?: string[];
+  zipCd?: string[];
+  supportType?: string[];
   applyPeriodType?: '0057001' | '0057002';
 };
 
@@ -54,6 +54,14 @@ type Props = {
   initialSection?: SectionKey | null;
   onApply: (values: PolicyFilterValues) => void;
 };
+
+function toggleInArray(list: string[] | undefined, value: string): string[] | undefined {
+  const current = list ?? [];
+  const next = current.includes(value)
+    ? current.filter((item) => item !== value)
+    : [...current, value];
+  return next.length > 0 ? next : undefined;
+}
 
 function FilterChip({
   label,
@@ -84,13 +92,13 @@ function FilterChip({
 function FilterRow({
   title,
   isExpanded,
-  hasValue,
+  badgeCount,
   onPress,
   children,
 }: {
   title: string;
   isExpanded: boolean;
-  hasValue: boolean;
+  badgeCount: number;
   onPress: () => void;
   children: React.ReactNode;
 }) {
@@ -103,18 +111,21 @@ function FilterRow({
       >
         <Text style={{ fontSize: 14, color: '#1F2024' }}>{title}</Text>
         <View className="flex-row items-center" style={{ gap: 8 }}>
-          {hasValue && (
+          {badgeCount > 0 && (
             <View
               style={{
                 backgroundColor: '#EF7722',
                 borderRadius: 20,
-                width: 20,
+                minWidth: 20,
                 height: 20,
+                paddingHorizontal: 4,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <Text style={{ fontSize: 10, fontWeight: '700', color: '#FFFFFF' }}>1</Text>
+              <Text style={{ fontSize: 10, fontWeight: '700', color: '#FFFFFF' }}>
+                {badgeCount}
+              </Text>
             </View>
           )}
           <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={14} color="#8F9098" />
@@ -207,7 +218,7 @@ export function PolicyFilterBottomSheet({
   return (
     <BottomSheet
       ref={sheetRef}
-      index={-1}
+      index={isOpen ? 0 : -1}
       snapPoints={snapPoints}
       enableDynamicSizing={false}
       enablePanDownToClose
@@ -238,7 +249,7 @@ export function PolicyFilterBottomSheet({
         <FilterRow
           title="카테고리"
           isExpanded={expandedSection === 'category'}
-          hasValue={!!largeCategory}
+          badgeCount={largeCategory?.length ?? 0}
           onPress={() => toggleSection('category')}
         >
           <View className="flex-row flex-wrap" style={{ gap: 8 }}>
@@ -246,8 +257,8 @@ export function PolicyFilterBottomSheet({
               <FilterChip
                 key={label}
                 label={label}
-                selected={largeCategory === label}
-                onPress={() => setLargeCategory(largeCategory === label ? undefined : label)}
+                selected={!!largeCategory?.includes(label)}
+                onPress={() => setLargeCategory(toggleInArray(largeCategory, label))}
               />
             ))}
           </View>
@@ -256,7 +267,7 @@ export function PolicyFilterBottomSheet({
         <FilterRow
           title="지역"
           isExpanded={expandedSection === 'region'}
-          hasValue={!!zipCd}
+          badgeCount={zipCd?.length ?? 0}
           onPress={() => toggleSection('region')}
         >
           <View className="flex-row flex-wrap" style={{ gap: 8 }}>
@@ -264,8 +275,8 @@ export function PolicyFilterBottomSheet({
               <FilterChip
                 key={sido.id}
                 label={sido.name}
-                selected={zipCd === sido.id}
-                onPress={() => setZipCd(zipCd === sido.id ? undefined : sido.id)}
+                selected={!!zipCd?.includes(sido.id)}
+                onPress={() => setZipCd(toggleInArray(zipCd, sido.id))}
               />
             ))}
           </View>
@@ -274,7 +285,7 @@ export function PolicyFilterBottomSheet({
         <FilterRow
           title="지원유형"
           isExpanded={expandedSection === 'supportType'}
-          hasValue={!!supportType}
+          badgeCount={supportType?.length ?? 0}
           onPress={() => toggleSection('supportType')}
         >
           <View className="flex-row flex-wrap" style={{ gap: 8 }}>
@@ -282,8 +293,8 @@ export function PolicyFilterBottomSheet({
               <FilterChip
                 key={label}
                 label={label}
-                selected={supportType === label}
-                onPress={() => setSupportType(supportType === label ? undefined : label)}
+                selected={!!supportType?.includes(label)}
+                onPress={() => setSupportType(toggleInArray(supportType, label))}
               />
             ))}
           </View>
@@ -292,7 +303,7 @@ export function PolicyFilterBottomSheet({
         <FilterRow
           title="정렬"
           isExpanded={expandedSection === 'period'}
-          hasValue={!!applyPeriodType}
+          badgeCount={1}
           onPress={() => toggleSection('period')}
         >
           <View className="flex-row flex-wrap" style={{ gap: 8 }}>
