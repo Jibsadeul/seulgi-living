@@ -60,6 +60,17 @@ type UpdateRecipeInput = {
   body: RecipeUpdateBody;
   mainImage?: File;
   stepImages: Map<number, File>;
+  editableRecipe?: EditableRecipe;
+};
+
+type EditableRecipe = {
+  id: string;
+  source: 'PUBLIC' | 'USER';
+  userId: string | null;
+  mainImageUrl: string;
+  recipeSteps: {
+    imageUrl: string | null;
+  }[];
 };
 
 function normalizeArray<T>(value: T | T[] | undefined) {
@@ -398,29 +409,7 @@ export async function updateRecipe(input: UpdateRecipeInput) {
   const uploadedImages: { key: string; url: string }[] = [];
   const oldImageUrlsToDelete = new Set<string>();
 
-  const recipe = await prisma.recipe.findUnique({
-    where: { id: recipeId },
-    select: {
-      id: true,
-      source: true,
-      userId: true,
-      mainImageUrl: true,
-      recipeSteps: {
-        orderBy: { stepNumber: 'asc' },
-        select: {
-          imageUrl: true,
-        },
-      },
-    },
-  });
-
-  if (!recipe) {
-    throw errors.notFound('레시피를 찾을 수 없습니다.');
-  }
-
-  if (recipe.source !== 'USER' || recipe.userId !== input.memberId) {
-    throw errors.forbidden('수정 권한이 없습니다.');
-  }
+  const recipe = input.editableRecipe ?? (await getEditableRecipe(input.memberId, recipeId));
 
   if (Boolean(input.mainImage) === Boolean(body.mainImageUrl)) {
     throw errors.validation('mainImage 또는 mainImageUrl 중 하나만 전송해야 합니다.');
@@ -530,6 +519,38 @@ export async function updateRecipe(input: UpdateRecipeInput) {
     await deleteRecipeImages(uploadedImages);
     throw error;
   }
+}
+
+export async function getEditableRecipe(
+  memberId: string,
+  recipeIdInput: unknown,
+): Promise<EditableRecipe> {
+  const { recipeId } = recipeDetailParamsSchema.parse({ recipeId: recipeIdInput });
+  const recipe = await prisma.recipe.findUnique({
+    where: { id: recipeId },
+    select: {
+      id: true,
+      source: true,
+      userId: true,
+      mainImageUrl: true,
+      recipeSteps: {
+        orderBy: { stepNumber: 'asc' },
+        select: {
+          imageUrl: true,
+        },
+      },
+    },
+  });
+
+  if (!recipe) {
+    throw errors.notFound('레시피를 찾을 수 없습니다.');
+  }
+
+  if (recipe.source !== 'USER' || recipe.userId !== memberId) {
+    throw errors.forbidden('수정 권한이 없습니다.');
+  }
+
+  return recipe;
 }
 
 export async function deleteRecipe(memberId: string, recipeIdInput: unknown) {

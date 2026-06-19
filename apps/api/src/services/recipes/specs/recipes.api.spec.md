@@ -409,7 +409,7 @@ sodiumTip = 저염 간장을 사용하고 간장 양을 줄인다.
 ### 규칙
 
 - `getCurrentMemberId`로 현재 사용자를 확인한다. 인증 실패 시 `getCurrentMemberId`가 `401`을 throw한다.
-- 존재하지 않는 레시피 ID는 `404` 오류로 응답한다.
+- 존재하지 않는 레시피 ID는 요청 바디 검증보다 먼저 `404` 오류로 응답한다.
 - `recipes.source`가 `USER`가 아니면 `403` 오류로 응답한다.
 - `recipes.user_id`가 현재 사용자 ID와 다르면 `403` 오류로 응답한다.
 - `mainImage`가 있으면 새 파일을 업로드하고 대표 이미지를 교체한다.
