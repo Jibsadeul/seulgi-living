@@ -125,7 +125,7 @@
 | name | VARCHAR(50) | NOT NULL |
 | quantity_text | VARCHAR(20) | NULL |
 | price | INTEGER | NOT NULL |
-| purchased_at | TIMESTAMP | NOT NULL |
+| purchased_at | DATE | NOT NULL, DEFAULT CURRENT_DATE |
 | created_at | TIMESTAMPTZ | NOT NULL |
 
 ---
