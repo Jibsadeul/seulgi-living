@@ -24,7 +24,7 @@
       "package": "com.seulgiliving.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/pre-logo.png"
     },
     "extra": {
       "router": {},

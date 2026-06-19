@@ -25,7 +25,7 @@ export default function Index() {
     return () => {
       isMounted = false;
     };
-  }, [router, setMemberProfileFromMe]);
+  }, [router]);
 
   return (
     <View className="flex-1 items-center justify-center bg-white">
