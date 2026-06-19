@@ -401,7 +401,7 @@ async function getFridgeRecommendations(userId: string, page: number, size: numb
   const countRows = await prisma.$queryRawUnsafe<CountRow[]>(
     `
       WITH user_fridge AS (
-        SELECT name FROM fridge_ingredients WHERE user_id = $1::uuid
+        SELECT DISTINCT name FROM fridge_ingredients WHERE user_id = $1::uuid
       ),
       recipe_matched_fridge AS (
         SELECT DISTINCT r.id
@@ -430,7 +430,7 @@ async function getFridgeRecommendations(userId: string, page: number, size: numb
   const rows = await prisma.$queryRawUnsafe<RecipeListRow[]>(
     `
       WITH user_fridge AS (
-        SELECT name FROM fridge_ingredients WHERE user_id = $1::uuid
+        SELECT DISTINCT name FROM fridge_ingredients WHERE user_id = $1::uuid
       ),
       fridge_count AS (
         SELECT COUNT(*)::int AS total FROM user_fridge
