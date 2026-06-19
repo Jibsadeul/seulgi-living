@@ -9,7 +9,7 @@
     "icon": "./assets/pre-logo.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/pre-logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -24,7 +24,7 @@
       "package": "com.seulgiliving.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/pre-logo.png"
     },
     "extra": {
       "router": {},

@@ -1,0 +1,252 @@
+import { useState } from 'react';
+import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Header } from '@/shared/ui';
+import {
+  useRecipeList,
+  useRecipeScrap,
+  getRecipeTags,
+  type RecipeCategory,
+  type RecipeTag,
+} from '@/entities/recipes';
+
+type SituationCategory = 'night' | 'speed' | 'dessert' | 'health';
+
+type CategoryMeta = {
+  label: string;
+  title: string;
+  subtitle: string;
+  apiCategory: RecipeCategory;
+};
+
+const CATEGORIES: { value: SituationCategory; meta: CategoryMeta }[] = [
+  {
+    value: 'night',
+    meta: {
+      label: '야식/안주',
+      title: '야식/안주 추천 ',
+      subtitle: '오늘 밤, 나만을 위한 최고의 야식 선택',
+      apiCategory: 'SIDE_DISH',
+    },
+  },
+  {
+    value: 'speed',
+    meta: {
+      label: '초스피드',
+      title: '초스피드 추천 ',
+      subtitle: '바쁜 당신을 위한 10분 완성 레시피',
+      apiCategory: 'OTHER',
+    },
+  },
+  {
+    value: 'dessert',
+    meta: {
+      label: '디저트',
+      title: '디저트 추천 ',
+      subtitle: '달콤한 하루를 마무리하는 디저트 모음',
+      apiCategory: 'DESSERT',
+    },
+  },
+  {
+    value: 'health',
+    meta: {
+      label: '건강식',
+      title: '건강식 추천 ',
+      subtitle: '몸도 마음도 건강해지는 레시피',
+      apiCategory: 'SOUP_STEW',
+    },
+  },
+];
+
+const TAG_STYLES: Record<RecipeTag['variant'], { container: string; text: string }> = {
+  pink: { container: 'bg-tag-pink', text: 'text-tagText-pink' },
+  blue: { container: 'bg-tag-blue', text: 'text-tagText-blue' },
+  green: { container: 'bg-tag-green', text: 'text-tagText-green' },
+  orange: { container: 'bg-tag-orange', text: 'text-tagText-orange' },
+  yellow: { container: 'bg-tag-yellow', text: 'text-tagText-yellow' },
+  grey: { container: 'bg-tag-grey', text: 'text-tagText-grey' },
+};
+
+const PAGE_SIZE = 10;
+
+export function RecipeListBySituationScreen() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ category?: string }>();
+  const initialCategory = (params.category as SituationCategory) || 'night';
+
+  const [activeCategory, setActiveCategory] = useState<SituationCategory>(initialCategory);
+  const [page, setPage] = useState(1);
+  const scrapMutation = useRecipeScrap();
+
+  const currentMeta = CATEGORIES.find((c) => c.value === activeCategory)?.meta;
+  const apiCategory = currentMeta?.apiCategory;
+
+  const { data, isLoading } = useRecipeList({
+    page,
+    size: PAGE_SIZE,
+    category: apiCategory,
+  });
+
+  const recipes = data?.items ?? [];
+  const totalCount = data?.totalCount ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  function handleCategoryChange(category: SituationCategory) {
+    setActiveCategory(category);
+    setPage(1);
+  }
+
+  function handleToggleScrap(recipeId: string, currentlySaved: boolean) {
+    scrapMutation.mutate({ recipeId, isSaved: !currentlySaved });
+  }
+
+  function handleRecipePress(id: string) {
+    router.push({ pathname: '/(stack)/recipes/[id]', params: { id } } as never);
+  }
+
+  return (
+    <View className="flex-1 bg-surface-default">
+      <Header title="상황별 추천 레시피" variant="back" />
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* 카테고리 탭 칩 */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingVertical: 12 }}
+        >
+          {CATEGORIES.map((cat) => {
+            const isActive = cat.value === activeCategory;
+            return (
+              <Pressable
+                key={cat.value}
+                onPress={() => handleCategoryChange(cat.value)}
+                className={`px-5 py-2 rounded-full border ${
+                  isActive ? 'bg-main-100 border-main-100' : 'bg-surface-default border-gray-30'
+                }`}
+              >
+                <Text className={`text-sm font-medium ${isActive ? 'text-white' : 'text-gray-70'}`}>
+                  {cat.meta.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        {/* 카테고리 타이틀 */}
+        {currentMeta && (
+          <View className="px-4 mt-2 mb-1">
+            <Text className="text-lg font-bold text-gray-90">{currentMeta.title}</Text>
+            <Text className="text-sm text-gray-60 mt-1">{currentMeta.subtitle}</Text>
+          </View>
+        )}
+
+        {/* 검색 결과 + 페이지네이션 */}
+        <View className="flex-row items-center justify-between px-4 mt-4 mb-3">
+          <Text className="text-xs text-gray-60">검색 결과 {totalCount}건</Text>
+          <View className="flex-row items-center gap-2">
+            <Pressable onPress={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
+              <Ionicons name="chevron-back" size={14} color={page <= 1 ? '#C6C6C6' : '#717171'} />
+            </Pressable>
+            <Text className="text-xs text-gray-70">
+              {page} / {totalPages}
+            </Text>
+            <Pressable
+              onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+            >
+              <Ionicons
+                name="chevron-forward"
+                size={14}
+                color={page >= totalPages ? '#C6C6C6' : '#717171'}
+              />
+            </Pressable>
+          </View>
+        </View>
+
+        {/* 2열 레시피 그리드 */}
+        {isLoading ? (
+          <View className="items-center py-16">
+            <ActivityIndicator color="#EF7722" size="large" />
+          </View>
+        ) : recipes.length === 0 ? (
+          <View className="items-center py-16 px-4">
+            <Text className="text-base font-semibold text-gray-90 mb-2">레시피가 없어요</Text>
+            <Text className="text-sm text-gray-50 text-center">다른 카테고리를 선택해보세요.</Text>
+          </View>
+        ) : (
+          <View className="flex-row flex-wrap px-4 gap-3 pb-32">
+            {recipes.map((recipe) => {
+              const tags = getRecipeTags(recipe.category, recipe.cookingMethod);
+              return (
+                <Pressable
+                  key={recipe.id}
+                  onPress={() => handleRecipePress(recipe.id)}
+                  className="bg-surface-default rounded-2xl overflow-hidden"
+                  style={{ width: '47.5%' }}
+                >
+                  {recipe.imageUrl ? (
+                    <View className="w-full aspect-square relative">
+                      <Image
+                        source={{ uri: recipe.imageUrl }}
+                        className="w-full h-full"
+                        resizeMode="cover"
+                      />
+                      <Pressable
+                        onPress={() => handleToggleScrap(recipe.id, recipe.isSaved)}
+                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 items-center justify-center"
+                        hitSlop={8}
+                      >
+                        <Ionicons
+                          name={recipe.isSaved ? 'bookmark' : 'bookmark-outline'}
+                          size={16}
+                          color={recipe.isSaved ? '#EF7722' : '#8E8E8E'}
+                        />
+                      </Pressable>
+                    </View>
+                  ) : (
+                    <View className="w-full aspect-square bg-gray-10 relative">
+                      <Pressable
+                        onPress={() => handleToggleScrap(recipe.id, recipe.isSaved)}
+                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 items-center justify-center"
+                        hitSlop={8}
+                      >
+                        <Ionicons
+                          name={recipe.isSaved ? 'bookmark' : 'bookmark-outline'}
+                          size={16}
+                          color={recipe.isSaved ? '#EF7722' : '#8E8E8E'}
+                        />
+                      </Pressable>
+                    </View>
+                  )}
+
+                  <View className="p-2 gap-1">
+                    <Text className="text-sm font-semibold text-gray-90" numberOfLines={1}>
+                      {recipe.name}
+                    </Text>
+                    <View className="flex-row gap-1 flex-wrap">
+                      {tags.map((tag) => {
+                        const style = TAG_STYLES[tag.variant];
+                        return (
+                          <View
+                            key={tag.label}
+                            className={`px-2 py-0.5 rounded-full ${style.container}`}
+                          >
+                            <Text className={`text-[10px] font-medium ${style.text}`}>
+                              {tag.label}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+      </ScrollView>
+    </View>
+  );
+}
