@@ -107,6 +107,20 @@ function buildWhereClause(query: RecipeListQuery) {
     conditions.push(`r.category::text = ANY($${values.push(categories)}::text[])`);
   }
 
+  const levels = normalizeArray(query.level);
+
+  if (levels) {
+    conditions.push(`(
+      SELECT CASE
+        WHEN COUNT(*) <= 3 THEN 'LOW'
+        WHEN COUNT(*) <= 6 THEN 'MEDIUM'
+        ELSE 'HIGH'
+      END
+      FROM recipe_steps
+      WHERE recipe_id = r.id
+    ) = ANY($${values.push(levels)}::text[])`);
+  }
+
   if (query.keyword) {
     const keywordParam = `$${values.push(`%${query.keyword}%`)}`;
     conditions.push(`(

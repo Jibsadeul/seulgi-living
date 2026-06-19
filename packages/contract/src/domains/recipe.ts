@@ -21,6 +21,8 @@ export const recipeCategorySchema = z.enum([
 
 export const recipeSortSchema = z.enum(['latest', 'oldest', 'popular']);
 
+export const recipeLevelSchema = z.enum(['LOW', 'MEDIUM', 'HIGH']);
+
 export const recipeListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   size: z.coerce.number().int().min(1).max(100).default(20),
@@ -28,6 +30,7 @@ export const recipeListQuerySchema = z.object({
   keyword: z.string().trim().min(1).optional(),
   cookingMethod: z.union([cookingMethodSchema, z.array(cookingMethodSchema)]).optional(),
   category: z.union([recipeCategorySchema, z.array(recipeCategorySchema)]).optional(),
+  level: z.union([recipeLevelSchema, z.array(recipeLevelSchema)]).optional(),
 });
 
 export const recipeScrapListQuerySchema = recipeListQuerySchema.pick({
@@ -144,6 +147,7 @@ export const recipeDeleteResponseSchema = z.null();
 export type CookingMethod = z.infer<typeof cookingMethodSchema>;
 export type RecipeCategory = z.infer<typeof recipeCategorySchema>;
 export type RecipeSort = z.infer<typeof recipeSortSchema>;
+export type RecipeLevel = z.infer<typeof recipeLevelSchema>;
 export type RecipeListQuery = z.infer<typeof recipeListQuerySchema>;
 export type RecipeScrapListQuery = z.infer<typeof recipeScrapListQuerySchema>;
 export type RecipePreview = z.infer<typeof recipePreviewSchema>;
