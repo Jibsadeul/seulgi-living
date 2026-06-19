@@ -1,14 +1,12 @@
 import { useMemo, useState } from 'react';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
-import type { MemberMe } from '@/entities/members';
 import {
   API_BASE_URL,
   AUTH_REDIRECT_SCHEME,
   KAKAO_REDIRECT_URI,
   KAKAO_REST_API_KEY,
 } from '@/shared/config/constants';
-import { submitKakaoLogin } from '../api/useLoginSubmit';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -25,32 +23,6 @@ function buildAppRedirectUri() {
   });
 }
 
-function buildUrlWithQuery(baseUrl: string, params: Record<string, string>) {
-  const query = Object.entries(params)
-    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-    .join('&');
-
-  return `${baseUrl}?${query}`;
-}
-
-function getQueryParam(url: string, key: string) {
-  const queryStart = url.indexOf('?');
-  if (queryStart === -1) return null;
-
-  const hashStart = url.indexOf('#', queryStart);
-  const query = url.slice(queryStart + 1, hashStart === -1 ? undefined : hashStart);
-  const pairs = query.split('&');
-
-  for (const pair of pairs) {
-    const [rawKey, rawValue = ''] = pair.split('=');
-    if (decodeURIComponent(rawKey) === key) {
-      return decodeURIComponent(rawValue.replace(/\+/g, ' '));
-    }
-  }
-
-  return null;
-}
-
 export const useLogin = () => {
   const [state, setState] = useState<LoginState>('idle');
   const [message, setMessage] = useState<string | null>(null);
@@ -58,7 +30,7 @@ export const useLogin = () => {
   const redirectUri = useMemo(buildKakaoRedirectUri, []);
   const appRedirectUri = useMemo(buildAppRedirectUri, []);
 
-  const login = async (): Promise<MemberMe | null> => {
+  const login = async (): Promise<null> => {
     if (isLoading) return null;
 
     if (!KAKAO_REST_API_KEY) {
@@ -72,34 +44,31 @@ export const useLogin = () => {
 
     try {
       const stateValue = Math.random().toString(36).slice(2);
-      const authUrl = buildUrlWithQuery('https://kauth.kakao.com/oauth/authorize', {
-        client_id: KAKAO_REST_API_KEY,
-        redirect_uri: redirectUri,
-        response_type: 'code',
-        state: stateValue,
-      });
+      const authUrl = new URL('https://kauth.kakao.com/oauth/authorize');
+      authUrl.searchParams.set('client_id', KAKAO_REST_API_KEY);
+      authUrl.searchParams.set('redirect_uri', redirectUri);
+      authUrl.searchParams.set('response_type', 'code');
+      authUrl.searchParams.set('state', stateValue);
 
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, appRedirectUri);
+      const result = await WebBrowser.openAuthSessionAsync(authUrl.toString(), appRedirectUri);
 
       if (result.type !== 'success') {
         setState('cancelled');
         return null;
       }
 
-      const code = getQueryParam(result.url, 'code');
-      const error = getQueryParam(result.url, 'error');
-      const returnedState = getQueryParam(result.url, 'state');
+      const resultUrl = new URL(result.url);
+      const error = resultUrl.searchParams.get('error');
+      const returnedState = resultUrl.searchParams.get('state');
 
-      if (error || returnedState !== stateValue || !code) {
+      if (error || returnedState !== stateValue) {
         setState('error');
         setMessage('카카오 로그인에 실패했습니다.');
         return null;
       }
 
-      const member = await submitKakaoLogin({ code, redirectUri });
-
       setState('success');
-      return member;
+      return null;
     } catch {
       setState('error');
       setMessage('로그인에 실패했습니다. 다시 시도해주세요.');
