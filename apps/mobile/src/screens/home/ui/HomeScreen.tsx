@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { getCurrentMember, type MemberMe, useMemberStore } from '@/entities/members';
 import { MemberInfoBottomSheet } from '@/screens/members';
+import { FridgePreview } from '@/screens/fridge/ui/components/FridgePreview';
 import { HomeHeader } from '@/screens/home/ui/components/HomeHeader';
-import { FridgePreview } from '@/screens/home/ui/fridge/FridgePreview';
-import { PoliciesScrapPreview } from '@/screens/home/ui/policies/PoliciesScrapPreview';
-import { RecipesScrapPreview } from '@/screens/home/ui/recipes/RecipesScrapPreview';
+import { PoliciesScrapPreview } from '@/screens/policies/ui/components/PoliciesScrapPreview';
+import { RecipesScrapPreview } from '@/screens/recipes/ui/components/RecipesScrapPreview';
 
 export function HomeScreen() {
   const [member, setMember] = useState<MemberMe | null>(null);
