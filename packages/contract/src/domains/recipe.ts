@@ -89,6 +89,58 @@ export const recipeDetailResponseSchema = z.object({
   recipe: recipeDetailSchema,
 });
 
+export const recipeCreateFormFieldsSchema = z.object({
+  name: z.string().trim().min(1),
+  cookingMethod: cookingMethodSchema,
+  category: recipeCategorySchema,
+  ingredients: z.string().trim().min(1),
+  steps: z.string().trim().min(1),
+  sodiumTip: z.string().trim().min(1).optional(),
+});
+
+export const recipeCreateIngredientSchema = recipeIngredientSchema;
+
+export const recipeCreateStepSchema = z.object({
+  description: z.string().trim().min(1),
+  imageUrl: z.null().optional(),
+});
+
+export const recipeCreateBodySchema = z.object({
+  name: z.string().trim().min(1),
+  cookingMethod: cookingMethodSchema,
+  category: recipeCategorySchema,
+  ingredients: z.array(recipeCreateIngredientSchema).min(1),
+  steps: z.array(recipeCreateStepSchema).min(1),
+  sodiumTip: z.string().trim().min(1).nullable(),
+});
+
+export const recipeCreateResponseSchema = z.object({
+  recipeId: z.string().uuid(),
+});
+
+export const recipeUpdateFormFieldsSchema = recipeCreateFormFieldsSchema.extend({
+  mainImageUrl: z.string().trim().min(1).optional(),
+});
+
+export const recipeUpdateStepSchema = z.object({
+  description: z.string().trim().min(1),
+  imageUrl: z.string().trim().min(1).nullable().optional(),
+});
+
+export const recipeUpdateBodySchema = z.object({
+  name: z.string().trim().min(1),
+  cookingMethod: cookingMethodSchema,
+  category: recipeCategorySchema,
+  ingredients: z.array(recipeCreateIngredientSchema).min(1),
+  steps: z.array(recipeUpdateStepSchema).min(1),
+  sodiumTip: z.string().trim().min(1).nullable(),
+  mainImageUrl: z.string().trim().min(1).optional(),
+});
+
+export const recipeUpdateResponseSchema = recipeCreateResponseSchema;
+
+export const recipeDeleteResponseSchema = z.null();
+
 export type CookingMethod = z.infer<typeof cookingMethodSchema>;
 export type RecipeCategory = z.infer<typeof recipeCategorySchema>;
 export type RecipeSort = z.infer<typeof recipeSortSchema>;
@@ -102,3 +154,13 @@ export type RecipeIngredient = z.infer<typeof recipeIngredientSchema>;
 export type RecipeStep = z.infer<typeof recipeStepSchema>;
 export type RecipeDetail = z.infer<typeof recipeDetailSchema>;
 export type RecipeDetailResponse = z.infer<typeof recipeDetailResponseSchema>;
+export type RecipeCreateFormFields = z.infer<typeof recipeCreateFormFieldsSchema>;
+export type RecipeCreateIngredient = z.infer<typeof recipeCreateIngredientSchema>;
+export type RecipeCreateStep = z.infer<typeof recipeCreateStepSchema>;
+export type RecipeCreateBody = z.infer<typeof recipeCreateBodySchema>;
+export type RecipeCreateResponse = z.infer<typeof recipeCreateResponseSchema>;
+export type RecipeUpdateFormFields = z.infer<typeof recipeUpdateFormFieldsSchema>;
+export type RecipeUpdateStep = z.infer<typeof recipeUpdateStepSchema>;
+export type RecipeUpdateBody = z.infer<typeof recipeUpdateBodySchema>;
+export type RecipeUpdateResponse = z.infer<typeof recipeUpdateResponseSchema>;
+export type RecipeDeleteResponse = z.infer<typeof recipeDeleteResponseSchema>;
