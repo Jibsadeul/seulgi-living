@@ -139,6 +139,8 @@ export const recipeUpdateBodySchema = z.object({
 
 export const recipeUpdateResponseSchema = recipeCreateResponseSchema;
 
+export const recipeDeleteResponseSchema = z.null();
+
 export type CookingMethod = z.infer<typeof cookingMethodSchema>;
 export type RecipeCategory = z.infer<typeof recipeCategorySchema>;
 export type RecipeSort = z.infer<typeof recipeSortSchema>;
@@ -161,3 +163,4 @@ export type RecipeUpdateFormFields = z.infer<typeof recipeUpdateFormFieldsSchema
 export type RecipeUpdateStep = z.infer<typeof recipeUpdateStepSchema>;
 export type RecipeUpdateBody = z.infer<typeof recipeUpdateBodySchema>;
 export type RecipeUpdateResponse = z.infer<typeof recipeUpdateResponseSchema>;
+export type RecipeDeleteResponse = z.infer<typeof recipeDeleteResponseSchema>;

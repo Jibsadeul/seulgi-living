@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getRecipeDetail, updateRecipe } from '@/services/recipes/recipes.service';
+import { deleteRecipe, getRecipeDetail, updateRecipe } from '@/services/recipes/recipes.service';
 import { withHandler } from '@/shared/lib/handler';
 import { jsonResponse, optionsResponse } from '@/shared/lib/response';
 import { getCurrentMemberId } from '@/shared/middleware/auth';
@@ -128,6 +128,16 @@ export const PUT = withHandler(async (request: NextRequest, { params }) => {
   return jsonResponse(result);
 });
 
+export const DELETE = withHandler(async (request: NextRequest, { params }) => {
+  const { recipeId } = await params;
+  const memberId = await getCurrentMemberId(request);
+  if (!memberId) throw errors.unauthorized();
+
+  const result = await deleteRecipe(memberId, recipeId);
+
+  return jsonResponse(result);
+});
+
 export function OPTIONS() {
-  return optionsResponse('GET, PUT, OPTIONS');
+  return optionsResponse('GET, PUT, DELETE, OPTIONS');
 }

@@ -6,6 +6,7 @@ import {
   recipeListQuerySchema,
   recipeListResponseSchema,
   recipeScrapListQuerySchema,
+  recipeDeleteResponseSchema,
   recipeUpdateBodySchema,
   recipeUpdateResponseSchema,
   type CookingMethod,
@@ -529,6 +530,49 @@ export async function updateRecipe(input: UpdateRecipeInput) {
     await deleteRecipeImages(uploadedImages);
     throw error;
   }
+}
+
+export async function deleteRecipe(memberId: string, recipeIdInput: unknown) {
+  const { recipeId } = recipeDetailParamsSchema.parse({ recipeId: recipeIdInput });
+  const recipe = await prisma.recipe.findUnique({
+    where: { id: recipeId },
+    select: {
+      id: true,
+      source: true,
+      userId: true,
+      mainImageUrl: true,
+      recipeSteps: {
+        select: {
+          imageUrl: true,
+        },
+      },
+    },
+  });
+
+  if (!recipe) {
+    throw errors.notFound('레시피를 찾을 수 없습니다.');
+  }
+
+  if (recipe.source !== 'USER' || recipe.userId !== memberId) {
+    throw errors.forbidden('삭제 권한이 없습니다.');
+  }
+
+  const imageUrlsToDelete = [
+    recipe.mainImageUrl,
+    ...recipe.recipeSteps.flatMap((step) => (step.imageUrl ? [step.imageUrl] : [])),
+  ];
+
+  await prisma.recipe.delete({
+    where: { id: recipeId },
+  });
+
+  try {
+    await deleteRecipeImagesByUrls(imageUrlsToDelete);
+  } catch (deleteError) {
+    console.error(deleteError);
+  }
+
+  return recipeDeleteResponseSchema.parse(null);
 }
 
 export async function scrapRecipe(memberId: string, recipeId: string): Promise<void> {
