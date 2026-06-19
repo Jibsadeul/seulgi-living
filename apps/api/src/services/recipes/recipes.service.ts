@@ -6,15 +6,22 @@ import {
   recipeListQuerySchema,
   recipeListResponseSchema,
   recipeScrapListQuerySchema,
+  recipeUpdateBodySchema,
+  recipeUpdateResponseSchema,
   type CookingMethod,
   type RecipeCreateBody,
   type RecipeCategory,
   type RecipeListQuery,
   type RecipeScrapListQuery,
+  type RecipeUpdateBody,
 } from '@repo/contract';
 import { prisma } from '@repo/db';
 import { errors } from '@/shared/lib/error';
-import { deleteRecipeImages, uploadRecipeImage } from '@/shared/external/s3-storage.client';
+import {
+  deleteRecipeImages,
+  deleteRecipeImagesByUrls,
+  uploadRecipeImage,
+} from '@/shared/external/s3-storage.client';
 import { randomUUID } from 'crypto';
 
 type ListRecipesContext = {
@@ -43,6 +50,14 @@ type CreateRecipeInput = {
   memberId: string;
   body: RecipeCreateBody;
   mainImage: File;
+  stepImages: Map<number, File>;
+};
+
+type UpdateRecipeInput = {
+  recipeId: string;
+  memberId: string;
+  body: RecipeUpdateBody;
+  mainImage?: File;
   stepImages: Map<number, File>;
 };
 
@@ -370,6 +385,146 @@ export async function createRecipe(input: CreateRecipeInput) {
     });
 
     return recipeCreateResponseSchema.parse({ recipeId });
+  } catch (error) {
+    await deleteRecipeImages(uploadedImages);
+    throw error;
+  }
+}
+
+export async function updateRecipe(input: UpdateRecipeInput) {
+  const { recipeId } = recipeDetailParamsSchema.parse({ recipeId: input.recipeId });
+  const body = recipeUpdateBodySchema.parse(input.body);
+  const uploadedImages: { key: string; url: string }[] = [];
+  const oldImageUrlsToDelete = new Set<string>();
+
+  const recipe = await prisma.recipe.findUnique({
+    where: { id: recipeId },
+    select: {
+      id: true,
+      source: true,
+      userId: true,
+      mainImageUrl: true,
+      recipeSteps: {
+        orderBy: { stepNumber: 'asc' },
+        select: {
+          imageUrl: true,
+        },
+      },
+    },
+  });
+
+  if (!recipe) {
+    throw errors.notFound('레시피를 찾을 수 없습니다.');
+  }
+
+  if (recipe.source !== 'USER' || recipe.userId !== input.memberId) {
+    throw errors.forbidden('수정 권한이 없습니다.');
+  }
+
+  if (Boolean(input.mainImage) === Boolean(body.mainImageUrl)) {
+    throw errors.validation('mainImage 또는 mainImageUrl 중 하나만 전송해야 합니다.');
+  }
+
+  const existingStepImageUrls = new Set(
+    recipe.recipeSteps.flatMap((step) => (step.imageUrl ? [step.imageUrl] : [])),
+  );
+
+  for (const [stepIndex] of input.stepImages.entries()) {
+    if (stepIndex < 0 || stepIndex >= body.steps.length) {
+      throw errors.validation('조리 단계 이미지 index가 올바르지 않습니다.');
+    }
+  }
+
+  body.steps.forEach((step, index) => {
+    if (step.imageUrl && input.stepImages.has(index)) {
+      throw errors.validation(
+        '기존 조리 단계 이미지 URL과 새 이미지 파일을 동시에 보낼 수 없습니다.',
+      );
+    }
+
+    if (step.imageUrl && !existingStepImageUrls.has(step.imageUrl)) {
+      throw errors.validation('조리 단계 이미지 URL이 올바르지 않습니다.');
+    }
+  });
+
+  if (body.mainImageUrl && body.mainImageUrl !== recipe.mainImageUrl) {
+    throw errors.validation('대표 이미지 URL이 올바르지 않습니다.');
+  }
+
+  try {
+    let nextMainImageUrl = recipe.mainImageUrl;
+    if (input.mainImage) {
+      const uploadedMainImage = await uploadRecipeImage({
+        file: input.mainImage,
+        memberId: input.memberId,
+        recipeId,
+        kind: 'main',
+      });
+      uploadedImages.push(uploadedMainImage);
+      nextMainImageUrl = uploadedMainImage.url;
+      oldImageUrlsToDelete.add(recipe.mainImageUrl);
+    }
+
+    const stepImageUrls = new Map<number, string>();
+    for (const [stepIndex, file] of input.stepImages.entries()) {
+      const uploadedStepImage = await uploadRecipeImage({
+        file,
+        memberId: input.memberId,
+        recipeId,
+        kind: 'step',
+        stepIndex,
+      });
+      uploadedImages.push(uploadedStepImage);
+      stepImageUrls.set(stepIndex, uploadedStepImage.url);
+    }
+
+    const keptStepImageUrls = new Set<string>();
+    const nextSteps = body.steps.map((step, index) => {
+      const nextImageUrl = stepImageUrls.get(index) ?? step.imageUrl ?? null;
+
+      if (nextImageUrl && existingStepImageUrls.has(nextImageUrl)) {
+        keptStepImageUrls.add(nextImageUrl);
+      }
+
+      return {
+        stepNumber: index + 1,
+        content: step.description,
+        imageUrl: nextImageUrl,
+      };
+    });
+
+    existingStepImageUrls.forEach((url) => {
+      if (!keptStepImageUrls.has(url)) {
+        oldImageUrlsToDelete.add(url);
+      }
+    });
+
+    await prisma.$transaction(async (tx) => {
+      await tx.recipe.update({
+        where: { id: recipeId },
+        data: {
+          name: body.name,
+          category: body.category,
+          cookingMethod: body.cookingMethod,
+          ingredients: body.ingredients,
+          mainImageUrl: nextMainImageUrl,
+          thumbnailUrl: null,
+          sodiumTip: body.sodiumTip,
+          recipeSteps: {
+            deleteMany: {},
+            create: nextSteps,
+          },
+        },
+      });
+    });
+
+    try {
+      await deleteRecipeImagesByUrls([...oldImageUrlsToDelete]);
+    } catch (deleteError) {
+      console.error(deleteError);
+    }
+
+    return recipeUpdateResponseSchema.parse({ recipeId });
   } catch (error) {
     await deleteRecipeImages(uploadedImages);
     throw error;

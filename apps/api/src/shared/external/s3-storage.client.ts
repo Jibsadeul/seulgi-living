@@ -83,6 +83,17 @@ function buildPublicUrl(key: string) {
   return `${publicBaseUrl}/${encodedKey}`;
 }
 
+function getKeyFromPublicUrl(url: string) {
+  const publicBaseUrl = getRequiredEnv('S3_PUBLIC_BASE_URL').replace(/\/$/, '');
+  const prefix = `${publicBaseUrl}/`;
+
+  if (!url.startsWith(prefix)) {
+    return undefined;
+  }
+
+  return url.slice(prefix.length).split('/').map(decodeURIComponent).join('/');
+}
+
 export async function uploadRecipeImage(input: UploadRecipeImageInput): Promise<UploadedImage> {
   assertImageFile(input.file);
 
@@ -123,4 +134,15 @@ export async function deleteRecipeImages(images: UploadedImage[]): Promise<void>
       ),
     ),
   );
+}
+
+export async function deleteRecipeImagesByUrls(urls: string[]): Promise<void> {
+  const images = urls
+    .map((url) => {
+      const key = getKeyFromPublicUrl(url);
+      return key ? { key, url } : undefined;
+    })
+    .filter((image): image is UploadedImage => Boolean(image));
+
+  await deleteRecipeImages(images);
 }
