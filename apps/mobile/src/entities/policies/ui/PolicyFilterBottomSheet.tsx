@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { getSidoList } from '@entities/regions';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 const CATEGORY_OPTIONS = ['주거', '금융', '일자리', '복지', '교육', '문화', '참여'];
 
@@ -185,9 +186,12 @@ export function PolicyFilterBottomSheet({
     onClose();
   }
 
+  const tabBarHeight = useBottomTabBarHeight();
+  const bottomInset = tabBarHeight + insets.bottom;
+
   const renderFooter = useCallback(
     (props: BottomSheetFooterProps) => (
-      <BottomSheetFooter {...props} bottomInset={insets.bottom}>
+      <BottomSheetFooter {...props} bottomInset={bottomInset}>
         <View
           className="bg-surface-default"
           style={{
@@ -212,7 +216,7 @@ export function PolicyFilterBottomSheet({
         </View>
       </BottomSheetFooter>
     ),
-    [largeCategory, zipCd, supportType, applyPeriodType, insets.bottom],
+    [largeCategory, zipCd, supportType, applyPeriodType, bottomInset],
   );
 
   return (
@@ -244,7 +248,7 @@ export function PolicyFilterBottomSheet({
 
       <BottomSheetScrollView
         enableFooterMarginAdjustment
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: tabBarHeight + 80 }}
       >
         <FilterRow
           title="카테고리"
