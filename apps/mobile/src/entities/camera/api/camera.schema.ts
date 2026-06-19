@@ -1,4 +1,5 @@
 export {
+  cameraAnalysisDateSchema,
   cameraAnalysisItemSchema,
   cameraAnalysisSourceSchema,
   cameraAnalyzeRequestSchema,

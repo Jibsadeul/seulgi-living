@@ -1,6 +1,6 @@
 import { View, Text } from 'react-native';
 import { DDayBadge } from '@/shared/ui/DDayBadge';
-import { HomeSectionHeader } from './HomeSectionHeader';
+import { HomeSectionHeader } from '@/screens/home/ui/components/HomeSectionHeader';
 
 const MOCK_POLICIES = [
   {
@@ -19,7 +19,7 @@ const MOCK_POLICIES = [
   },
 ];
 
-export function HomePolicyScrap() {
+export function PoliciesScrapPreview() {
   return (
     <View className="bg-surface-default pt-5 px-4 pb-6 mt-3">
       <HomeSectionHeader title="청년정책 즐겨찾기" onMorePress={() => {}} />

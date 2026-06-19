@@ -26,6 +26,7 @@
 ```ts
 {
   source: 'RECEIPT' | 'INGREDIENT';
+  date: timestamp | null;
   items: Array<{
     name: string;
     category: FridgeCategory;
@@ -34,12 +35,26 @@
     price: number | null;
   }>;
 }
+
+FridgeCategory =
+  'VEGETABLE' |
+  'FRUIT' |
+  'MEAT' |
+  'SEAFOOD' |
+  'EGG_DAIRY' |
+  'GRAIN_NOODLE' |
+  'PROCESSED' |
+  'SAUCE_SEASONING' |
+  'OTHER';
 ```
 
 ### 규칙
 
 - `source=RECEIPT`면 영수증 프롬프트를 사용한다.
+- `source=RECEIPT`면 영수증에서 구매일 또는 결제일을 찾아 `date`로 반환한다.
+- `source=RECEIPT`에서 날짜를 읽을 수 없으면 `date=null`로 반환한다.
 - `source=INGREDIENT`면 식재료 프롬프트를 사용한다.
+- `source=INGREDIENT` 결과는 `date=null`로 반환한다.
 - `source=INGREDIENT` 결과는 모든 item의 `price`를 `null`로 반환한다.
 - Gemini 원본 응답은 서버에서 contract schema로 검증한 뒤만 반환한다.
 

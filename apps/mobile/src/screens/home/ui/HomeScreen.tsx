@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { getCurrentMember, type MemberMe, useMemberStore } from '@/entities/members';
 import { MemberInfoBottomSheet } from '@/screens/members';
-import { HomeFridgePreview } from './components/HomeFridgePreview';
-import { HomeHeader } from './components/HomeHeader';
-import { HomePolicyScrap } from './components/HomePolicyScrap';
-import { HomeRecipeScrap } from './components/HomeRecipeScrap';
+import { FridgePreview } from '@/screens/fridge/ui/components/FridgePreview';
+import { HomeHeader } from '@/screens/home/ui/components/HomeHeader';
+import { PoliciesScrapPreview } from '@/screens/policies/ui/components/PoliciesScrapPreview';
+import { RecipesScrapPreview } from '@/screens/recipes/ui/components/RecipesScrapPreview';
 
 export function HomeScreen() {
   const [member, setMember] = useState<MemberMe | null>(null);
@@ -34,9 +34,9 @@ export function HomeScreen() {
           username={member?.nickname ?? undefined}
           onSettingsPress={() => setIsMemberInfoOpen(true)}
         />
-        <HomeFridgePreview />
-        <HomeRecipeScrap />
-        <HomePolicyScrap />
+        <FridgePreview />
+        <RecipesScrapPreview />
+        <PoliciesScrapPreview />
       </ScrollView>
       <MemberInfoBottomSheet
         visible={isMemberInfoOpen}

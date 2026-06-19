@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 export const cameraAnalysisSourceSchema = z.enum(['RECEIPT', 'INGREDIENT']);
 
+export const cameraAnalysisDateSchema = z.string().datetime({ offset: true }).nullable();
+
 export const fridgeCategorySchema = z.enum([
   'VEGETABLE',
   'FRUIT',
@@ -32,9 +34,18 @@ export const cameraAnalysisItemSchema = z.object({
 export const cameraAnalyzeResponseSchema = z
   .object({
     source: cameraAnalysisSourceSchema,
+    date: cameraAnalysisDateSchema,
     items: z.array(cameraAnalysisItemSchema),
   })
   .superRefine((value, ctx) => {
+    if (value.source === 'INGREDIENT' && value.date !== null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['date'],
+        message: '식재료 분석 결과의 date는 null이어야 합니다.',
+      });
+    }
+
     if (value.source !== 'INGREDIENT') {
       return;
     }
@@ -51,6 +62,7 @@ export const cameraAnalyzeResponseSchema = z
   });
 
 export type CameraAnalysisSource = z.infer<typeof cameraAnalysisSourceSchema>;
+export type CameraAnalysisDate = z.infer<typeof cameraAnalysisDateSchema>;
 export type FridgeCategory = z.infer<typeof fridgeCategorySchema>;
 export type CameraAnalyzeRequest = z.infer<typeof cameraAnalyzeRequestSchema>;
 export type CameraAnalysisItem = z.infer<typeof cameraAnalysisItemSchema>;
