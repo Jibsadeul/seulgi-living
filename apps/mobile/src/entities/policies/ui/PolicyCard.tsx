@@ -4,6 +4,7 @@ import type { Policy } from '@repo/contract';
 import { getCategoryLabel, formatPeriod } from '../model/policies.model';
 import { usePolicyScrap } from '../model/usePolicy';
 import ScrapIcon from '@assets/icons/scrap.svg';
+import ScrappedIcon from '@assets/icons/scrapped.svg';
 
 const TAG_CONFIG = {
   deadline_soon: { label: '마감임박', color: '#FF4B4B', bg: '#FFF0F0' },
@@ -58,7 +59,11 @@ export function PolicyCard({ policy }: Props) {
           <Text style={{ fontSize: 11, color: '#3C3C3C' }}>{getCategoryLabel(policy)}</Text>
         </View>
         <Pressable onPress={handleScrap} hitSlop={8}>
-          <ScrapIcon width={32} height={32} color={policy.isScrapped ? '#EF7722' : '#C2C2C2'} />
+          {policy.isScrapped ? (
+            <ScrappedIcon width={32} height={32} />
+          ) : (
+            <ScrapIcon width={32} height={32} />
+          )}
         </Pressable>
       </View>
 

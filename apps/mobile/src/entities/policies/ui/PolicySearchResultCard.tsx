@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { Policy } from '@repo/contract';
 import { usePolicyScrap } from '../model/usePolicy';
 import ScrapIcon from '@assets/icons/scrap.svg';
+import ScrappedIcon from '@assets/icons/scrapped.svg';
 
 const CATEGORY_BADGE_COLORS: Record<string, { bg: string; text: string }> = {
   일자리: { bg: '#E1F5EE', text: '#085041' },
@@ -97,7 +98,11 @@ export function PolicySearchResultCard({ policy }: Props) {
           </View>
         </View>
         <Pressable onPress={handleScrap} hitSlop={8}>
-          <ScrapIcon width={32} height={32} color={policy.isScrapped ? '#EF7722' : '#C2C2C2'} />
+          {policy.isScrapped ? (
+            <ScrappedIcon width={32} height={32} />
+          ) : (
+            <ScrapIcon width={32} height={32} />
+          )}
         </Pressable>
       </View>
 
