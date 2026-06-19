@@ -1,6 +1,6 @@
 import { View, Text, ScrollView } from 'react-native';
 import { DDayBadge } from '@/shared/ui/DDayBadge';
-import { HomeSectionHeader } from './HomeSectionHeader';
+import { HomeSectionHeader } from '@/screens/home/ui/components/HomeSectionHeader';
 
 const MOCK_ITEMS = [
   { id: '1', name: '우유 900ml', daysLeft: 1 },
@@ -8,7 +8,7 @@ const MOCK_ITEMS = [
   { id: '3', name: '부채살', daysLeft: 5 },
 ];
 
-export function HomeFridgePreview() {
+export function FridgePreview() {
   return (
     <View className="bg-surface-default pt-5 pb-5 px-4">
       <HomeSectionHeader title="냉장고 미리보기" onMorePress={() => {}} />
