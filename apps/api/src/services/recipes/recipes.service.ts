@@ -1,16 +1,21 @@
 import {
+  recipeCreateBodySchema,
+  recipeCreateResponseSchema,
   recipeDetailParamsSchema,
   recipeDetailResponseSchema,
   recipeListQuerySchema,
   recipeListResponseSchema,
   recipeScrapListQuerySchema,
   type CookingMethod,
+  type RecipeCreateBody,
   type RecipeCategory,
   type RecipeListQuery,
   type RecipeScrapListQuery,
 } from '@repo/contract';
 import { prisma } from '@repo/db';
 import { errors } from '@/shared/lib/error';
+import { deleteRecipeImages, uploadRecipeImage } from '@/shared/external/s3-storage.client';
+import { randomUUID } from 'crypto';
 
 type ListRecipesContext = {
   userId?: string;
@@ -32,6 +37,13 @@ type RecipeListRow = {
 
 type CountRow = {
   totalCount: number | bigint | string;
+};
+
+type CreateRecipeInput = {
+  memberId: string;
+  body: RecipeCreateBody;
+  mainImage: File;
+  stepImages: Map<number, File>;
 };
 
 function normalizeArray<T>(value: T | T[] | undefined) {
@@ -300,6 +312,68 @@ export async function getRecipeDetail(
       sodiumTip: recipe.sodiumTip,
     },
   });
+}
+
+export async function createRecipe(input: CreateRecipeInput) {
+  const body = recipeCreateBodySchema.parse(input.body);
+  const recipeId = randomUUID();
+  const uploadedImages: { key: string; url: string }[] = [];
+
+  try {
+    const mainImage = await uploadRecipeImage({
+      file: input.mainImage,
+      memberId: input.memberId,
+      recipeId,
+      kind: 'main',
+    });
+    uploadedImages.push(mainImage);
+
+    const stepImageUrls = new Map<number, string>();
+    for (const [stepIndex, file] of input.stepImages.entries()) {
+      if (stepIndex < 0 || stepIndex >= body.steps.length) {
+        throw errors.validation('조리 단계 이미지 index가 올바르지 않습니다.');
+      }
+
+      const uploadedStepImage = await uploadRecipeImage({
+        file,
+        memberId: input.memberId,
+        recipeId,
+        kind: 'step',
+        stepIndex,
+      });
+      uploadedImages.push(uploadedStepImage);
+      stepImageUrls.set(stepIndex, uploadedStepImage.url);
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.recipe.create({
+        data: {
+          id: recipeId,
+          source: 'USER',
+          userId: input.memberId,
+          name: body.name,
+          category: body.category,
+          cookingMethod: body.cookingMethod,
+          ingredients: body.ingredients,
+          mainImageUrl: mainImage.url,
+          thumbnailUrl: null,
+          sodiumTip: body.sodiumTip,
+          recipeSteps: {
+            create: body.steps.map((step, index) => ({
+              stepNumber: index + 1,
+              content: step,
+              imageUrl: stepImageUrls.get(index) ?? null,
+            })),
+          },
+        },
+      });
+    });
+
+    return recipeCreateResponseSchema.parse({ recipeId });
+  } catch (error) {
+    await deleteRecipeImages(uploadedImages);
+    throw error;
+  }
 }
 
 export async function scrapRecipe(memberId: string, recipeId: string): Promise<void> {

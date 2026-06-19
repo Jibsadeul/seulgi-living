@@ -264,6 +264,86 @@
 - 비로그인 사용자는 `isSaved`가 `false`로 응답된다.
 - 존재하지 않는 레시피 ID는 `404` 오류로 응답된다.
 
+## 레시피 등록
+
+`POST /api/recipes`
+
+인증이 필요하다. `getCurrentMemberId`가 인증 실패 시 `401`을 throw한다.
+
+요청은 `multipart/form-data`로 전송한다. 이미지는 API 서버가 S3 호환 외부 스토리지에 업로드하고, DB에는 업로드된 이미지 URL만 저장한다.
+
+### 요청 필드
+
+| 이름              | 타입        | 필수 여부 | 설명                                                |
+| ----------------- | ----------- | --------- | --------------------------------------------------- |
+| mainImage         | File        | 필수      | 대표 이미지 파일                                    |
+| name              | string      | 필수      | 레시피 이름                                         |
+| cookingMethod     | string      | 필수      | `CookingMethod` enum 값                             |
+| category          | string      | 필수      | `RecipeCategory` enum 값                            |
+| ingredients       | JSON string | 필수      | `RecipeIngredient[]`를 JSON.stringify한 문자열      |
+| steps             | JSON string | 필수      | 조리 단계 설명 `string[]`을 JSON.stringify한 문자열 |
+| sodiumTip         | string      | 선택      | 저나트륨 비법 노하우                                |
+| stepImages[index] | File        | 선택      | 조리 단계 이미지 파일                               |
+
+### 요청 예시
+
+```text
+mainImage = (대표 사진 파일)
+name = 매콤 달콤 닭볶음탕
+cookingMethod = BOIL
+category = SOUP_STEW
+ingredients = [{"section":"재료","items":["연두부 75g(3/4모)","칵테일새우 20g(5마리)"]},{"section":"양념","items":["고추장 5숟갈"]}]
+steps = ["닭을 깨끗하게 씻고 끓는 물에 데친다.","감자와 양파를 먹기 좋은 크기로 썬다.","양념을 넣고 약한 불에서 졸인다."]
+stepImages[0] = (1번 조리 단계 이미지 파일)
+stepImages[1] = (2번 조리 단계 이미지 파일)
+sodiumTip = 간장 양을 줄이고 양파와 대파로 감칠맛을 보완한다.
+```
+
+`steps`의 이미지 매핑은 배열의 0-based index를 기준으로 한다. 예를 들어 `steps[0]` 문자열의 이미지가 있으면 파일 필드명은 `stepImages[0]`이다. 이미지가 없는 단계는 해당 `stepImages[index]` 필드를 전송하지 않는다.
+
+### 응답
+
+성공 시 `201 Created`를 반환한다.
+
+| 필드     | 타입   | 설명             |
+| -------- | ------ | ---------------- |
+| recipeId | string | 저장된 레시피 ID |
+
+### 응답 예시
+
+```json
+{
+  "recipeId": "4b8f9a6f-2e81-4d5d-b557-07a3f963d96a"
+}
+```
+
+### 규칙
+
+- `getCurrentMemberId`로 현재 사용자를 확인한다. 인증 실패 시 `getCurrentMemberId`가 `401`을 throw한다.
+- `mainImage`가 없거나 이미지 파일이 아니면 `400` 오류를 반환한다.
+- `stepImages[index]`는 이미지 파일일 때만 허용한다.
+- 허용 이미지 MIME type은 `image/jpeg`, `image/png`, `image/webp`이다.
+- 각 이미지 파일 크기는 5MB 이하여야 한다.
+- `cookingMethod`는 `CookingMethod` enum 값만 허용한다. 화면 표시명인 `끓이기` 같은 값은 허용하지 않는다.
+- `category`는 `RecipeCategory` enum 값만 허용한다. 화면 표시명인 `국&찌개` 같은 값은 허용하지 않는다.
+- `ingredients`는 JSON 문자열이어야 하며, 파싱 결과는 `section`, `items` 구조여야 한다.
+- `steps`는 JSON 문자열이어야 하며, 파싱 결과는 빈 문자열이 없는 `string[]` 구조여야 한다.
+- DB 저장 시 `recipes.source`는 `USER`, `recipes.user_id`는 현재 사용자 ID로 저장한다.
+- `recipe_steps.step_number`는 `steps` 배열 순서 기준으로 1부터 저장한다.
+- 대표 이미지는 `recipes.main_image_url`에 저장하고, `recipes.thumbnail_url`은 `null`로 저장한다.
+- 단계 이미지는 `recipe_steps.image_url`에 저장하며, 이미지가 없는 단계는 `null`로 저장한다.
+- 업로드 성공 후 DB 저장에 실패하면 업로드된 외부 스토리지 객체 삭제를 시도한다.
+
+## 검증 기준
+
+- 인증된 사용자가 정상 multipart 요청을 보내면 `recipes`와 `recipe_steps`가 생성되고 `{ recipeId }`를 반환한다.
+- 인증되지 않은 요청은 `401`을 반환한다.
+- 대표 이미지가 없는 요청은 `400`을 반환한다.
+- 잘못된 enum 값은 `400`을 반환한다.
+- 깨진 JSON 문자열 또는 잘못된 재료/단계 구조는 `400`을 반환한다.
+- `stepImages[index]`가 없는 단계는 `imageUrl: null`로 저장된다.
+- 등록 후 `GET /api/recipes/[recipeId]`로 상세 조회가 가능하다.
+
 ## 레시피 스크랩 목록 조회
 
 `GET /api/recipes/scraps`
