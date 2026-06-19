@@ -37,8 +37,7 @@ export function CookMainScreen() {
   }
 
   function handleRecipeUploadPress() {
-    // TODO: 레시피 등록 라우트 연결 필요 (RecipeUploadScreen)
-    console.log('[CookMainScreen] recipe upload pressed');
+    router.push('/(stack)/recipe-upload' as never);
   }
 
   return (

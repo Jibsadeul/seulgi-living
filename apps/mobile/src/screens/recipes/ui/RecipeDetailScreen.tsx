@@ -84,18 +84,9 @@ export function RecipeDetailScreen() {
           <View className="w-full aspect-[4/3] bg-gray-10" />
         )}
 
-        {/* 제목 + 태그 + 스크랩 */}
+        {/* 제목 + 태그 */}
         <View className="px-4 pt-4 pb-2">
-          <View className="flex-row items-start justify-between gap-2">
-            <Text className="flex-1 text-xl font-bold text-gray-90">{recipe.name}</Text>
-            <Pressable onPress={handleToggleScrap} hitSlop={8}>
-              <Ionicons
-                name={scrap.isSaved ? 'bookmark' : 'bookmark-outline'}
-                size={22}
-                color={scrap.isSaved ? '#EF7722' : '#C6C6C6'}
-              />
-            </Pressable>
-          </View>
+          <Text className="text-xl font-bold text-gray-90">{recipe.name}</Text>
           {recipe.authorNickname && (
             <Text className="text-xs text-gray-50 mt-1">by {recipe.authorNickname}</Text>
           )}
@@ -109,7 +100,6 @@ export function RecipeDetailScreen() {
               );
             })}
           </View>
-          <Text className="text-xs text-gray-50 mt-2">스크랩 {scrap.scrapCount}</Text>
         </View>
 
         {/* 재료 및 미디어 */}

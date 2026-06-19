@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -16,7 +16,7 @@ export const EMPTY_FILTERS: RecipeFilters = {
 
 const FOOD_TYPES = ['전체', '국/찌개', '반찬', '밥/죽', '후식', '기타'];
 const COOK_METHODS = ['전체', '구이', '끓이기', '볶음', '찜', '튀김', '조림', '부침', '기타'];
-const DIFFICULTIES = ['초급', '중급', '상급'];
+const DIFFICULTIES = ['전체', '초급', '중급', '상급'];
 
 type Props = {
   visible: boolean;
@@ -27,6 +27,7 @@ type Props = {
 
 export function RecipeFilterModal({ visible, filters, onApply, onClose }: Props) {
   const [draft, setDraft] = useState<RecipeFilters>(filters);
+  const [showDifficultyTip, setShowDifficultyTip] = useState(false);
 
   function handleOpen() {
     setDraft(filters);
@@ -55,16 +56,21 @@ export function RecipeFilterModal({ visible, filters, onApply, onClose }: Props)
     >
       <View className="flex-1 bg-black/40 justify-end">
         <View className="bg-surface-default rounded-t-3xl max-h-[85%]">
+          {/* 드래그 핸들 */}
+          <View className="items-center pt-3 pb-1">
+            <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: '#D1D1D6' }} />
+          </View>
+
           {/* 헤더 */}
-          <View className="flex-row items-center justify-between px-4 pt-4 pb-2">
-            <Pressable onPress={onClose}>
-              <Text className="text-base text-main-100 font-medium">Cancel</Text>
-            </Pressable>
-            <Text className="text-base font-semibold text-gray-90">레시피</Text>
+          <View className="flex-row items-center justify-between px-4 pt-2 pb-3">
+            <Text className="text-base font-semibold text-gray-90">레시피필터</Text>
             <Pressable onPress={onClose}>
               <Ionicons name="close" size={24} color="#1D1D1D" />
             </Pressable>
           </View>
+
+          {/* 구분선 */}
+          <View style={{ height: 1, backgroundColor: '#E5E5EA' }} />
 
           <ScrollView className="px-4" showsVerticalScrollIndicator={false}>
             {/* 음식 종류 */}
@@ -84,39 +90,24 @@ export function RecipeFilterModal({ visible, filters, onApply, onClose }: Props)
             />
 
             {/* 난이도 */}
-            <View className="mt-5 mb-4">
-              <View className="flex-row items-center gap-2 mb-3">
-                <Text className="text-base font-semibold text-gray-90">난이도</Text>
-                <View className="flex-row items-center gap-1 bg-gray-5 rounded-lg px-2 py-1">
-                  <Ionicons name="information-circle-outline" size={14} color="#8E8E8E" />
-                  <Text className="text-[11px] text-gray-50">
-                    난이도는 재료 갯수에 따라 산정되었습니다.
-                  </Text>
-                </View>
-              </View>
-              <View className="flex-row flex-wrap gap-2">
-                {DIFFICULTIES.map((opt) => {
-                  const isSelected = draft.difficulty === opt;
-                  return (
-                    <Pressable
-                      key={opt}
-                      onPress={() => select('difficulty', isSelected ? '전체' : opt)}
-                      className={`px-5 py-2 rounded-full ${
-                        isSelected ? 'bg-main-100' : 'bg-gray-5'
-                      }`}
-                    >
-                      <Text
-                        className={`text-sm font-medium ${
-                          isSelected ? 'text-white' : 'text-gray-70'
-                        }`}
-                      >
-                        {opt}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
+            <FilterSection
+              title="난이도"
+              options={DIFFICULTIES}
+              selected={draft.difficulty}
+              onSelect={(v) => select('difficulty', v)}
+              titleExtra={
+                <>
+                  <Pressable onPress={() => setShowDifficultyTip((prev) => !prev)} hitSlop={8}>
+                    <Ionicons name="information-circle-outline" size={16} color="#8E8E8E" />
+                  </Pressable>
+                  {showDifficultyTip && (
+                    <View className="bg-gray-5 rounded-lg px-2 py-1">
+                      <Text className="text-[11px] text-gray-50">재료 갯수에 따라 산정됩니다.</Text>
+                    </View>
+                  )}
+                </>
+              }
+            />
           </ScrollView>
 
           {/* 하단 버튼 */}
@@ -145,22 +136,27 @@ function FilterSection({
   options,
   selected,
   onSelect,
+  titleExtra,
 }: {
   title: string;
   options: string[];
   selected: string;
   onSelect: (value: string) => void;
+  titleExtra?: React.ReactNode;
 }) {
   return (
     <View className="mt-5">
-      <Text className="text-base font-semibold text-gray-90 mb-3">{title}</Text>
+      <View className="flex-row items-center gap-2 mb-3">
+        <Text className="text-base font-semibold text-gray-90">{title}</Text>
+        {titleExtra}
+      </View>
       <View className="flex-row flex-wrap gap-2">
         {options.map((opt) => {
           const isSelected = selected === opt;
           return (
             <Pressable
               key={opt}
-              onPress={() => onSelect(opt)}
+              onPress={() => onSelect(isSelected ? '전체' : opt)}
               className={`px-5 py-2 rounded-full ${isSelected ? 'bg-main-100' : 'bg-gray-5'}`}
             >
               <Text className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-70'}`}>

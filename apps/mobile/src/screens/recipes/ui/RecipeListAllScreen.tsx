@@ -103,7 +103,7 @@ export function RecipeListAllScreen() {
   }
 
   function handleRecipeUploadPress() {
-    console.log('[RecipeListAll] recipe upload pressed');
+    router.push('/(stack)/recipe-upload' as never);
   }
 
   const handleEndReached = useCallback(() => {

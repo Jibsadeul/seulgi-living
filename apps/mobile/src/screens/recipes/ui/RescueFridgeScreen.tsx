@@ -11,12 +11,7 @@ type Ingredient = {
   icon: keyof typeof Ionicons.glyphMap;
 };
 
-const MOCK_FRIDGE_INGREDIENTS: Ingredient[] = [
-  { id: '1', label: '육류', icon: 'nutrition-outline' },
-  { id: '2', label: '대파', icon: 'leaf-outline' },
-  { id: '3', label: '달걀', icon: 'egg-outline' },
-  { id: '4', label: '두부', icon: 'cube-outline' },
-];
+const MOCK_FRIDGE_INGREDIENTS: Ingredient[] = [];
 
 export function RescueFridgeScreen() {
   const router = useRouter();
@@ -104,13 +99,16 @@ export function RescueFridgeScreen() {
           <Ionicons name="search" size={18} color="#EF7722" />
           <TextInput
             className="flex-1 text-sm text-gray-90"
-            placeholder="재료를 검색해보세요 (예: 감자) Enter로 추가"
+            placeholder="재료를 검색해보세요"
             placeholderTextColor="#C6C6C6"
             value={searchText}
             onChangeText={setSearchText}
             onSubmitEditing={handleSearchSubmit}
             returnKeyType="done"
           />
+          <Pressable onPress={handleSearchSubmit}>
+            <Text className="text-sm font-semibold text-main-100">추가</Text>
+          </Pressable>
         </View>
 
         {/* My 냉장고의 재료 */}
