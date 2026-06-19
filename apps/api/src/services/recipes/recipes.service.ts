@@ -361,7 +361,7 @@ export async function createRecipe(input: CreateRecipeInput) {
           recipeSteps: {
             create: body.steps.map((step, index) => ({
               stepNumber: index + 1,
-              content: step,
+              content: step.description,
               imageUrl: stepImageUrls.get(index) ?? null,
             })),
           },

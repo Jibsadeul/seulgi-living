@@ -100,7 +100,10 @@ export const recipeCreateFormFieldsSchema = z.object({
 
 export const recipeCreateIngredientSchema = recipeIngredientSchema;
 
-export const recipeCreateStepSchema = z.string().trim().min(1);
+export const recipeCreateStepSchema = z.object({
+  description: z.string().trim().min(1),
+  imageUrl: z.null().optional(),
+});
 
 export const recipeCreateBodySchema = z.object({
   name: z.string().trim().min(1),
