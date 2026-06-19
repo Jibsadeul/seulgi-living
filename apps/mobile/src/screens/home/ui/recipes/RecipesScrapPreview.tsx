@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from 'react-native';
-import { HomeSectionHeader } from './HomeSectionHeader';
+import { HomeSectionHeader } from '@/screens/home/ui/components/HomeSectionHeader';
 
 const MOCK_RECIPES = [
   { id: '1', name: '영양만점 비빔밥' },
@@ -7,7 +7,7 @@ const MOCK_RECIPES = [
   { id: '3', name: '얼큰한 김치찌개' },
 ];
 
-export function HomeRecipeScrap() {
+export function RecipesScrapPreview() {
   return (
     <View className="bg-surface-default pt-5 pb-5 px-4 mt-3">
       <HomeSectionHeader title="레시피 즐겨찾기" onMorePress={() => {}} />
