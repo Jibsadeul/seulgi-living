@@ -288,6 +288,62 @@ export async function getScrappedRecipeList(queryInput: unknown, memberId: strin
   });
 }
 
+export async function getMyRecipeList(queryInput: unknown, memberId: string) {
+  const query = recipeScrapListQuerySchema.parse(queryInput);
+  const { limit, offset } = toPagination(query);
+
+  const countRows = await prisma.$queryRawUnsafe<CountRow[]>(
+    `
+      SELECT COUNT(*)::int AS "totalCount"
+      FROM recipes r
+      WHERE r.source = 'USER'
+        AND r.user_id = $1::uuid
+    `,
+    memberId,
+  );
+  const totalCount = toNumber(countRows[0]?.totalCount);
+
+  const rows = await prisma.$queryRawUnsafe<RecipeListRow[]>(
+    `
+      SELECT
+        r.id::text AS id,
+        r.name AS name,
+        r.category::text AS category,
+        r.cooking_method::text AS "cookingMethod",
+        COALESCE(r.thumbnail_url, r.main_image_url) AS "imageUrl",
+        COUNT(all_scraps.recipe_id)::int AS "scrapCount",
+        EXISTS (
+          SELECT 1
+          FROM recipe_scraps saved
+          WHERE saved.recipe_id = r.id
+            AND saved.user_id = $1::uuid
+        ) AS "isSaved"
+      FROM recipes r
+      LEFT JOIN recipe_scraps all_scraps ON all_scraps.recipe_id = r.id
+      WHERE r.source = 'USER'
+        AND r.user_id = $1::uuid
+      GROUP BY r.id
+      ORDER BY r.created_at DESC, r.id DESC
+      LIMIT $2
+      OFFSET $3
+    `,
+    memberId,
+    limit,
+    offset,
+  );
+
+  return recipeListResponseSchema.parse({
+    items: rows.map((row) => ({
+      ...row,
+      scrapCount: toNumber(row.scrapCount),
+    })),
+    page: query.page,
+    size: query.size,
+    totalCount,
+    hasNextPage: offset + rows.length < totalCount,
+  });
+}
+
 export async function getRecipeDetail(
   recipeIdInput: unknown,
   context: GetRecipeDetailContext = {},

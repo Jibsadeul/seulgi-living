@@ -493,6 +493,90 @@ null
 - 존재하지 않는 레시피 ID는 `404` 오류로 응답된다.
 - 인증 실패 시 `401` 오류로 응답된다.
 
+## 내가 작성한 레시피 목록 조회
+
+`GET /api/recipes/me`
+
+인증이 필요하다. `getCurrentMemberId`가 인증 실패 시 `401`을 throw한다.
+
+현재 사용자가 직접 작성한 레시피 목록을 페이지 단위로 조회한다. 필터와 정렬 쿼리 파라미터는 받지 않고, 정렬은 레시피 생성일 최신순으로 고정한다.
+
+### 요청 예시
+
+```text
+/api/recipes/me?page=1&size=20
+```
+
+### 쿼리 파라미터
+
+| 이름 | 타입   | 필수 여부 | 기본값 | 설명                        |
+| ---- | ------ | --------- | ------ | --------------------------- |
+| page | number | 선택      | 1      | 조회할 페이지 번호          |
+| size | number | 선택      | 20     | 페이지당 제공하는 레시피 수 |
+
+### 응답
+
+응답 형식은 `GET /api/recipes`와 동일한 `RecipeListResponse`를 사용한다.
+
+| 필드        | 타입            | 설명                        |
+| ----------- | --------------- | --------------------------- |
+| items       | RecipePreview[] | 내가 작성한 레시피 목록     |
+| page        | number          | 현재 페이지 번호            |
+| size        | number          | 페이지당 제공하는 레시피 수 |
+| totalCount  | number          | 내가 작성한 전체 레시피 수  |
+| hasNextPage | boolean         | 다음 페이지 존재 여부       |
+
+`RecipePreview`는 `GET /api/recipes`와 동일한 필드를 포함한다.
+
+### 응답 예시
+
+```json
+{
+  "items": [
+    {
+      "id": "cm123abc",
+      "name": "두부 김치찌개",
+      "category": "SOUP_STEW",
+      "cookingMethod": "BOIL",
+      "imageUrl": "https://example.com/recipes/cm123abc-thumbnail.jpg",
+      "scrapCount": 4,
+      "isSaved": false
+    }
+  ],
+  "page": 1,
+  "size": 20,
+  "totalCount": 3,
+  "hasNextPage": false
+}
+```
+
+### 규칙
+
+- `getCurrentMemberId`로 현재 사용자를 확인한다. 인증 실패 시 `getCurrentMemberId`가 `401`을 throw한다.
+- 데이터는 `recipes` 테이블을 기준으로 조회한다.
+- `recipes.source`가 `USER`이고 `recipes.user_id`가 현재 사용자 ID인 레시피만 반환한다.
+- 정렬은 `recipes.created_at DESC`, 동률이면 `recipes.id DESC`로 고정한다.
+- 필터와 정렬 쿼리 파라미터는 받지 않는다.
+- `page`가 없으면 `1`을 기본값으로 사용한다.
+- `size`가 없으면 `20`을 기본값으로 사용한다.
+- `page`가 1보다 작으면 오류를 반환한다.
+- `size`가 1보다 작으면 오류를 반환한다.
+- `size`가 100보다 크면 오류를 반환한다.
+- `isSaved`는 현재 사용자 기준 실제 스크랩 여부로 계산한다.
+- `scrapCount`는 `recipe_scraps` 관계를 집계해서 계산한다.
+- `imageUrl`은 `thumbnailUrl`이 있으면 `thumbnailUrl`, 없으면 `mainImageUrl` 값을 응답한다.
+- 작성한 레시피가 없으면 `items`는 빈 배열, `totalCount`는 0, `hasNextPage`는 `false`로 응답한다.
+
+## 검증 기준
+
+- 기본 요청 `GET /api/recipes/me`는 현재 사용자가 작성한 첫 페이지를 최신순으로 반환한다.
+- 다른 사용자가 작성한 레시피와 공개 레시피는 반환하지 않는다.
+- `page`, `size` 쿼리 파라미터로 페이지 단위 조회가 가능하다.
+- 응답 형식은 `GET /api/recipes`와 동일하다.
+- 작성한 레시피가 없으면 빈 목록과 `hasNextPage: false`를 반환한다.
+- 잘못된 페이지네이션 값은 오류로 응답된다.
+- 인증 실패 시 `401`을 반환한다.
+
 ## 레시피 스크랩 목록 조회
 
 `GET /api/recipes/scraps`
