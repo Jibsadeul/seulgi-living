@@ -19,6 +19,7 @@ import EducationIcon from '@assets/icons/policy/education.svg';
 import CultureIcon from '@assets/icons/policy/culture.svg';
 import ParticipationIcon from '@assets/icons/policy/participation.svg';
 import LightIcon from '@assets/icons/policy/light.svg';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 
 type QuickCategory = {
   Icon: React.ComponentType<{ width: number; height: number }>;
@@ -37,9 +38,8 @@ const QUICK_CATEGORIES: QuickCategory[] = [
   { Icon: ParticipationIcon, label: '참여', params: { largeCategory: '참여' } },
 ];
 
-const TAB_BAR_HEIGHT = 87;
-
 export function PoliciesListScreen() {
+  const tabBarHeight = useBottomTabBarHeight();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const nickname = useMemberStore((s) => s.nickname);
@@ -74,7 +74,7 @@ export function PoliciesListScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom }}
+        contentContainerStyle={{ paddingBottom: tabBarHeight + insets.bottom }}
       >
         {/* 마감임박 배너 */}
         {banner && (
