@@ -201,6 +201,7 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
   );
 
   const selectedCount = items.length;
+  const isSaveDisabled = isReceipt && saveTargets.length === 0;
 
   const updateItem = (id: string, nextItem: Partial<CameraAnalysisItem>) => {
     setItems((currentItems) =>
@@ -222,9 +223,7 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
   const toggleSaveTarget = (target: SaveTarget) => {
     setSaveTargets((currentTargets) => {
       if (currentTargets.includes(target)) {
-        return currentTargets.length === 1
-          ? currentTargets
-          : currentTargets.filter((currentTarget) => currentTarget !== target);
+        return currentTargets.filter((currentTarget) => currentTarget !== target);
       }
 
       return [...currentTargets, target];
@@ -392,7 +391,12 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
           <Pressable className="min-h-[52px] w-[108px] items-center justify-center rounded-xl bg-gray-10">
             <Text className="text-base font-bold text-gray-80">취소</Text>
           </Pressable>
-          <Pressable className="min-h-[52px] flex-1 flex-row items-center justify-center gap-2 rounded-xl bg-main-100">
+          <Pressable
+            className={`min-h-[52px] flex-1 flex-row items-center justify-center gap-2 rounded-xl ${
+              isSaveDisabled ? 'bg-gray-30' : 'bg-main-100'
+            }`}
+            disabled={isSaveDisabled}
+          >
             <Text className="text-base font-bold text-white">저장하기</Text>
             <View className="min-w-7 items-center rounded-full bg-white/20 px-2 py-0.5">
               <Text className="text-xs font-bold text-white">{selectedCount}</Text>
