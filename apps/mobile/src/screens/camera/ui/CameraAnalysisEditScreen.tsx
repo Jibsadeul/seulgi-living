@@ -1,4 +1,5 @@
-import { CameraAnalysisForm, useCameraStore, type CameraAnalyzeResponse } from '@/entities/camera';
+import { useCameraStore, type CameraAnalyzeResponse } from '@/entities/camera';
+import { CameraAnalysisForm } from '@/features/camera-analysis-edit';
 import { Header } from '@/shared/ui';
 import { useRouter } from 'expo-router';
 import { ScrollView, View } from 'react-native';
