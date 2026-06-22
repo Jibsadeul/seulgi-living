@@ -24,7 +24,7 @@ export function SearchBar({ placeholder = '검색', onPress }: Props) {
       className="flex-row items-center gap-2 bg-surface-default border border-gray-30 rounded-full px-4 py-3 mx-4"
     >
       <SearchIcon />
-      <Text className="flex-1 text-xs text-gray-40 leading-normal">{placeholder}</Text>
+      <Text className="flex-1 text-xs text-gray-40">{placeholder}</Text>
     </Pressable>
   );
 }
