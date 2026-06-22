@@ -1,7 +1,11 @@
-import { Alert } from 'react-native';
+import { Alert, Image } from 'react-native';
+import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 
 export type ImagePickSource = 'camera' | 'library';
+
+const MAX_UPLOAD_IMAGE_EDGE = 1280;
+const UPLOAD_IMAGE_QUALITY = 0.8;
 
 export async function pickImageUri(source: ImagePickSource): Promise<string | null> {
   const permission =
@@ -66,6 +70,17 @@ export async function readImageUriAsBase64(uri: string): Promise<string> {
   });
 }
 
+export async function compressImageForUpload(uri: string): Promise<string> {
+  const { width, height } = await getImageSize(uri);
+  const resize = getResizeAction(width, height);
+  const result = await manipulateAsync(uri, resize ? [{ resize }] : [], {
+    compress: UPLOAD_IMAGE_QUALITY,
+    format: SaveFormat.JPEG,
+  });
+
+  return result.uri;
+}
+
 export function inferImageMimeType(uri: string): string {
   const normalizedUri = uri.split('?')[0]?.toLowerCase() ?? '';
 
@@ -78,4 +93,27 @@ export function inferImageMimeType(uri: string): string {
   }
 
   return 'image/jpeg';
+}
+
+function getImageSize(uri: string): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    Image.getSize(
+      uri,
+      (width, height) => resolve({ width, height }),
+      () => reject(new Error('이미지 크기를 확인할 수 없습니다.')),
+    );
+  });
+}
+
+function getResizeAction(
+  width: number,
+  height: number,
+): { width: number } | { height: number } | null {
+  const longestEdge = Math.max(width, height);
+
+  if (longestEdge <= MAX_UPLOAD_IMAGE_EDGE) {
+    return null;
+  }
+
+  return width >= height ? { width: MAX_UPLOAD_IMAGE_EDGE } : { height: MAX_UPLOAD_IMAGE_EDGE };
 }

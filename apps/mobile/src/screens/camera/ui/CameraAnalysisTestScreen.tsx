@@ -9,6 +9,7 @@ import {
   type CameraCaptureMode,
 } from '@/entities/camera';
 import {
+  compressImageForUpload,
   inferImageMimeType,
   pickImageUri,
   readImageUriAsBase64,
@@ -44,11 +45,12 @@ export function CameraAnalysisTestScreen({ mode, imageUri }: CameraAnalysisTestS
     clearAnalysisResult();
 
     try {
-      const base64 = await readImageUriAsBase64(currentImageUri);
+      const uploadImageUri = await compressImageForUpload(currentImageUri);
+      const base64 = await readImageUriAsBase64(uploadImageUri);
       const analysis = await analyzeCameraImage({
         source: getCameraAnalysisSource(selectedMode),
-        imageUri: currentImageUri,
-        mimeType: inferImageMimeType(currentImageUri),
+        imageUri: uploadImageUri,
+        mimeType: inferImageMimeType(uploadImageUri),
         base64,
       });
 
