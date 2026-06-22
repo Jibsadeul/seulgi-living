@@ -31,14 +31,14 @@
   date: timestamp | null;
   items: Array<{
     name: string;
-    category: FridgeCategory;
+    category: IngredientCategory;
     quantity: number;
     unit: string;
     price: number | null;
   }>;
 }
 
-FridgeCategory =
+IngredientCategory =
   'VEGETABLE' |
   'FRUIT' |
   'MEAT' |

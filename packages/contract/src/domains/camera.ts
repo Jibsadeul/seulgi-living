@@ -6,18 +6,6 @@ export const cameraResultDestinationSchema = z.enum(['PURCHASE', 'FRIDGE']);
 
 export const cameraAnalysisDateSchema = z.string().datetime({ offset: true }).nullable();
 
-export const fridgeCategorySchema = z.enum([
-  'VEGETABLE',
-  'FRUIT',
-  'MEAT',
-  'SEAFOOD',
-  'EGG_DAIRY',
-  'GRAIN_NOODLE',
-  'PROCESSED',
-  'SAUCE_SEASONING',
-  'OTHER',
-]);
-
 export const cameraAnalyzeRequestSchema = z.object({
   source: cameraAnalysisSourceSchema,
   imageUri: z.string().optional(),
@@ -27,7 +15,7 @@ export const cameraAnalyzeRequestSchema = z.object({
 
 export const cameraAnalysisItemSchema = z.object({
   name: z.string().trim().min(1, '이름이 필요합니다.'),
-  category: fridgeCategorySchema,
+  category: ingredientCategorySchema,
   quantity: z.number().positive('수량은 0보다 커야 합니다.'),
   unit: z.string().trim().min(1, '단위가 필요합니다.'),
   price: z.number().nonnegative('가격은 0 이상이어야 합니다.').nullable(),

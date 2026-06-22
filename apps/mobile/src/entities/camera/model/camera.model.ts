@@ -8,7 +8,7 @@ export type {
   CameraAnalysisSource,
   CameraAnalyzeRequest,
   CameraAnalyzeResponse,
-  FridgeCategory,
+  IngredientCategory,
 } from '@repo/contract';
 
 export type CameraCaptureOption = {

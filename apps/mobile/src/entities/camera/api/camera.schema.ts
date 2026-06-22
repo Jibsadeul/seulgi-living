@@ -4,5 +4,5 @@ export {
   cameraAnalysisSourceSchema,
   cameraAnalyzeRequestSchema,
   cameraAnalyzeResponseSchema,
-  fridgeCategorySchema,
+  ingredientCategorySchema,
 } from '@repo/contract';

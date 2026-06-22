@@ -1,28 +1,28 @@
+import { errors } from '@/shared/lib/error';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
   cameraAnalyzeRequestSchema,
   cameraAnalyzeResponseSchema,
   cameraResultSaveRequestSchema,
-  fridgeCategorySchema,
+  ingredientCategorySchema,
   type CameraAnalysisSource,
   type CameraAnalyzeResponse,
 } from '@repo/contract';
 import { prisma } from '@repo/db';
 import { z } from 'zod';
-import { errors } from '@/shared/lib/error';
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 function normalizeCategory(value: unknown) {
-  const parsed = fridgeCategorySchema.safeParse(value);
+  const parsed = ingredientCategorySchema.safeParse(value);
 
   return parsed.success ? parsed.data : 'OTHER';
 }
 
 const looseGeminiItemSchema = z.object({
   name: z.preprocess((value) => (value == null ? '이름 미확인' : value), z.string().trim().min(1)),
-  category: z.preprocess(normalizeCategory, fridgeCategorySchema),
+  category: z.preprocess(normalizeCategory, ingredientCategorySchema),
   quantity: z.preprocess((value) => (value == null ? 1 : value), z.coerce.number().positive()),
   unit: z.preprocess(
     (value) => (value == null || value === '' ? '개' : value),
