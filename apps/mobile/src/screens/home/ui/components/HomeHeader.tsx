@@ -1,7 +1,7 @@
 import { Text, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SettingsIcon from '@assets/icons/settings.svg';
-import { HomeBudgetCard } from '@/screens/home/ui/components/HomeBudgetCard';
+import { HomeBudgetCard } from './HomeBudgetCard';
 
 type Props = {
   username?: string;

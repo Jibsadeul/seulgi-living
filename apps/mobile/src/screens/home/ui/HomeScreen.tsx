@@ -11,10 +11,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { getCurrentMember, type MemberMe, useMemberStore } from '@/entities/members';
 import { MemberInfoBottomSheet } from '@/screens/members';
-import { FridgePreview } from '@/screens/fridge/ui/components/FridgePreview';
-import { HomeHeader } from '@/screens/home/ui/components/HomeHeader';
-import { PoliciesScrapPreview } from '@/screens/policies/ui/components/PoliciesScrapPreview';
-import { RecipesScrapPreview } from '@/screens/recipes/ui/components/RecipesScrapPreview';
+import { HomeFridgePreview } from './components/HomeFridgePreview';
+import { HomeHeader } from './components/HomeHeader';
+import { HomePolicyScrap } from './components/HomePolicyScrap';
+import { HomeRecipeScrap } from './components/HomeRecipeScrap';
 
 export function HomeScreen() {
   const router = useRouter();
@@ -76,9 +76,9 @@ export function HomeScreen() {
           username={member?.nickname ?? undefined}
           onSettingsPress={() => setIsMemberInfoOpen(true)}
         />
-        <FridgePreview />
-        <RecipesScrapPreview />
-        <PoliciesScrapPreview />
+        <HomeFridgePreview />
+        <HomeRecipeScrap />
+        <HomePolicyScrap />
       </ScrollView>
       <Animated.View
         pointerEvents={isNearBottom ? 'none' : 'auto'}

@@ -14,6 +14,8 @@ import { errors } from '@/shared/lib/error';
 export const GET = withHandler(async (request: NextRequest, { params }) => {
   const { recipeId } = await params;
   const memberId = await getCurrentMemberId(request);
+  if (!memberId) throw errors.unauthorized();
+
   const recipe = await getRecipeDetail(recipeId, {
     userId: memberId,
   });

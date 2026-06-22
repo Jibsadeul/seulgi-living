@@ -38,6 +38,14 @@ export const recipeScrapListQuerySchema = recipeListQuerySchema.pick({
   size: true,
 });
 
+export const recipeRecommendationTypeSchema = z.enum(['speed', 'diet', 'night', 'fridge']);
+
+export const recipeRecommendationQuerySchema = z.object({
+  type: recipeRecommendationTypeSchema,
+  page: z.coerce.number().int().min(1).default(1),
+  size: z.coerce.number().int().min(1).max(100).default(20),
+});
+
 export const recipePreviewSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1),
@@ -154,6 +162,8 @@ export type RecipePreview = z.infer<typeof recipePreviewSchema>;
 export type RecipeListResponse = z.infer<typeof recipeListResponseSchema>;
 export type RecipeDetailParams = z.infer<typeof recipeDetailParamsSchema>;
 export type RecipeScrap = z.infer<typeof recipeScrapSchema>;
+export type RecipeRecommendationType = z.infer<typeof recipeRecommendationTypeSchema>;
+export type RecipeRecommendationQuery = z.infer<typeof recipeRecommendationQuerySchema>;
 export type RecipeIngredient = z.infer<typeof recipeIngredientSchema>;
 export type RecipeStep = z.infer<typeof recipeStepSchema>;
 export type RecipeDetail = z.infer<typeof recipeDetailSchema>;
