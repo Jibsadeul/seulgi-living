@@ -1,4 +1,5 @@
 import type { ZodType } from 'zod';
+import { router } from 'expo-router';
 import { refreshTokenResponseSchema } from '@repo/contract';
 import { API_BASE_URL, TEST_MEMBER_ID } from '@/shared/config/constants';
 import { showAppToast } from '@/shared/ui/Toast';
@@ -154,6 +155,7 @@ async function apiRequestInternal<T>(
 
     if (refreshResult.status === 'sessionExpired') {
       showAppToast({ type: 'warning', text: SESSION_EXPIRED_MESSAGE });
+      router.replace('/(auth)/login');
       throw new Error(SESSION_EXPIRED_MESSAGE);
     }
 
@@ -166,6 +168,7 @@ async function apiRequestInternal<T>(
   if (response.status === 401 && !options.skipAuth) {
     await clearTokens();
     showAppToast({ type: 'warning', text: SESSION_EXPIRED_MESSAGE });
+    router.replace('/(auth)/login');
   }
 
   if (!response.ok) {
