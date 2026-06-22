@@ -102,11 +102,13 @@ function FieldLabel({ children }: { children: string }) {
 }
 
 function FormInput({
+  editable = true,
   value,
   placeholder,
   keyboardType,
   onChangeText,
 }: {
+  editable?: boolean;
   value: string;
   placeholder?: string;
   keyboardType?: 'default' | 'numeric';
@@ -114,7 +116,10 @@ function FormInput({
 }) {
   return (
     <TextInput
-      className="min-h-11 rounded-[10px] bg-gray-5 px-3 text-base font-medium text-gray-90"
+      className={`min-h-11 rounded-[10px] px-3 text-base font-medium ${
+        editable ? 'bg-gray-5 text-gray-90' : 'border border-gray-20 bg-gray-10 text-gray-50'
+      }`}
+      editable={editable}
       keyboardType={keyboardType}
       onChangeText={onChangeText}
       placeholder={placeholder}
@@ -202,6 +207,9 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
 
   const selectedCount = items.length;
   const isSaveDisabled = isReceipt && saveTargets.length === 0;
+  const isFridgeOnlySelected =
+    isReceipt && saveTargets.length === 1 && saveTargets.includes('fridge');
+  const isGroceryFieldsDisabled = isFridgeOnlySelected;
 
   const updateItem = (id: string, nextItem: Partial<CameraAnalysisItem>) => {
     setItems((currentItems) =>
@@ -245,9 +253,18 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
       </View>
 
       {isReceipt ? (
-        <View className="rounded-2xl border border-gray-20 bg-surface-default p-4">
+        <View
+          className={`rounded-2xl border border-gray-20 bg-surface-default p-4 ${
+            isGroceryFieldsDisabled ? 'bg-gray-5' : ''
+          }`}
+        >
           <FieldLabel>구매일</FieldLabel>
-          <FormInput onChangeText={setPurchaseDate} placeholder="YYYY.MM.DD" value={purchaseDate} />
+          <FormInput
+            editable={!isGroceryFieldsDisabled}
+            onChangeText={setPurchaseDate}
+            placeholder="YYYY.MM.DD"
+            value={purchaseDate}
+          />
         </View>
       ) : null}
 
@@ -322,6 +339,7 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
               <View>
                 <FieldLabel>가격</FieldLabel>
                 <FormInput
+                  editable={!isGroceryFieldsDisabled}
                   keyboardType="numeric"
                   onChangeText={(value) => updateItem(item.id, { price: parsePrice(value) })}
                   placeholder="0"
@@ -374,12 +392,31 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
             <Text className="ml-1 text-[11px] font-medium text-gray-60">
               * 최소 하나 이상의 저장 위치를 선택해주세요.
             </Text>
-            <View className="flex-row items-end justify-between pt-1">
-              <Text className="text-lg font-bold text-gray-90">예상 총 금액</Text>
-              <Text className="text-2xl font-bold text-main-100">
-                {totalPrice.toLocaleString('ko-KR')}원
-              </Text>
-            </View>
+            {isFridgeOnlySelected ? (
+              <View className="rounded-[10px] bg-gray-5 px-3 py-2">
+                <Text className="text-xs font-medium leading-4 text-gray-60">
+                  My 냉장고만 선택하면 구매일과 가격은 저장되지 않아요.
+                </Text>
+              </View>
+            ) : null}
+            {isReceipt ? (
+              <View className="flex-row items-end justify-between pt-1">
+                <Text
+                  className={`text-lg font-bold ${
+                    isGroceryFieldsDisabled ? 'text-gray-50' : 'text-gray-90'
+                  }`}
+                >
+                  예상 총 금액
+                </Text>
+                <Text
+                  className={`text-2xl font-bold ${
+                    isGroceryFieldsDisabled ? 'text-gray-50' : 'text-main-100'
+                  }`}
+                >
+                  {totalPrice.toLocaleString('ko-KR')}원
+                </Text>
+              </View>
+            ) : null}
           </View>
         ) : (
           <View className="rounded-xl bg-main-10 px-4 py-3">
