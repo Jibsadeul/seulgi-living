@@ -91,7 +91,7 @@ export function buildRegionFilter(sigunguId: string | string[] | null | undefine
 }
 
 export function buildScrapsInclude(memberId: string | null) {
-  return memberId ? { where: { userId: memberId } } : { where: { userId: '' } };
+  return memberId ? { where: { userId: memberId } } : { where: { id: BigInt(-1) } };
 }
 
 export function rawToUpsertData(raw: YouthPolicyRaw) {
