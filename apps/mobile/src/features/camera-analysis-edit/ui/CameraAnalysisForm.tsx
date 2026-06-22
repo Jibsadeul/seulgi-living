@@ -3,6 +3,7 @@ import type {
   CameraAnalysisSource,
   CameraAnalyzeResponse,
 } from '@/entities/camera';
+import { cameraAnalysisItemSchema } from '@/entities/camera';
 import { Ionicons } from '@expo/vector-icons';
 import { IngredientCategory } from '@repo/contract';
 import { useMemo, useState } from 'react';
@@ -15,6 +16,13 @@ type SaveTarget = 'groceries' | 'fridge';
 
 type EditableCameraAnalysisItem = CameraAnalysisItem & {
   id: string;
+};
+
+type ItemFormErrors = Partial<Record<keyof CameraAnalysisItem, string>>;
+
+type CameraAnalysisFormErrors = {
+  purchaseDate?: string;
+  items: Record<string, ItemFormErrors>;
 };
 
 type CameraAnalysisFormProps = {
@@ -75,10 +83,14 @@ function parseQuantity(value: string) {
 }
 
 function parsePrice(value: string) {
+  if (value.trim() === '') {
+    return null;
+  }
+
   const parsed = Number(value.replace(/,/g, ''));
 
-  if (!Number.isFinite(parsed) || parsed < 0) {
-    return 0;
+  if (!Number.isFinite(parsed)) {
+    return -1;
   }
 
   return parsed;
@@ -93,6 +105,7 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
   const [items, setItems] = useState<EditableCameraAnalysisItem[]>(
     analysis.items.map(createEditableItem),
   );
+  const [errors, setErrors] = useState<CameraAnalysisFormErrors>({ items: {} });
 
   const totalPrice = useMemo(
     () => items.reduce((total, item) => total + (item.price ?? 0), 0),
@@ -104,14 +117,21 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
   const isFridgeOnlySelected =
     isReceipt && saveTargets.length === 1 && saveTargets.includes('fridge');
   const isGroceryFieldsDisabled = isFridgeOnlySelected;
+  const isPriceRequired = isReceipt && saveTargets.includes('groceries');
+
+  const clearErrors = () => {
+    setErrors({ items: {} });
+  };
 
   const updateItem = (id: string, nextItem: Partial<CameraAnalysisItem>) => {
+    clearErrors();
     setItems((currentItems) =>
       currentItems.map((item) => (item.id === id ? { ...item, ...nextItem } : item)),
     );
   };
 
   const addItem = () => {
+    clearErrors();
     setItems((currentItems) => [
       createEmptyItem(currentItems.length, analysis.source),
       ...currentItems,
@@ -119,10 +139,12 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
   };
 
   const removeItem = (id: string) => {
+    clearErrors();
     setItems((currentItems) => currentItems.filter((item) => item.id !== id));
   };
 
   const toggleSaveTarget = (target: SaveTarget) => {
+    clearErrors();
     setSaveTargets((currentTargets) => {
       if (currentTargets.includes(target)) {
         return currentTargets.filter((currentTarget) => currentTarget !== target);
@@ -130,6 +152,62 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
 
       return [...currentTargets, target];
     });
+  };
+
+  const updatePurchaseDate = (value: string) => {
+    clearErrors();
+    setPurchaseDate(value);
+  };
+
+  const validateForm = () => {
+    const nextErrors: CameraAnalysisFormErrors = { items: {} };
+
+    if (isPriceRequired && purchaseDate.trim() === '') {
+      nextErrors.purchaseDate = '구매일을 선택해주세요.';
+    }
+
+    items.forEach((item) => {
+      const itemErrors: ItemFormErrors = {};
+      const parseResult = cameraAnalysisItemSchema.safeParse({
+        name: item.name,
+        category: item.category,
+        quantity: item.quantity,
+        unit: item.unit,
+        price: item.price,
+      });
+
+      if (!parseResult.success) {
+        parseResult.error.errors.forEach((issue) => {
+          const field = issue.path[0];
+
+          if (
+            field === 'name' ||
+            field === 'category' ||
+            field === 'quantity' ||
+            field === 'unit' ||
+            field === 'price'
+          ) {
+            itemErrors[field] = issue.message;
+          }
+        });
+      }
+
+      if (isPriceRequired && item.price === null) {
+        itemErrors.price = '가격을 입력해주세요.';
+      }
+
+      if (Object.keys(itemErrors).length > 0) {
+        nextErrors.items[item.id] = itemErrors;
+      }
+    });
+
+    setErrors(nextErrors);
+
+    return !nextErrors.purchaseDate && Object.keys(nextErrors.items).length === 0;
+  };
+
+  const handleSave = () => {
+    validateForm();
   };
 
   return (
@@ -155,9 +233,14 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
           <FieldLabel>구매일</FieldLabel>
           <PurchaseDatePicker
             disabled={isGroceryFieldsDisabled}
-            onChange={setPurchaseDate}
+            onChange={updatePurchaseDate}
             value={purchaseDate}
           />
+          {errors.purchaseDate ? (
+            <Text className="mt-1 ml-1 text-xs font-medium text-point-100">
+              {errors.purchaseDate}
+            </Text>
+          ) : null}
         </View>
       ) : null}
 
@@ -173,75 +256,88 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
       </View>
 
       <View className="gap-3">
-        {items.map((item) => (
-          <View
-            className="gap-4 rounded-2xl border border-gray-20 bg-surface-default p-4"
-            key={item.id}
-          >
-            <View className="flex-row items-center justify-between">
-              <Text className="text-sm font-bold text-gray-80">식재료 정보</Text>
-              <Pressable
-                accessibilityLabel="항목 삭제"
-                className="size-9 items-center justify-center"
-                onPress={() => removeItem(item.id)}
-              >
-                <Ionicons color="#BA1A1A" name="trash-outline" size={18} />
-              </Pressable>
-            </View>
+        {items.map((item) => {
+          const itemErrors = errors.items[item.id] ?? {};
 
-            <View>
-              <FieldLabel>품목명</FieldLabel>
-              <FormInput
-                onChangeText={(value) => updateItem(item.id, { name: value })}
-                placeholder="품목명을 입력하세요"
-                value={item.name}
-              />
-            </View>
-
-            <View>
-              <FieldLabel>카테고리</FieldLabel>
-              <CategoryDropdown
-                onChange={(category) => updateItem(item.id, { category })}
-                value={item.category}
-              />
-            </View>
-
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <FieldLabel>수량</FieldLabel>
-                <FormInput
-                  keyboardType="numeric"
-                  onChangeText={(value) =>
-                    updateItem(item.id, {
-                      quantity: parseQuantity(value),
-                    })
-                  }
-                  value={item.quantity === 0 ? '' : `${item.quantity}`}
-                />
+          return (
+            <View
+              className="gap-4 rounded-2xl border border-gray-20 bg-surface-default p-4"
+              key={item.id}
+            >
+              <View className="flex-row items-center justify-between">
+                <Text className="text-sm font-bold text-gray-80">식재료 정보</Text>
+                <Pressable
+                  accessibilityLabel="항목 삭제"
+                  className="size-9 items-center justify-center"
+                  onPress={() => removeItem(item.id)}
+                >
+                  <Ionicons color="#BA1A1A" name="trash-outline" size={18} />
+                </Pressable>
               </View>
-              <View className="w-[104px]">
-                <FieldLabel>단위</FieldLabel>
-                <FormInput
-                  onChangeText={(value) => updateItem(item.id, { unit: value })}
-                  value={item.unit}
-                />
-              </View>
-            </View>
 
-            {isReceipt ? (
               <View>
-                <FieldLabel>가격</FieldLabel>
+                <FieldLabel>품목명</FieldLabel>
                 <FormInput
-                  editable={!isGroceryFieldsDisabled}
-                  keyboardType="numeric"
-                  onChangeText={(value) => updateItem(item.id, { price: parsePrice(value) })}
-                  placeholder="0"
-                  value={`${item.price ?? 0}`}
+                  onChangeText={(value) => updateItem(item.id, { name: value })}
+                  placeholder="품목명을 입력하세요"
+                  value={item.name}
+                  errorMessage={itemErrors.name}
                 />
               </View>
-            ) : null}
-          </View>
-        ))}
+
+              <View>
+                <FieldLabel>카테고리</FieldLabel>
+                <CategoryDropdown
+                  onChange={(category) => updateItem(item.id, { category })}
+                  value={item.category}
+                />
+                {itemErrors.category ? (
+                  <Text className="mt-1 ml-1 text-xs font-medium text-point-100">
+                    {itemErrors.category}
+                  </Text>
+                ) : null}
+              </View>
+
+              <View className="flex-row gap-3">
+                <View className="flex-1">
+                  <FieldLabel>수량</FieldLabel>
+                  <FormInput
+                    keyboardType="numeric"
+                    onChangeText={(value) =>
+                      updateItem(item.id, {
+                        quantity: parseQuantity(value),
+                      })
+                    }
+                    value={item.quantity === 0 ? '' : `${item.quantity}`}
+                    errorMessage={itemErrors.quantity}
+                  />
+                </View>
+                <View className="w-[104px]">
+                  <FieldLabel>단위</FieldLabel>
+                  <FormInput
+                    onChangeText={(value) => updateItem(item.id, { unit: value })}
+                    value={item.unit}
+                    errorMessage={itemErrors.unit}
+                  />
+                </View>
+              </View>
+
+              {isReceipt ? (
+                <View>
+                  <FieldLabel>가격</FieldLabel>
+                  <FormInput
+                    editable={!isGroceryFieldsDisabled}
+                    keyboardType="numeric"
+                    onChangeText={(value) => updateItem(item.id, { price: parsePrice(value) })}
+                    placeholder="0"
+                    value={item.price === null ? '' : `${item.price}`}
+                    errorMessage={itemErrors.price}
+                  />
+                </View>
+              ) : null}
+            </View>
+          );
+        })}
       </View>
 
       <View className="gap-4 border-t border-gray-20 pt-6 mt-3">
@@ -321,6 +417,7 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
               isSaveDisabled ? 'bg-gray-30' : 'bg-main-100'
             }`}
             disabled={isSaveDisabled}
+            onPress={handleSave}
           >
             <Text className="text-base font-bold text-white">저장하기</Text>
             <View className="min-w-7 items-center rounded-full bg-white/20 px-2 py-0.5">
