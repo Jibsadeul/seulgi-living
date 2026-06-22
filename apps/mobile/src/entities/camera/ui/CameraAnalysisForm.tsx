@@ -2,7 +2,15 @@ import { INGREDIENT_CATEGORY_LABELS, INGREDIENT_CATEGORY_OPTIONS } from '@/entit
 import { Ionicons } from '@expo/vector-icons';
 import { IngredientCategory } from '@repo/contract';
 import { useMemo, useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import {
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import type {
   CameraAnalysisItem,
   CameraAnalysisSource,
@@ -301,6 +309,7 @@ function CategoryDropdown({
   onChange: (value: IngredientCategory) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const { height } = useWindowDimensions();
   const close = () => setIsOpen(false);
 
   return (
@@ -318,8 +327,9 @@ function CategoryDropdown({
       <Modal animationType="fade" transparent visible={isOpen} onRequestClose={close}>
         <Pressable className="flex-1 justify-center bg-black/35 px-6" onPress={close}>
           <Pressable
-            className="max-h-[420px] rounded-2xl bg-surface-default p-3"
+            className="rounded-2xl bg-surface-default p-3"
             onPress={(event) => event.stopPropagation()}
+            style={{ maxHeight: height * 0.75 }}
           >
             <Text className="px-2 py-3 text-base font-bold text-gray-90">카테고리</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -411,7 +421,8 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
         <Text className="text-sm leading-5 text-gray-70">
           정확하지 않은 항목은 수정하거나 삭제하고, 누락된 항목은 추가해 주세요.
         </Text>
-        <View className="border-t border-gray-20 pt-3">
+        <View className="flex-row items-center gap-1 border-t border-gray-20 pt-3">
+          <Ionicons color="#EF7722" name="checkmark" size={15} />
           <Text className="text-xs font-semibold text-gray-80">
             분석 출처: {isReceipt ? '영수증 촬영' : '식재료 촬영'}
           </Text>
