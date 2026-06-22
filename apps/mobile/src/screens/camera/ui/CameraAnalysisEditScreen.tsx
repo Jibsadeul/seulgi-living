@@ -40,7 +40,7 @@ export function CameraAnalysisEditScreen() {
   return (
     <View className="flex-1 bg-surface-card">
       <Header title="AI 분석 결과" variant="back" onBackPress={goToCamera} />
-      <ScrollView contentContainerClassName="px-5 pt-4 pb-10">
+      <ScrollView contentContainerClassName="px-5 pt-4 pb-6">
         <CameraAnalysisForm analysis={analysisResult ?? MOCK_ANALYSIS} onCancel={goToCamera} />
       </ScrollView>
     </View>

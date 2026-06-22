@@ -182,7 +182,7 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
               <Text className="text-sm font-bold text-gray-80">식재료 정보</Text>
               <Pressable
                 accessibilityLabel="항목 삭제"
-                className="size-9 items-center justify-center rounded-full bg-gray-5"
+                className="size-9 items-center justify-center"
                 onPress={() => removeItem(item.id)}
               >
                 <Ionicons color="#BA1A1A" name="trash-outline" size={18} />
@@ -244,10 +244,10 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
         ))}
       </View>
 
-      <View className="gap-4 rounded-t-3xl border border-gray-20 bg-surface-default p-4 shadow-sm">
+      <View className="gap-4 border-t border-gray-20 pt-6 mt-3">
         {isReceipt ? (
           <View className="gap-3">
-            <Text className="ml-1 text-xs font-semibold text-gray-60">저장 위치</Text>
+            <Text className="ml-1 text-sm font-semibold ">저장 위치</Text>
             <View className="flex-row gap-2">
               <Pressable
                 className={`min-h-11 flex-1 items-center justify-center rounded-[10px] border ${
