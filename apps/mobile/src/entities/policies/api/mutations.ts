@@ -26,6 +26,7 @@ export function usePolicyScrap() {
         method: isScrapped ? 'POST' : 'DELETE',
       }),
 
+    // 서버 응답 오기 전에 미리 캐시를 손으로 고쳐서 화면이 즉시 반영되게 함
     onMutate: async ({ policyId, isScrapped }) => {
       await queryClient.cancelQueries({ queryKey: policyKeys.all });
 
@@ -35,17 +36,22 @@ export function usePolicyScrap() {
         old?.map(patchIsScrapped(policyId, isScrapped)),
       );
 
-      // 검색 결과(무한스크롤) 캐시는 params별로 여러 개 존재할 수 있어, list로 시작하는 쿼리를 전부 갱신한다.
+      // 검색 결과/스크랩 목록(둘 다 무한스크롤) 캐시는 params별로 여러 개 존재할 수 있어, list·scraps로 시작하는 쿼리를 전부 갱신한다.
+      const patchInfinitePages = (old: InfinitePolicyListData | undefined) =>
+        old && {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            items: page.items.map(patchIsScrapped(policyId, isScrapped)),
+          })),
+        };
       queryClient.setQueriesData<InfinitePolicyListData>(
         { queryKey: [...policyKeys.all, 'list'] },
-        (old) =>
-          old && {
-            ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              items: page.items.map(patchIsScrapped(policyId, isScrapped)),
-            })),
-          },
+        patchInfinitePages,
+      );
+      queryClient.setQueriesData<InfinitePolicyListData>(
+        { queryKey: [...policyKeys.all, 'scraps'] },
+        patchInfinitePages,
       );
 
       return { previousRecommended };
@@ -62,6 +68,7 @@ export function usePolicyScrap() {
       queryClient.invalidateQueries({ queryKey: policyKeys.recommended() });
       queryClient.invalidateQueries({ queryKey: policyKeys.banner() });
       queryClient.invalidateQueries({ queryKey: [...policyKeys.all, 'list'] });
+      queryClient.invalidateQueries({ queryKey: [...policyKeys.all, 'scraps'] });
     },
   });
 }

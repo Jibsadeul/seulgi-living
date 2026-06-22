@@ -33,6 +33,7 @@ export function usePolicySearchResults() {
   const [isFilterSheetOpen, setFilterSheetOpen] = useState(false);
   const [filterSheetSection, setFilterSheetSection] = useState<FilterSection | null>(null);
   const [hasOpenedFilterSheet, setHasOpenedFilterSheet] = useState(false);
+  const [excludeExpired, setExcludeExpired] = useState(true);
 
   const { data: sidoList } = useQuery({ queryKey: ['sido'], queryFn: getSidoList });
   const regionLabels = filterValues.zipCd
@@ -46,6 +47,7 @@ export function usePolicySearchResults() {
     supportType: filterValues.supportType,
     applyPeriodType: filterValues.applyPeriodType,
     deadlineOnly: params.deadlineOnly === 'true',
+    excludeExpired,
   };
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfinitePolicies(
@@ -84,6 +86,8 @@ export function usePolicySearchResults() {
     filterValues,
     setFilterValues,
     regionLabels,
+    excludeExpired,
+    setExcludeExpired,
     isFilterSheetOpen,
     filterSheetSection,
     hasOpenedFilterSheet,

@@ -23,6 +23,8 @@ export function PoliciesSearchResultScreen() {
     filterValues,
     setFilterValues,
     regionLabels,
+    excludeExpired,
+    setExcludeExpired,
     isFilterSheetOpen,
     filterSheetSection,
     hasOpenedFilterSheet,
@@ -51,6 +53,8 @@ export function PoliciesSearchResultScreen() {
         filterValues={filterValues}
         regionLabels={regionLabels}
         onOpenFilterSection={openFilterSheet}
+        excludeExpired={excludeExpired}
+        onToggleExcludeExpired={() => setExcludeExpired((prev) => !prev)}
       />
 
       {hasOpenedFilterSheet && (

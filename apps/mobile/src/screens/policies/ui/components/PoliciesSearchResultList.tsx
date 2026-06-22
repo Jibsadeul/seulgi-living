@@ -1,7 +1,9 @@
-import { FlatList, Text, View } from 'react-native';
+import { FlatList, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { PolicySearchResultCard, type Policy, type PolicyFilterValues } from '@/entities/policies';
 import type { FilterSection } from '@/features/policy-search';
-import { SkeletonCard } from '@/shared/ui';
+import { SkeletonCard, TAB_BAR_BASE_HEIGHT } from '@/shared/ui';
 import { PoliciesSearchFilterChips } from './PoliciesSearchFilterChips';
 
 type Props = {
@@ -13,6 +15,8 @@ type Props = {
   filterValues: PolicyFilterValues;
   regionLabels?: string[];
   onOpenFilterSection: (section: FilterSection | null) => void;
+  excludeExpired: boolean;
+  onToggleExcludeExpired: () => void;
 };
 
 export function PoliciesSearchResultList({
@@ -24,7 +28,11 @@ export function PoliciesSearchResultList({
   filterValues,
   regionLabels,
   onOpenFilterSection,
+  excludeExpired,
+  onToggleExcludeExpired,
 }: Props) {
+  const insets = useSafeAreaInsets();
+
   return (
     <FlatList
       data={policies}
@@ -34,7 +42,10 @@ export function PoliciesSearchResultList({
           <PolicySearchResultCard policy={item} />
         </View>
       )}
-      contentContainerStyle={{ paddingTop: 4, paddingBottom: 24 }}
+      contentContainerStyle={{
+        paddingTop: 4,
+        paddingBottom: TAB_BAR_BASE_HEIGHT + insets.bottom + 24,
+      }}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       ListHeaderComponent={
@@ -44,14 +55,40 @@ export function PoliciesSearchResultList({
             regionLabels={regionLabels}
             onOpenSection={onOpenFilterSection}
           />
-          {totalCount !== undefined && (
-            <Text
-              className="px-4 mt-3 mb-2"
-              style={{ fontSize: 12, fontWeight: '500', color: '#737686' }}
+          <View className="flex-row items-center justify-between px-4 mt-3 mb-2">
+            {totalCount !== undefined ? (
+              <Text style={{ fontSize: 12, fontWeight: '500', color: '#737686' }}>
+                검색 결과 {totalCount}건
+              </Text>
+            ) : (
+              <View />
+            )}
+            <Pressable
+              onPress={onToggleExcludeExpired}
+              className="flex-row items-center rounded-full"
+              style={{
+                paddingHorizontal: 9,
+                paddingVertical: 6,
+                gap: 4,
+                backgroundColor: excludeExpired ? '#FFEBDC' : '#F0F0F0',
+              }}
             >
-              검색 결과 {totalCount}건
-            </Text>
-          )}
+              <Ionicons
+                name={excludeExpired ? 'checkbox' : 'square-outline'}
+                size={13}
+                color={excludeExpired ? '#EF7722' : '#8F9098'}
+              />
+              <Text
+                style={{
+                  fontSize: 11,
+                  fontWeight: '500',
+                  color: excludeExpired ? '#EF7722' : '#8F9098',
+                }}
+              >
+                마감 제외
+              </Text>
+            </Pressable>
+          </View>
         </View>
       }
       ListFooterComponent={

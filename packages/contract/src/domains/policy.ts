@@ -26,6 +26,7 @@ export type Policy = z.infer<typeof policySchema>;
 
 // 마감임박 배너 응답 (BFF → 앱)
 export const policyBannerSchema = z.object({
+  id: z.string(),
   conditionType: z.enum(['scrap', 'recommended']),
   name: z.string(),
   daysLeft: z.number().nullable(),
@@ -41,6 +42,10 @@ export const policyListQuerySchema = z.object({
   supportType: z.string().optional(),
   applyPeriodType: z.enum(['0057001', '0057002']).optional(), // 0057001: 기간 있음, 0057002: 상시
   deadlineOnly: z.coerce.boolean().optional(), // 마감임박 필터 (7일 이내)
+  excludeExpired: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((v) => v !== 'false'), // 마감된 정책 제외, 'false'가 명시된 경우만 false (기본 true)
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(50).default(10),
 });
@@ -49,6 +54,10 @@ export type PolicyListQuery = z.infer<typeof policyListQuerySchema>;
 // 정책 스크랩 목록 요청 파라미터 (앱 → BFF)
 export const policyScrapListQuerySchema = z.object({
   sortBy: z.enum(['deadline', 'recent']).default('deadline'),
+  excludeExpired: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((v) => v !== 'false'), // 마감된 정책 제외, 'false'가 명시된 경우만 false (기본 true)
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(50).default(15),
 });
