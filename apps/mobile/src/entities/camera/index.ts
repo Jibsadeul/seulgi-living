@@ -8,6 +8,7 @@ export {
   isCameraCaptureMode,
 } from './model/camera.model';
 export { useCameraStore } from './model/camera.store';
+export { CameraAnalysisForm } from './ui/CameraAnalysisForm';
 export {
   cameraAnalysisDateSchema,
   cameraAnalysisItemSchema,
