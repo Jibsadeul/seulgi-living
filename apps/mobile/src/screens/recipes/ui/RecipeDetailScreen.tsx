@@ -91,10 +91,13 @@ export function RecipeDetailScreen() {
             <Text className="text-xs text-gray-50 mt-1">by {recipe.authorNickname}</Text>
           )}
           <View className="flex-row gap-1 mt-2 flex-wrap">
-            {tags.map((tag) => {
+            {tags.map((tag, tagIndex) => {
               const style = TAG_STYLES[tag.variant];
               return (
-                <View key={tag.label} className={`px-3 py-1 rounded-full ${style.container}`}>
+                <View
+                  key={`${tag.label}-${tagIndex}`}
+                  className={`px-3 py-1 rounded-full ${style.container}`}
+                >
                   <Text className={`text-xs font-medium ${style.text}`}>{tag.label}</Text>
                 </View>
               );

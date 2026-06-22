@@ -66,10 +66,13 @@ export function RecipeCard({
         </Text>
 
         <View className="flex-row gap-1 mt-1">
-          {tags.map((tag) => {
+          {tags.map((tag, tagIndex) => {
             const style = TAG_STYLES[tag.variant];
             return (
-              <View key={tag.label} className={`px-2 py-1 rounded-full ${style.container}`}>
+              <View
+                key={`${tag.label}-${tagIndex}`}
+                className={`px-2 py-1 rounded-full ${style.container}`}
+              >
                 <Text className={`text-[11px] font-medium ${style.text}`}>{tag.label}</Text>
               </View>
             );

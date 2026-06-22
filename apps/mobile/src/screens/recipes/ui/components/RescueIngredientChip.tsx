@@ -1,19 +1,14 @@
 import { Pressable, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import type { SvgProps } from 'react-native-svg';
 
 type Props = {
   label: string;
-  icon?: keyof typeof Ionicons.glyphMap;
+  Icon: React.FC<SvgProps>;
   selected?: boolean;
   onPress?: () => void;
 };
 
-export function RescueIngredientChip({
-  label,
-  icon = 'nutrition-outline',
-  selected = false,
-  onPress,
-}: Props) {
+export function RescueIngredientChip({ label, Icon, selected = false, onPress }: Props) {
   return (
     <Pressable onPress={onPress} className="items-center gap-1 w-16">
       <View
@@ -21,7 +16,7 @@ export function RescueIngredientChip({
           selected ? 'bg-main-10 border-2 border-main-100' : 'bg-gray-5'
         }`}
       >
-        <Ionicons name={icon} size={24} color={selected ? '#EF7722' : '#8E8E8E'} />
+        <Icon width={28} height={28} />
       </View>
       <Text
         className={`text-xs ${selected ? 'text-main-100 font-medium' : 'text-gray-70'}`}
