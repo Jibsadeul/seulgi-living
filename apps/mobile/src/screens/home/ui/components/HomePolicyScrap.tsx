@@ -1,7 +1,7 @@
 import { View, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { DDayBadge } from '@/shared/ui/DDayBadge';
-import { HomeSectionHeader } from '@/screens/home/ui/components/HomeSectionHeader';
+import { HomeSectionHeader } from './HomeSectionHeader';
 
 const MOCK_POLICIES = [
   {
