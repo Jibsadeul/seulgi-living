@@ -282,32 +282,24 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
                 </Text>
               </Pressable>
             </View>
-            <Text className="ml-1 text-[11px] font-medium text-gray-60">
-              * 최소 하나 이상의 저장 위치를 선택해주세요.
-            </Text>
-            {isFridgeOnlySelected ? (
-              <View className="rounded-[10px] bg-gray-5 px-3 py-2">
-                <Text className="text-xs font-medium leading-4 text-gray-60">
-                  My 냉장고만 선택하면 구매일과 가격은 저장되지 않아요.
-                </Text>
-              </View>
-            ) : null}
             {isReceipt ? (
-              <View className="flex-row items-end justify-between pt-1">
-                <Text
-                  className={`text-lg font-bold ${
-                    isGroceryFieldsDisabled ? 'text-gray-50' : 'text-gray-90'
-                  }`}
-                >
-                  예상 총 금액
-                </Text>
-                <Text
-                  className={`text-2xl font-bold ${
-                    isGroceryFieldsDisabled ? 'text-gray-50' : 'text-main-100'
-                  }`}
-                >
-                  {totalPrice.toLocaleString('ko-KR')}원
-                </Text>
+              <View className="h-12 justify-center pt-1">
+                {isSaveDisabled ? (
+                  <Text className="text-center text-sm font-medium leading-5 text-point-100">
+                    최소 하나 이상의 저장 위치를 선택해주세요.
+                  </Text>
+                ) : isFridgeOnlySelected ? (
+                  <Text className="text-center text-sm font-medium leading-5 text-gray-60">
+                    My 냉장고만 선택하면 구매일과 가격은 저장되지 않아요.
+                  </Text>
+                ) : (
+                  <View className="flex-row items-end justify-between">
+                    <Text className="text-lg font-bold text-gray-90">예상 총 금액</Text>
+                    <Text className="text-2xl font-bold text-main-100">
+                      {totalPrice.toLocaleString('ko-KR')}원
+                    </Text>
+                  </View>
+                )}
               </View>
             ) : null}
           </View>
