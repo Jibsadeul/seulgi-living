@@ -11,6 +11,8 @@ export function ScrapsScreen() {
   const {
     sortBy,
     setSortBy,
+    excludeExpired,
+    setExcludeExpired,
     policies,
     totalCount,
     isLoading,
@@ -59,6 +61,8 @@ export function ScrapsScreen() {
           isLoading={isLoading}
           sortBy={sortBy}
           onChangeSortBy={setSortBy}
+          excludeExpired={excludeExpired}
+          onToggleExcludeExpired={() => setExcludeExpired((prev) => !prev)}
           isFetchingNextPage={isFetchingNextPage}
           isNextPageError={isNextPageError}
           onEndReached={() => fetchNextPage()}

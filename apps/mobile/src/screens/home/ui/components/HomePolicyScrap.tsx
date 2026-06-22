@@ -20,7 +20,7 @@ const MOCK_POLICIES = [
   },
 ];
 
-export function PoliciesScrapPreview() {
+export function HomePolicyScrap() {
   const router = useRouter();
 
   return (

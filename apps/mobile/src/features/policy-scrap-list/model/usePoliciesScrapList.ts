@@ -3,9 +3,10 @@ import { useScrappedPolicies, type PolicyScrapSortBy } from '@/entities/policies
 
 export function usePoliciesScrapList() {
   const [sortBy, setSortBy] = useState<PolicyScrapSortBy>('deadline');
+  const [excludeExpired, setExcludeExpired] = useState(true);
 
   const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
-    useScrappedPolicies(sortBy);
+    useScrappedPolicies(sortBy, excludeExpired);
 
   const policies = data?.pages.flatMap((page) => page.items) ?? [];
   const totalCount = data?.pages[0]?.total;
@@ -18,6 +19,8 @@ export function usePoliciesScrapList() {
   return {
     sortBy,
     setSortBy,
+    excludeExpired,
+    setExcludeExpired,
     policies,
     totalCount,
     isLoading,

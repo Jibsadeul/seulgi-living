@@ -1,4 +1,5 @@
 import { Linking, Pressable, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { PolicyBanner } from '@repo/contract';
 import AlarmClockIcon from '@assets/icons/alarm-clock.svg';
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export function PolicyBannerCard({ banner, nickname }: Props) {
+  const router = useRouter();
   const copy =
     banner.conditionType === 'scrap'
       ? `${nickname ?? ''}님이 스크랩해 둔 정책이에요.\n지금 신청하세요.`
@@ -17,6 +19,8 @@ export function PolicyBannerCard({ banner, nickname }: Props) {
   function handleOpen() {
     if (banner.applicationUrl) {
       Linking.openURL(banner.applicationUrl);
+    } else {
+      router.push(`/(stack)/policies/${banner.id}`);
     }
   }
 
@@ -42,7 +46,7 @@ export function PolicyBannerCard({ banner, nickname }: Props) {
         {banner.daysLeft !== null && (
           <View className="flex-row items-center gap-1 mb-2">
             <AlarmClockIcon width={32} height={32} />
-            <Text style={{ fontSize: 24, fontWeight: '400', lineHeight: 32, color: '#EF7722' }}>
+            <Text style={{ fontSize: 20, fontWeight: '400', lineHeight: 28, color: '#EF7722' }}>
               D-{banner.daysLeft}
             </Text>
           </View>
@@ -50,7 +54,7 @@ export function PolicyBannerCard({ banner, nickname }: Props) {
 
         {/* 정책명 */}
         <Text
-          style={{ fontSize: 20, fontWeight: '500', lineHeight: 28, color: '#000000' }}
+          style={{ fontSize: 18, fontWeight: '500', lineHeight: 26, color: '#000000' }}
           numberOfLines={1}
         >
           {banner.name}
@@ -58,32 +62,36 @@ export function PolicyBannerCard({ banner, nickname }: Props) {
 
         {/* 부제 */}
         <Text
-          style={{ fontSize: 14, fontWeight: '400', color: '#000000', marginTop: 6 }}
+          style={{ fontSize: 13, fontWeight: '400', color: '#000000', marginTop: 6 }}
           numberOfLines={2}
         >
           {copy}
         </Text>
       </View>
 
-      {/* 바로가기 버튼 — 우하단 */}
-      {banner.applicationUrl ? (
-        <Pressable
-          onPress={handleOpen}
-          className="flex-row items-center gap-1"
-          style={{
-            position: 'absolute',
-            bottom: 18,
-            right: 18,
-            backgroundColor: '#EF7722',
-            borderRadius: 9,
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-          }}
-        >
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#FFFFFF' }}>바로가기</Text>
-          <Ionicons name="open-outline" size={16} color="#FFFFFF" />
-        </Pressable>
-      ) : null}
+      {/* 바로가기/자세히보기 버튼 — 우하단 */}
+      <Pressable
+        onPress={handleOpen}
+        className="flex-row items-center gap-1"
+        style={{
+          position: 'absolute',
+          bottom: 18,
+          right: 18,
+          backgroundColor: '#EF7722',
+          borderRadius: 9,
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+        }}
+      >
+        <Text style={{ fontSize: 13, fontWeight: '600', color: '#FFFFFF' }}>
+          {banner.applicationUrl ? '바로가기' : '자세히보기'}
+        </Text>
+        <Ionicons
+          name={banner.applicationUrl ? 'open-outline' : 'chevron-forward'}
+          size={16}
+          color="#FFFFFF"
+        />
+      </Pressable>
     </View>
   );
 }

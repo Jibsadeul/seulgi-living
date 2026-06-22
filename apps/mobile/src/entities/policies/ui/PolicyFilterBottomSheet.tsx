@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { getSidoList } from '@entities/regions';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { TAB_BAR_BASE_HEIGHT } from '@/shared/ui';
 
 const CATEGORY_OPTIONS = ['주거', '금융', '일자리', '복지', '교육', '문화', '참여'];
 
@@ -186,7 +186,7 @@ export function PolicyFilterBottomSheet({
     onClose();
   }
 
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = TAB_BAR_BASE_HEIGHT + insets.bottom;
   const bottomInset = tabBarHeight + insets.bottom;
 
   const renderFooter = useCallback(

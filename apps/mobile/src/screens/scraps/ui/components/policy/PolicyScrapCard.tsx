@@ -1,6 +1,12 @@
 import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { type Policy, usePolicyScrap, getAgeLabel } from '@/entities/policies';
+import {
+  type Policy,
+  usePolicyScrap,
+  getAgeLabel,
+  getDeadlineLabel,
+  isUrgentDeadline,
+} from '@/entities/policies';
 import ScrappedIcon from '@assets/icons/scrapped.svg';
 import { getCategoryStyle } from './policyCategoryStyle';
 
@@ -13,8 +19,9 @@ export function PolicyScrapCard({ policy }: Props) {
   const { mutate: toggleScrap } = usePolicyScrap();
   const { Icon, bg, accent } = getCategoryStyle(policy.largeCategory);
 
-  const isUrgent = policy.daysLeft !== null && policy.daysLeft <= 3;
-  const dayLabel = policy.daysLeft !== null ? `D-${policy.daysLeft}` : '상시';
+  const isClosed = policy.daysLeft !== null && policy.daysLeft < 0;
+  const isUrgent = isUrgentDeadline(policy.daysLeft);
+  const dayLabel = getDeadlineLabel(policy.daysLeft);
   const ageLabel = getAgeLabel(policy);
   const subtitle = [policy.region, ageLabel].filter(Boolean).join(' · ');
 
@@ -69,11 +76,15 @@ export function PolicyScrapCard({ policy }: Props) {
             style={{
               paddingHorizontal: 6,
               paddingVertical: 2,
-              backgroundColor: isUrgent ? '#FFE2E5' : '#FAEEDA',
+              backgroundColor: isClosed ? '#F0F0F0' : isUrgent ? '#FFE2E5' : '#FAEEDA',
             }}
           >
             <Text
-              style={{ fontSize: 10, fontWeight: '700', color: isUrgent ? '#ED3241' : '#EF7722' }}
+              style={{
+                fontSize: 10,
+                fontWeight: '700',
+                color: isClosed ? '#757575' : isUrgent ? '#ED3241' : '#EF7722',
+              }}
             >
               {dayLabel}
             </Text>

@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { Policy } from '@repo/contract';
 import { usePolicyScrap } from '../model/usePolicy';
-import { getAgeLabel } from '../model/policies.model';
+import { getAgeLabel, getDeadlineLabel, isUrgentDeadline } from '../model/policies.model';
 import ScrapIcon from '@assets/icons/scrap.svg';
 import ScrappedIcon from '@assets/icons/scrapped.svg';
 
@@ -28,8 +28,9 @@ export function PolicySearchResultCard({ policy }: Props) {
 
   const categoryLabel = policy.largeCategory ?? '기타';
   const categoryColor = getCategoryBadgeColor(categoryLabel);
-  const isUrgent = policy.daysLeft !== null && policy.daysLeft <= 3;
-  const dayLabel = policy.daysLeft !== null ? `D-${policy.daysLeft}` : '상시';
+  const isClosed = policy.daysLeft !== null && policy.daysLeft < 0;
+  const isUrgent = isUrgentDeadline(policy.daysLeft);
+  const dayLabel = getDeadlineLabel(policy.daysLeft);
   const keyword = policy.keywords?.split(',')[0]?.trim();
   const ageLabel = getAgeLabel(policy);
 
@@ -67,13 +68,13 @@ export function PolicySearchResultCard({ policy }: Props) {
               justifyContent: 'center',
             }}
           >
-            <Text style={{ fontSize: 12, fontWeight: '500', color: categoryColor.text }}>
+            <Text style={{ fontSize: 10, fontWeight: '500', color: categoryColor.text }}>
               {categoryLabel}
             </Text>
           </View>
           <View
             style={{
-              backgroundColor: isUrgent ? '#FFE2E5' : '#FFEBDC',
+              backgroundColor: isClosed ? '#F0F0F0' : isUrgent ? '#FFE2E5' : '#FFEBDC',
               borderRadius: 4,
               paddingHorizontal: 8,
               paddingVertical: 4,
@@ -82,9 +83,9 @@ export function PolicySearchResultCard({ policy }: Props) {
           >
             <Text
               style={{
-                fontSize: 12,
+                fontSize: 10,
                 fontWeight: '700',
-                color: isUrgent ? '#ED3241' : '#EF7722',
+                color: isClosed ? '#757575' : isUrgent ? '#ED3241' : '#EF7722',
               }}
             >
               {dayLabel}
@@ -102,7 +103,7 @@ export function PolicySearchResultCard({ policy }: Props) {
 
       {/* 정책명 */}
       <Text
-        style={{ fontSize: 18, fontWeight: '500', color: '#0B1C30', marginBottom: 8 }}
+        style={{ fontSize: 13, fontWeight: '500', color: '#0B1C30', marginBottom: 8 }}
         numberOfLines={1}
       >
         {policy.name}
@@ -112,20 +113,20 @@ export function PolicySearchResultCard({ policy }: Props) {
       <View className="flex-row items-center" style={{ gap: 16 }}>
         {keyword && (
           <View className="flex-row items-center" style={{ gap: 6 }}>
-            <Ionicons name="pricetag-outline" size={11} color="#757575" />
-            <Text style={{ fontSize: 14, color: '#434655' }}>{keyword}</Text>
+            <Ionicons name="pricetag-outline" size={10} color="#757575" />
+            <Text style={{ fontSize: 12, color: '#434655' }}>{keyword}</Text>
           </View>
         )}
         {ageLabel && (
           <View className="flex-row items-center" style={{ gap: 6 }}>
-            <Ionicons name="people-outline" size={11} color="#757575" />
-            <Text style={{ fontSize: 14, color: '#434655' }}>{ageLabel}</Text>
+            <Ionicons name="people-outline" size={10} color="#757575" />
+            <Text style={{ fontSize: 12, color: '#434655' }}>{ageLabel}</Text>
           </View>
         )}
         {policy.region && (
           <View className="flex-row items-center" style={{ gap: 6 }}>
-            <Ionicons name="location-outline" size={11} color="#757575" />
-            <Text style={{ fontSize: 14, color: '#434655' }}>{policy.region}</Text>
+            <Ionicons name="location-outline" size={10} color="#757575" />
+            <Text style={{ fontSize: 12, color: '#434655' }}>{policy.region}</Text>
           </View>
         )}
       </View>

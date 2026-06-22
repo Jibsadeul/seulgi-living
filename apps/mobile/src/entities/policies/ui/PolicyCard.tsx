@@ -56,7 +56,7 @@ export function PolicyCard({ policy }: Props) {
             paddingVertical: 2,
           }}
         >
-          <Text style={{ fontSize: 11, color: '#3C3C3C' }}>{getCategoryLabel(policy)}</Text>
+          <Text style={{ fontSize: 10, color: '#3C3C3C' }}>{getCategoryLabel(policy)}</Text>
         </View>
         <Pressable onPress={handleScrap} hitSlop={8}>
           {policy.isScrapped ? (
@@ -91,7 +91,7 @@ export function PolicyCard({ policy }: Props) {
 
       {/* 정책명 */}
       <Text
-        style={{ fontSize: 15, fontWeight: '600', color: '#000000', marginBottom: 5 }}
+        style={{ fontSize: 13, fontWeight: '600', color: '#000000', marginBottom: 5 }}
         numberOfLines={2}
       >
         {policy.name}
@@ -100,7 +100,7 @@ export function PolicyCard({ policy }: Props) {
       {/* 설명 */}
       {policy.description ? (
         <Text
-          style={{ fontSize: 13, fontWeight: '400', color: '#000000', marginBottom: 8 }}
+          style={{ fontSize: 12, fontWeight: '400', color: '#000000', marginBottom: 8 }}
           numberOfLines={2}
         >
           {policy.description}
@@ -108,7 +108,7 @@ export function PolicyCard({ policy }: Props) {
       ) : null}
 
       {/* 신청기간 */}
-      <Text style={{ fontSize: 12, fontWeight: '600', color: '#000000', marginTop: 10 }}>
+      <Text style={{ fontSize: 11, fontWeight: '600', color: '#000000', marginTop: 10 }}>
         신청기간{' '}
         <Text style={{ fontWeight: '400', color: '#868686' }}>| {formatPeriod(policy)}</Text>
       </Text>
@@ -129,7 +129,7 @@ export function PolicyCard({ policy }: Props) {
           alignItems: 'center',
         }}
       >
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#EF7722' }}>자세히보기</Text>
+        <Text style={{ fontSize: 12, fontWeight: '600', color: '#EF7722' }}>자세히보기</Text>
       </Pressable>
     </View>
   );

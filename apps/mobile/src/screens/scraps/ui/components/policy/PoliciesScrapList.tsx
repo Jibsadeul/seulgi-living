@@ -1,4 +1,5 @@
 import { FlatList, Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { Policy, PolicyScrapSortBy } from '@/entities/policies';
 import { SkeletonCard } from '@/shared/ui';
 import { PolicyScrapCard } from './PolicyScrapCard';
@@ -10,6 +11,8 @@ type Props = {
   isLoading: boolean;
   sortBy: PolicyScrapSortBy;
   onChangeSortBy: (sortBy: PolicyScrapSortBy) => void;
+  excludeExpired: boolean;
+  onToggleExcludeExpired: () => void;
   isFetchingNextPage: boolean;
   isNextPageError: boolean;
   onEndReached: () => void;
@@ -22,6 +25,8 @@ export function PoliciesScrapList({
   isLoading,
   sortBy,
   onChangeSortBy,
+  excludeExpired,
+  onToggleExcludeExpired,
   isFetchingNextPage,
   isNextPageError,
   onEndReached,
@@ -40,16 +45,42 @@ export function PoliciesScrapList({
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       ListHeaderComponent={
-        <View
-          className="flex-row items-center justify-between px-4"
-          style={{ marginTop: 12, marginBottom: 16 }}
-        >
-          {totalCount !== undefined && (
-            <Text style={{ fontSize: 12, fontWeight: '600', color: '#666666' }}>
-              총 <Text style={{ color: '#EF7722' }}>{totalCount}</Text>개의 저장된 청년정책
+        <View style={{ marginTop: 12, marginBottom: 16 }}>
+          <View className="flex-row items-center justify-between px-4">
+            {totalCount !== undefined && (
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#666666' }}>
+                총 <Text style={{ color: '#EF7722' }}>{totalCount}</Text>개의 저장된 청년정책
+              </Text>
+            )}
+            <PoliciesScrapSortToggle value={sortBy} onChange={onChangeSortBy} />
+          </View>
+          <Pressable
+            onPress={onToggleExcludeExpired}
+            className="flex-row items-center self-end rounded-full"
+            style={{
+              marginTop: 8,
+              marginRight: 16,
+              paddingHorizontal: 9,
+              paddingVertical: 6,
+              gap: 4,
+              backgroundColor: excludeExpired ? '#FFEBDC' : '#F0F0F0',
+            }}
+          >
+            <Ionicons
+              name={excludeExpired ? 'checkbox' : 'square-outline'}
+              size={13}
+              color={excludeExpired ? '#EF7722' : '#8F9098'}
+            />
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: '500',
+                color: excludeExpired ? '#EF7722' : '#8F9098',
+              }}
+            >
+              마감 제외
             </Text>
-          )}
-          <PoliciesScrapSortToggle value={sortBy} onChange={onChangeSortBy} />
+          </Pressable>
         </View>
       }
       ListFooterComponent={

@@ -35,6 +35,7 @@ export type PolicySearchParams = {
   supportType?: string[];
   applyPeriodType?: '0057001' | '0057002';
   deadlineOnly?: boolean;
+  excludeExpired?: boolean;
 };
 
 function buildSearchQueryString(params: PolicySearchParams, page: number): string {
@@ -45,6 +46,7 @@ function buildSearchQueryString(params: PolicySearchParams, page: number): strin
   if (params.supportType?.length) search.set('supportType', params.supportType.join(','));
   if (params.applyPeriodType) search.set('applyPeriodType', params.applyPeriodType);
   if (params.deadlineOnly) search.set('deadlineOnly', 'true');
+  if (params.excludeExpired === false) search.set('excludeExpired', 'false');
   search.set('page', String(page));
   search.set('limit', String(LIST_LIMIT));
   return search.toString();
@@ -69,14 +71,14 @@ const SCRAP_LIST_LIMIT = 15;
 
 export type PolicyScrapSortBy = 'deadline' | 'recent';
 
-export function useScrappedPolicies(sortBy: PolicyScrapSortBy) {
-  const params = { sortBy };
+export function useScrappedPolicies(sortBy: PolicyScrapSortBy, excludeExpired = true) {
+  const params = { sortBy, excludeExpired };
 
   return useInfiniteQuery({
     queryKey: policyKeys.scraps(params),
     queryFn: ({ pageParam }): Promise<PolicyListResponse> =>
       apiRequest(
-        `/api/policies/scraps?sortBy=${sortBy}&page=${pageParam}&limit=${SCRAP_LIST_LIMIT}`,
+        `/api/policies/scraps?sortBy=${sortBy}&excludeExpired=${excludeExpired}&page=${pageParam}&limit=${SCRAP_LIST_LIMIT}`,
         policyListResponseSchema,
       ),
     initialPageParam: 1,

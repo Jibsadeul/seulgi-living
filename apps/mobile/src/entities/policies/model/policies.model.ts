@@ -33,3 +33,13 @@ const TAG_LABELS: Record<Policy['tags'][number], string> = {
 export function getTagLabels(tags: Policy['tags']): string[] {
   return tags.map((t) => TAG_LABELS[t]);
 }
+
+export function getDeadlineLabel(daysLeft: number | null): string {
+  if (daysLeft === null) return '상시';
+  if (daysLeft < 0) return '마감';
+  return `D-${daysLeft}`;
+}
+
+export function isUrgentDeadline(daysLeft: number | null): boolean {
+  return daysLeft !== null && daysLeft >= 0 && daysLeft <= 3;
+}
