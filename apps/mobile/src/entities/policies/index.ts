@@ -7,8 +7,10 @@ export {
   useRecommendedPolicies,
   usePolicyScrap,
   useInfinitePolicies,
+  useScrappedPolicies,
   type PolicySearchParams,
+  type PolicyScrapSortBy,
 } from './model/usePolicy';
-export { formatPeriod, getCategoryLabel, getTagLabels } from './model/policies.model';
+export { formatPeriod, getCategoryLabel, getTagLabels, getAgeLabel } from './model/policies.model';
 export { policyKeys } from './api/keys';
 export type { Policy, PolicyBanner, PolicyListQuery } from './api/policies.schema';

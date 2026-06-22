@@ -64,3 +64,23 @@ export function useInfinitePolicies(params: PolicySearchParams, enabled = true) 
     enabled,
   });
 }
+
+const SCRAP_LIST_LIMIT = 15;
+
+export type PolicyScrapSortBy = 'deadline' | 'recent';
+
+export function useScrappedPolicies(sortBy: PolicyScrapSortBy) {
+  const params = { sortBy };
+
+  return useInfiniteQuery({
+    queryKey: policyKeys.scraps(params),
+    queryFn: ({ pageParam }): Promise<PolicyListResponse> =>
+      apiRequest(
+        `/api/policies/scraps?sortBy=${sortBy}&page=${pageParam}&limit=${SCRAP_LIST_LIMIT}`,
+        policyListResponseSchema,
+      ),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page * lastPage.limit < lastPage.total ? lastPage.page + 1 : undefined,
+  });
+}

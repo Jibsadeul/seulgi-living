@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { Policy } from '@repo/contract';
 import { usePolicyScrap } from '../model/usePolicy';
+import { getAgeLabel } from '../model/policies.model';
 import ScrapIcon from '@assets/icons/scrap.svg';
 import ScrappedIcon from '@assets/icons/scrapped.svg';
 
@@ -15,13 +16,6 @@ const CATEGORY_BADGE_COLORS: Record<string, { bg: string; text: string }> = {
 function getCategoryBadgeColor(label: string) {
   const matchedKey = Object.keys(CATEGORY_BADGE_COLORS).find((key) => label.includes(key));
   return matchedKey ? CATEGORY_BADGE_COLORS[matchedKey] : { bg: '#F0F0F0', text: '#555555' };
-}
-
-function getAgeLabel(policy: Pick<Policy, 'noAgeLimit' | 'ageMin' | 'ageMax'>) {
-  if (policy.noAgeLimit) return '연령 무관';
-  if (policy.ageMin != null && policy.ageMax != null)
-    return `만 ${policy.ageMin}~${policy.ageMax}세`;
-  return null;
 }
 
 type Props = {

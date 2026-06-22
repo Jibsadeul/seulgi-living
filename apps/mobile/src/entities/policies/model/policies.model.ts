@@ -15,6 +15,15 @@ export function getCategoryLabel(policy: Pick<Policy, 'largeCategory' | 'mediumC
   return policy.mediumCategory ?? policy.largeCategory ?? '기타';
 }
 
+export function getAgeLabel(
+  policy: Pick<Policy, 'noAgeLimit' | 'ageMin' | 'ageMax'>,
+): string | null {
+  if (policy.noAgeLimit) return '연령 무관';
+  if (policy.ageMin != null && policy.ageMax != null)
+    return `만 ${policy.ageMin}~${policy.ageMax}세`;
+  return null;
+}
+
 const TAG_LABELS: Record<Policy['tags'][number], string> = {
   popular: '🔥 인기 정책',
   many_scraps: '⭐ 스크랩 많음',
