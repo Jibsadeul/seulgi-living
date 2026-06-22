@@ -35,13 +35,15 @@ const MOCK_ANALYSIS: CameraAnalyzeResponse = {
 export function CameraAnalysisEditScreen() {
   const router = useRouter();
   const analysisResult = useCameraStore((state) => state.analysisResult);
-  const goToCamera = () => router.replace('/camera');
 
   return (
     <View className="flex-1 bg-surface-card">
-      <Header title="AI 분석 결과" variant="back" onBackPress={goToCamera} />
+      <Header title="AI 분석 결과" variant="back" />
       <ScrollView contentContainerClassName="px-5 pt-4 pb-6">
-        <CameraAnalysisForm analysis={analysisResult ?? MOCK_ANALYSIS} onCancel={goToCamera} />
+        <CameraAnalysisForm
+          analysis={analysisResult ?? MOCK_ANALYSIS}
+          onCancel={() => router.back()}
+        />
       </ScrollView>
     </View>
   );
