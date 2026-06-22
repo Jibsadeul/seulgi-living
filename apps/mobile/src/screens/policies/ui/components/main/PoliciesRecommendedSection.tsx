@@ -23,7 +23,7 @@ export function PoliciesRecommendedSection({ nickname, recommended, isLoading, e
     <View className="mb-6">
       <View className="flex-row items-center px-5 mb-3" style={{ gap: 6 }}>
         <LightIcon width={21} height={21} />
-        <Text style={{ fontSize: 18, fontWeight: '600', color: '#24252C' }}>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: '#24252C' }}>
           {nickname ? `${nickname}님 맞춤 추천` : '맞춤 추천'}
         </Text>
       </View>

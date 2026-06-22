@@ -77,11 +77,12 @@ export async function getPolicyBanner(memberId: string | null): Promise<PolicyBa
         applyEndDate: { gte: today, lte: in30Days },
       },
       orderBy: { applyEndDate: 'asc' },
-      select: { name: true, applyEndDate: true, applicationUrl: true },
+      select: { id: true, name: true, applyEndDate: true, applicationUrl: true },
     });
 
     if (scrappedPolicy) {
       return policyBannerSchema.parse({
+        id: scrappedPolicy.id,
         conditionType: 'scrap',
         name: scrappedPolicy.name,
         daysLeft: calcDaysLeft(scrappedPolicy.applyEndDate),
@@ -121,11 +122,12 @@ export async function getPolicyBanner(memberId: string | null): Promise<PolicyBa
       ],
     },
     orderBy: { applyEndDate: 'asc' },
-    select: { name: true, applyEndDate: true, applicationUrl: true },
+    select: { id: true, name: true, applyEndDate: true, applicationUrl: true },
   });
 
   if (recommendedPolicy) {
     return policyBannerSchema.parse({
+      id: recommendedPolicy.id,
       conditionType: 'recommended',
       name: recommendedPolicy.name,
       daysLeft: calcDaysLeft(recommendedPolicy.applyEndDate),
@@ -188,8 +190,17 @@ export async function getPolicies(
   query: unknown,
   memberId: string | null,
 ): Promise<{ items: Policy[]; total: number; page: number; limit: number }> {
-  const { keyword, largeCategory, zipCd, supportType, applyPeriodType, deadlineOnly, page, limit } =
-    policyListQuerySchema.parse(query);
+  const {
+    keyword,
+    largeCategory,
+    zipCd,
+    supportType,
+    applyPeriodType,
+    deadlineOnly,
+    excludeExpired,
+    page,
+    limit,
+  } = policyListQuerySchema.parse(query);
 
   // 쉼표로 구분된 다중 선택값을 배열로 분리한다.
   const categories = largeCategory ? largeCategory.split(',').filter(Boolean) : [];
@@ -222,6 +233,7 @@ export async function getPolicies(
       ? [{ OR: supportTypes.map((type) => ({ keywords: { contains: type } })) }]
       : []),
     ...(deadlineOnly ? [{ applyEndDate: { gte: today, lte: in7Days } }] : []),
+    ...(excludeExpired ? [{ OR: [{ applyEndDate: null }, { applyEndDate: { gte: today } }] }] : []),
   ];
 
   // where 객체를 동적으로 하여 불필요한 필터 붙지 않게끔 함
@@ -261,9 +273,17 @@ export async function getScrappedPolicies(
 ): Promise<{ items: Policy[]; total: number; page: number; limit: number }> {
   if (!memberId) throw errors.unauthorized();
 
-  const { sortBy, page, limit } = policyScrapListQuerySchema.parse(query);
+  const { sortBy, excludeExpired, page, limit } = policyScrapListQuerySchema.parse(query);
 
-  const where = { userId: memberId };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const where = {
+    userId: memberId,
+    ...(excludeExpired && {
+      policy: { OR: [{ applyEndDate: null }, { applyEndDate: { gte: today } }] },
+    }),
+  };
 
   const [scraps, total] = await prisma.$transaction([
     prisma.policyScrap.findMany({
