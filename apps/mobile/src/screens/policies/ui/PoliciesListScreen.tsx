@@ -1,6 +1,5 @@
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { PolicyBannerCard } from '@/entities/policies';
 import { Header, SearchBar } from '@/shared/ui';
 import { usePoliciesMain } from '@/features/policy-main';
@@ -8,7 +7,7 @@ import { PoliciesQuickCategories } from './components/main/PoliciesQuickCategori
 import { PoliciesRecommendedSection } from './components/main/PoliciesRecommendedSection';
 
 export function PoliciesListScreen() {
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = 87;
   const insets = useSafeAreaInsets();
   const {
     nickname,

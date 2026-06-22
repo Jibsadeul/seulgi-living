@@ -7,3 +7,4 @@ export { RecipeListAllScreen } from './ui/RecipeListAllScreen';
 export { RecipeDetailScreen } from './ui/RecipeDetailScreen';
 export { RecipeUploadScreen } from './ui/RecipeUploadScreen';
 export { FridgeAddScreen } from './ui/FridgeAddScreen';
+export { FridgeAllScreen } from './ui/FridgeAllScreen';
