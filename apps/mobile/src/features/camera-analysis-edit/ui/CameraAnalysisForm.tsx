@@ -14,7 +14,7 @@ import { FieldLabel, FormInput } from './CameraAnalysisFields';
 import { CategoryDropdown } from './CategoryDropdown';
 import { PurchaseDatePicker } from './PurchaseDatePicker';
 
-type SaveTarget = 'groceries' | 'fridge';
+type SaveTarget = CameraResultSaveRequest['destinations'][number];
 
 type EditableCameraAnalysisItem = CameraAnalysisItem & {
   id: string;
@@ -107,7 +107,7 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
   const isReceipt = analysis.source === 'RECEIPT';
   const [purchaseDate, setPurchaseDate] = useState(formatDate(analysis.date));
   const [saveTargets, setSaveTargets] = useState<SaveTarget[]>(
-    isReceipt ? ['groceries', 'fridge'] : ['fridge'],
+    isReceipt ? ['PURCHASE', 'FRIDGE'] : ['FRIDGE'],
   );
   const [items, setItems] = useState<EditableCameraAnalysisItem[]>(
     analysis.items.map(createEditableItem),
@@ -121,12 +121,13 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
   );
 
   const selectedCount = items.length;
-  const isSaveDisabled = isSaving || (isReceipt && saveTargets.length === 0);
+  const isMissingSaveTarget = isReceipt && saveTargets.length === 0;
+  const isSaveDisabled = isSaving || isMissingSaveTarget;
   const isFridgeOnlySelected =
-    isReceipt && saveTargets.length === 1 && saveTargets.includes('fridge');
-  const isCategoryRequired = !isReceipt || saveTargets.includes('fridge');
+    isReceipt && saveTargets.length === 1 && saveTargets.includes('FRIDGE');
+  const isCategoryRequired = !isReceipt || saveTargets.includes('FRIDGE');
   const isGroceryFieldsDisabled = isFridgeOnlySelected;
-  const isPriceRequired = isReceipt && saveTargets.includes('groceries');
+  const isPriceRequired = isReceipt && saveTargets.includes('PURCHASE');
 
   const clearErrors = () => {
     setErrors({ items: {} });
@@ -221,7 +222,7 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
 
   const buildSaveRequest = (): CameraResultSaveRequest => {
     const destinations: CameraResultSaveRequest['destinations'] = isReceipt
-      ? saveTargets.map((target) => (target === 'groceries' ? 'PURCHASE' : 'FRIDGE'))
+      ? saveTargets
       : ['FRIDGE'];
     const savesPurchase = destinations.includes('PURCHASE');
     const savesFridge = destinations.includes('FRIDGE');
@@ -395,15 +396,15 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
             <View className="flex-row gap-2">
               <Pressable
                 className={`min-h-11 flex-1 items-center justify-center rounded-[10px] border ${
-                  saveTargets.includes('groceries')
+                  saveTargets.includes('PURCHASE')
                     ? 'border-main-100 bg-main-100'
                     : 'border-gray-20 bg-surface-default'
                 }`}
-                onPress={() => toggleSaveTarget('groceries')}
+                onPress={() => toggleSaveTarget('PURCHASE')}
               >
                 <Text
                   className={`text-sm font-bold ${
-                    saveTargets.includes('groceries') ? 'text-white' : 'text-gray-80'
+                    saveTargets.includes('PURCHASE') ? 'text-white' : 'text-gray-80'
                   }`}
                 >
                   장보기 내역
@@ -411,15 +412,15 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
               </Pressable>
               <Pressable
                 className={`min-h-11 flex-1 items-center justify-center rounded-[10px] border ${
-                  saveTargets.includes('fridge')
+                  saveTargets.includes('FRIDGE')
                     ? 'border-main-100 bg-main-100'
                     : 'border-gray-20 bg-surface-default'
                 }`}
-                onPress={() => toggleSaveTarget('fridge')}
+                onPress={() => toggleSaveTarget('FRIDGE')}
               >
                 <Text
                   className={`text-sm font-bold ${
-                    saveTargets.includes('fridge') ? 'text-white' : 'text-gray-80'
+                    saveTargets.includes('FRIDGE') ? 'text-white' : 'text-gray-80'
                   }`}
                 >
                   My 냉장고
@@ -428,7 +429,7 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
             </View>
             {isReceipt ? (
               <View className="h-12 justify-center pt-1">
-                {isSaveDisabled ? (
+                {isMissingSaveTarget ? (
                   <Text className="text-center text-sm font-medium leading-5 text-point-100">
                     최소 하나 이상의 저장 위치를 선택해주세요.
                   </Text>
