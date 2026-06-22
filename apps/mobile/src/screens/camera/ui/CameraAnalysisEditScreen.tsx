@@ -1,7 +1,7 @@
-import { ScrollView, View } from 'react-native';
-import { useRouter } from 'expo-router';
 import { CameraAnalysisForm, useCameraStore, type CameraAnalyzeResponse } from '@/entities/camera';
 import { Header } from '@/shared/ui';
+import { useRouter } from 'expo-router';
+import { ScrollView, View } from 'react-native';
 
 const MOCK_ANALYSIS: CameraAnalyzeResponse = {
   source: 'RECEIPT',

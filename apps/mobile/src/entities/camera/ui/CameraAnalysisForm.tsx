@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useMemo, useState } from 'react';
+import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type {
   CameraAnalysisItem,
   CameraAnalysisSource,
@@ -31,6 +31,11 @@ const FRIDGE_CATEGORY_LABELS: Record<FridgeCategory, string> = {
 };
 
 const DEFAULT_CATEGORY: FridgeCategory = 'OTHER';
+
+const FRIDGE_CATEGORY_OPTIONS = Object.entries(FRIDGE_CATEGORY_LABELS).map(([value, label]) => ({
+  label,
+  value: value as FridgeCategory,
+}));
 
 function createEditableItem(item: CameraAnalysisItem, index: number): EditableCameraAnalysisItem {
   return {
@@ -115,6 +120,67 @@ function FormInput({
   );
 }
 
+function CategoryDropdown({
+  value,
+  onChange,
+}: {
+  value: FridgeCategory;
+  onChange: (value: FridgeCategory) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const close = () => setIsOpen(false);
+
+  return (
+    <>
+      <Pressable
+        className="min-h-11 flex-row items-center justify-between rounded-[10px] bg-gray-5 px-3"
+        onPress={() => setIsOpen(true)}
+      >
+        <Text className="text-base font-medium text-gray-90">{FRIDGE_CATEGORY_LABELS[value]}</Text>
+        <Ionicons color="#717171" name="chevron-down" size={18} />
+      </Pressable>
+
+      <Modal animationType="fade" transparent visible={isOpen} onRequestClose={close}>
+        <Pressable className="flex-1 justify-center bg-black/35 px-6" onPress={close}>
+          <Pressable
+            className="max-h-[420px] rounded-2xl bg-surface-default p-3"
+            onPress={(event) => event.stopPropagation()}
+          >
+            <Text className="px-2 py-3 text-base font-bold text-gray-90">카테고리</Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {FRIDGE_CATEGORY_OPTIONS.map((option) => {
+                const isSelected = option.value === value;
+
+                return (
+                  <Pressable
+                    className={`min-h-11 flex-row items-center justify-between rounded-[10px] px-3 ${
+                      isSelected ? 'bg-main-10' : 'bg-surface-default'
+                    }`}
+                    key={option.value}
+                    onPress={() => {
+                      onChange(option.value);
+                      close();
+                    }}
+                  >
+                    <Text
+                      className={`text-sm ${
+                        isSelected ? 'font-bold text-main-100' : 'font-medium text-gray-90'
+                      }`}
+                    >
+                      {option.label}
+                    </Text>
+                    {isSelected ? <Ionicons color="#EF7722" name="checkmark" size={18} /> : null}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
+  );
+}
+
 export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
   const isReceipt = analysis.source === 'RECEIPT';
   const [purchaseDate, setPurchaseDate] = useState(formatDate(analysis.date));
@@ -140,8 +206,8 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
 
   const addItem = () => {
     setItems((currentItems) => [
-      ...currentItems,
       createEmptyItem(currentItems.length, analysis.source),
+      ...currentItems,
     ]);
   };
 
@@ -164,12 +230,13 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
   return (
     <View className="gap-5">
       <View className="gap-3 rounded-2xl border border-gray-20 bg-surface-default p-4">
+        <Text className="text-sm leading-5 text-gray-70">AI 분석 결과입니다.</Text>
         <Text className="text-sm leading-5 text-gray-70">
-          AI 분석 결과입니다. 정확하지 않은 항목은 수정/삭제하고 누락된 항목은 추가해 주세요.
+          정확하지 않은 항목은 수정하거나 삭제하고, 누락된 항목은 추가해 주세요.
         </Text>
         <View className="border-t border-gray-20 pt-3">
           <Text className="text-xs font-semibold text-gray-80">
-            분석 출처: {isReceipt ? '영수증' : '식재료'}
+            분석 출처: {isReceipt ? '영수증 촬영' : '식재료 촬영'}
           </Text>
         </View>
       </View>
@@ -193,13 +260,13 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
       </View>
 
       <View className="gap-3">
-        {items.map((item, index) => (
+        {items.map((item) => (
           <View
             className="gap-4 rounded-2xl border border-gray-20 bg-surface-default p-4"
             key={item.id}
           >
             <View className="flex-row items-center justify-between">
-              <Text className="text-sm font-bold text-gray-80">항목 {index + 1}</Text>
+              <Text className="text-sm font-bold text-gray-80">식재료 정보</Text>
               <Pressable
                 accessibilityLabel="항목 삭제"
                 className="size-9 items-center justify-center rounded-full bg-gray-5"
@@ -220,15 +287,10 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
 
             <View>
               <FieldLabel>카테고리</FieldLabel>
-              <Pressable
-                className="min-h-11 flex-row items-center justify-between rounded-[10px] bg-gray-5 px-3"
-                onPress={() => updateItem(item.id, { category: DEFAULT_CATEGORY })}
-              >
-                <Text className="text-base font-medium text-gray-90">
-                  {FRIDGE_CATEGORY_LABELS[item.category]}
-                </Text>
-                <Ionicons color="#717171" name="chevron-down" size={18} />
-              </Pressable>
+              <CategoryDropdown
+                onChange={(category) => updateItem(item.id, { category })}
+                value={item.category}
+              />
             </View>
 
             <View className="flex-row gap-3">
