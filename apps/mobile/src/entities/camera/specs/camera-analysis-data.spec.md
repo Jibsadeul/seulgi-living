@@ -53,11 +53,16 @@ camera entity는 영수증/식재료 이미지 분석 결과를 공통 데이터
 
 - entity는 분석 요청 mutation과 응답 schema 파싱을 제공한다.
 - 이미지 전송 payload에는 `source`, `imageUri`, `mimeType`, `base64`를 포함한다.
+- 분석 요청 전 이미지는 base64 변환 전에 업로드용 JPEG로 전처리한다.
+  - 장변이 1280px을 초과하면 장변 1280px 이하로 비율 유지 리사이즈한다.
+  - JPEG 품질 0.8로 압축한다.
+  - API payload의 `imageUri`, `mimeType`, `base64`는 전처리된 이미지를 기준으로 만든다.
 - 편집/저장 모델은 이번 범위에서 제외하고 테스트 출력 모델만 우선 제공한다.
 
 ## 검증 기준
 
 - mobile이 API 응답을 contract schema로 파싱할 수 있다.
+- 모바일 촬영 원본 이미지를 분석해도 클라이언트가 압축된 JPEG를 전송해 413 응답을 피할 수 있다.
 - zustand의 `analysisResult`는 `source`, `date`, `items`를 포함한 `CameraAnalyzeResponse` 전체를 그대로 저장한다.
 - 결과 화면은 zustand의 `analysisResult.date`를 포함한 응답 전체를 그대로 렌더링할 수 있다.
 - `INGREDIENT` 응답에 `price` 숫자가 포함되면 검증 실패로 처리한다.

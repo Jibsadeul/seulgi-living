@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getScrappedRecipeList } from '@/services/recipes/recipes.service';
+import { getMyRecipeList } from '@/services/recipes/recipes.service';
 import { toRecipeScrapListQueryObject } from '@/services/recipes/recipes.request';
 import { withHandler } from '@/shared/lib/handler';
 import { jsonResponse, optionsResponse } from '@/shared/lib/response';
@@ -10,7 +10,7 @@ export const GET = withHandler(async (request: NextRequest) => {
   const memberId = await getCurrentMemberId(request);
   if (!memberId) throw errors.unauthorized();
 
-  const recipes = await getScrappedRecipeList(
+  const recipes = await getMyRecipeList(
     toRecipeScrapListQueryObject(request.nextUrl.searchParams),
     memberId,
   );

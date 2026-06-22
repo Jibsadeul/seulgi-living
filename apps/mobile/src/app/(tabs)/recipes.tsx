@@ -1,2 +1,2 @@
-import { RecipesListScreen } from '@/screens/recipes';
-export default RecipesListScreen;
+import { CookMainScreen } from '@/screens/recipes';
+export default CookMainScreen;

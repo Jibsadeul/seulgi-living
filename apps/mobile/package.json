@@ -24,6 +24,7 @@
     "expo-calendar": "~55.0.15",
     "expo-camera": "~55.0.19",
     "expo-dev-client": "~55.0.35",
+    "expo-image-manipulator": "~55.0.17",
     "expo-image-picker": "~55.0.20",
     "expo-location": "~55.1.10",
     "expo-notifications": "~55.0.23",
