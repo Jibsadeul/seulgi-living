@@ -4,8 +4,9 @@ export {
   cameraAnalysisSourceSchema,
   cameraAnalyzeRequestSchema,
   cameraAnalyzeResponseSchema,
+  cameraResultSaveRequestSchema,
 } from './api/camera.schema';
-export { analyzeCameraImage } from './api/mutations';
+export { analyzeCameraImage, saveCameraResult } from './api/mutations';
 export {
   CAMERA_ANALYSIS_SOURCE_BY_MODE,
   CAMERA_CAPTURE_LABELS,
@@ -23,5 +24,6 @@ export type {
   CameraAnalyzeResponse,
   CameraCaptureMode,
   CameraCaptureOption,
+  CameraResultSaveRequest,
 } from './model/camera.model';
 export { useCameraStore } from './model/camera.store';

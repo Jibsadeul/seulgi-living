@@ -35,6 +35,12 @@ const MOCK_ANALYSIS: CameraAnalyzeResponse = {
 export function CameraAnalysisEditScreen() {
   const router = useRouter();
   const analysisResult = useCameraStore((state) => state.analysisResult);
+  const clearAnalysisResult = useCameraStore((state) => state.clearAnalysisResult);
+
+  const handleSaveSuccess = () => {
+    clearAnalysisResult();
+    router.replace('/');
+  };
 
   return (
     <View className="flex-1 bg-surface-card">
@@ -43,6 +49,7 @@ export function CameraAnalysisEditScreen() {
         <CameraAnalysisForm
           analysis={analysisResult ?? MOCK_ANALYSIS}
           onCancel={() => router.back()}
+          onSaveSuccess={handleSaveSuccess}
         />
       </ScrollView>
     </View>

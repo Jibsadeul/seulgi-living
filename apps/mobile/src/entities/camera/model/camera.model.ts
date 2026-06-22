@@ -8,6 +8,7 @@ export type {
   CameraAnalysisSource,
   CameraAnalyzeRequest,
   CameraAnalyzeResponse,
+  CameraResultSaveRequest,
   IngredientCategory,
 } from '@repo/contract';
 

@@ -2,8 +2,10 @@ import type {
   CameraAnalysisItem,
   CameraAnalysisSource,
   CameraAnalyzeResponse,
+  CameraResultSaveRequest,
 } from '@/entities/camera';
-import { cameraAnalysisItemSchema } from '@/entities/camera';
+import { cameraAnalysisItemSchema, saveCameraResult } from '@/entities/camera';
+import { showAppToast } from '@/shared/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { IngredientCategory } from '@repo/contract';
 import { useMemo, useState } from 'react';
@@ -28,6 +30,7 @@ type CameraAnalysisFormErrors = {
 type CameraAnalysisFormProps = {
   analysis: CameraAnalyzeResponse;
   onCancel: () => void;
+  onSaveSuccess: () => void;
 };
 
 const DEFAULT_CATEGORY: IngredientCategory = 'OTHER';
@@ -68,6 +71,10 @@ function formatDate(value: string | null) {
   return `${year}.${month}.${day}`;
 }
 
+function toApiDate(value: string) {
+  return value.trim().replace(/\./g, '-');
+}
+
 function parseQuantity(value: string) {
   if (value.trim() === '') {
     return 0;
@@ -96,7 +103,7 @@ function parsePrice(value: string) {
   return parsed;
 }
 
-export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormProps) {
+export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: CameraAnalysisFormProps) {
   const isReceipt = analysis.source === 'RECEIPT';
   const [purchaseDate, setPurchaseDate] = useState(formatDate(analysis.date));
   const [saveTargets, setSaveTargets] = useState<SaveTarget[]>(
@@ -106,6 +113,7 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
     analysis.items.map(createEditableItem),
   );
   const [errors, setErrors] = useState<CameraAnalysisFormErrors>({ items: {} });
+  const [isSaving, setIsSaving] = useState(false);
 
   const totalPrice = useMemo(
     () => items.reduce((total, item) => total + (item.price ?? 0), 0),
@@ -113,7 +121,7 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
   );
 
   const selectedCount = items.length;
-  const isSaveDisabled = isReceipt && saveTargets.length === 0;
+  const isSaveDisabled = isSaving || (isReceipt && saveTargets.length === 0);
   const isFridgeOnlySelected =
     isReceipt && saveTargets.length === 1 && saveTargets.includes('fridge');
   const isCategoryRequired = !isReceipt || saveTargets.includes('fridge');
@@ -211,8 +219,43 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
     return !nextErrors.purchaseDate && Object.keys(nextErrors.items).length === 0;
   };
 
-  const handleSave = () => {
-    validateForm();
+  const buildSaveRequest = (): CameraResultSaveRequest => {
+    const destinations: CameraResultSaveRequest['destinations'] = isReceipt
+      ? saveTargets.map((target) => (target === 'groceries' ? 'PURCHASE' : 'FRIDGE'))
+      : ['FRIDGE'];
+    const savesPurchase = destinations.includes('PURCHASE');
+    const savesFridge = destinations.includes('FRIDGE');
+
+    return {
+      source: analysis.source,
+      ...(savesPurchase ? { purchaseDate: toApiDate(purchaseDate) } : {}),
+      destinations,
+      items: items.map((item) => ({
+        name: item.name,
+        ...(savesFridge ? { category: item.category } : {}),
+        quantity: item.quantity,
+        unit: item.unit,
+        ...(savesPurchase && item.price !== null ? { price: item.price } : {}),
+      })),
+    };
+  };
+
+  const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      await saveCameraResult(buildSaveRequest());
+      showAppToast({ type: 'success', text: 'AI 분석 결과를 저장했어요.' });
+      onSaveSuccess();
+    } catch {
+      showAppToast({ type: 'error', text: '저장하지 못했어요. 잠시 후 다시 시도해주세요.' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -424,7 +467,9 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
             disabled={isSaveDisabled}
             onPress={handleSave}
           >
-            <Text className="text-base font-bold text-white">저장하기</Text>
+            <Text className="text-base font-bold text-white">
+              {isSaving ? '저장 중' : '저장하기'}
+            </Text>
             <View className="min-w-7 items-center rounded-full bg-white/20 px-2 py-0.5">
               <Text className="text-xs font-bold text-white">{selectedCount}</Text>
             </View>
