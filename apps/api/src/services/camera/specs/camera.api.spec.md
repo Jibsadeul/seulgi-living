@@ -6,6 +6,8 @@
 
 모든 요청/응답 타입은 `packages/contract`의 Zod 스키마를 단일 진실로 사용한다.
 
+분석 결과 저장 API는 `camera-result-save-api.spec.md`를 참고한다.
+
 ## 이미지 분석
 
 `POST /api/ai/camera`
