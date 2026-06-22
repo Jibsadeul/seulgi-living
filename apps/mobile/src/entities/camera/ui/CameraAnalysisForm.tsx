@@ -73,11 +73,15 @@ function formatDate(value: string | null) {
   return `${year}.${month}.${day}`;
 }
 
-function parsePositiveNumber(value: string, fallback: number) {
+function parseQuantity(value: string) {
+  if (value.trim() === '') {
+    return 0;
+  }
+
   const parsed = Number(value.replace(/,/g, ''));
 
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    return fallback;
+    return 0;
   }
 
   return parsed;
@@ -300,10 +304,10 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
                   keyboardType="numeric"
                   onChangeText={(value) =>
                     updateItem(item.id, {
-                      quantity: parsePositiveNumber(value, item.quantity),
+                      quantity: parseQuantity(value),
                     })
                   }
-                  value={`${item.quantity}`}
+                  value={item.quantity === 0 ? '' : `${item.quantity}`}
                 />
               </View>
               <View className="w-[104px]">
