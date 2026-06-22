@@ -1,71 +1,24 @@
-import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  PolicyBannerCard,
-  PolicyCard,
-  usePolicyBanner,
-  useRecommendedPolicies,
-} from '@/entities/policies';
-import { useMemberStore } from '@/entities/members';
-import { Header, SearchBar, SkeletonCard, showAppToast } from '@/shared/ui';
-import { useEffect } from 'react';
-import FireIcon from '@assets/icons/policy/fire.svg';
-import HouseIcon from '@assets/icons/policy/house.svg';
-import FinanceIcon from '@assets/icons/policy/fiance.svg';
-import JobIcon from '@assets/icons/policy/job.svg';
-import WelfareIcon from '@assets/icons/policy/welfare.svg';
-import EducationIcon from '@assets/icons/policy/education.svg';
-import CultureIcon from '@assets/icons/policy/culture.svg';
-import ParticipationIcon from '@assets/icons/policy/participation.svg';
-import LightIcon from '@assets/icons/policy/light.svg';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-
-type QuickCategory = {
-  Icon: React.ComponentType<{ width: number; height: number }>;
-  label: string;
-  params: Record<string, unknown>;
-};
-
-const QUICK_CATEGORIES: QuickCategory[] = [
-  { Icon: FireIcon, label: '마감임박', params: { deadlineOnly: true } },
-  { Icon: HouseIcon, label: '주거', params: { largeCategory: '주거' } },
-  { Icon: FinanceIcon, label: '금융', params: { largeCategory: '금융' } },
-  { Icon: JobIcon, label: '일자리', params: { largeCategory: '일자리' } },
-  { Icon: WelfareIcon, label: '복지', params: { largeCategory: '복지' } },
-  { Icon: EducationIcon, label: '교육', params: { largeCategory: '교육' } },
-  { Icon: CultureIcon, label: '문화', params: { largeCategory: '문화' } },
-  { Icon: ParticipationIcon, label: '참여', params: { largeCategory: '참여' } },
-];
+import { PolicyBannerCard } from '@/entities/policies';
+import { Header, SearchBar } from '@/shared/ui';
+import { usePoliciesMain } from '@/features/policy-main';
+import { PoliciesQuickCategories } from './components/main/PoliciesQuickCategories';
+import { PoliciesRecommendedSection } from './components/main/PoliciesRecommendedSection';
 
 export function PoliciesListScreen() {
   const tabBarHeight = useBottomTabBarHeight();
-  const router = useRouter();
   const insets = useSafeAreaInsets();
-  const nickname = useMemberStore((s) => s.nickname);
-
-  const { data: banner, isError: bannerError } = usePolicyBanner();
   const {
-    data: recommended,
-    isLoading: recommendedLoading,
-    isError: recommendedError,
-  } = useRecommendedPolicies();
-
-  useEffect(() => {
-    if (bannerError) showAppToast({ type: 'error', text: '배너를 불러오지 못했습니다.' });
-  }, [bannerError]);
-
-  useEffect(() => {
-    if (recommendedError) showAppToast({ type: 'error', text: '맞춤 추천을 불러오지 못했습니다.' });
-  }, [recommendedError]);
-
-  function handleSearchPress() {
-    router.push('/(stack)/policies/search' as never);
-  }
-
-  function handleCategoryPress(params: Record<string, unknown>) {
-    router.push({ pathname: '/(tabs)/policies-results', params } as never);
-  }
+    nickname,
+    banner,
+    recommended,
+    recommendedLoading,
+    recommendedError,
+    handleSearchPress,
+    handleCategoryPress,
+  } = usePoliciesMain();
 
   return (
     <View className="flex-1 bg-surface-card">
@@ -92,92 +45,15 @@ export function PoliciesListScreen() {
         </View>
 
         {/* 빠른 탐색 */}
-        <View className="px-5 mb-5">
-          <Text style={{ fontSize: 18, fontWeight: '600', color: '#24252C', marginBottom: 14 }}>
-            빠른 탐색
-          </Text>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 16 }}
-          >
-            {QUICK_CATEGORIES.map(({ Icon, label, params }) => (
-              <Pressable
-                key={label}
-                onPress={() => handleCategoryPress(params)}
-                className="items-center"
-                style={{ gap: 8 }}
-              >
-                <View
-                  className="items-center justify-center bg-surface-default"
-                  style={{
-                    width: 55,
-                    height: 55,
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: '#DEC1B2',
-                  }}
-                >
-                  <Icon width={28} height={28} />
-                </View>
-                <Text style={{ fontSize: 10, fontWeight: '500', color: '#574237', lineHeight: 12 }}>
-                  {label}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
+        <PoliciesQuickCategories onCategoryPress={handleCategoryPress} />
 
         {/* 맞춤 추천 */}
-        <View className="mb-6">
-          <View className="flex-row items-center px-5 mb-3" style={{ gap: 6 }}>
-            <LightIcon width={21} height={21} />
-            <Text style={{ fontSize: 18, fontWeight: '600', color: '#24252C' }}>
-              {nickname ? `${nickname}님 맞춤 추천` : '맞춤 추천'}
-            </Text>
-          </View>
-
-          {recommendedLoading && (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 10, gap: 8 }}
-            >
-              {[0, 1, 2].map((i) => (
-                <SkeletonCard key={i} width={295} height={232} />
-              ))}
-            </ScrollView>
-          )}
-
-          {!recommendedLoading && recommended && recommended.length > 0 && (
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={recommended}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => <PolicyCard policy={item} />}
-              contentContainerStyle={{ paddingHorizontal: 20, paddingVertical: 10 }}
-              scrollEventThrottle={16}
-            />
-          )}
-
-          {!recommendedLoading &&
-            (!recommended || recommended.length === 0) &&
-            !recommendedError && (
-              <View className="items-center py-8 px-5">
-                <Text className="text-sm text-gray-50 mb-3 text-center">
-                  아직 맞춤 정책이 없어요. 프로필을 완성해 보세요!
-                </Text>
-                <Pressable
-                  onPress={() => router.push('/(tabs)/mypage' as never)}
-                  className="bg-main-10 px-4 py-2 rounded-xl"
-                >
-                  <Text className="text-sm font-semibold text-main-100">프로필 수정</Text>
-                </Pressable>
-              </View>
-            )}
-        </View>
+        <PoliciesRecommendedSection
+          nickname={nickname}
+          recommended={recommended}
+          isLoading={recommendedLoading}
+          error={recommendedError}
+        />
       </ScrollView>
     </View>
   );
