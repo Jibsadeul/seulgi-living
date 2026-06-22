@@ -3,6 +3,7 @@ import { CameraAnalysisForm } from '@/features/camera-analysis-edit';
 import { Header } from '@/shared/ui';
 import { useRouter } from 'expo-router';
 import { ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const MOCK_ANALYSIS: CameraAnalyzeResponse = {
   source: 'RECEIPT',
@@ -34,6 +35,7 @@ const MOCK_ANALYSIS: CameraAnalyzeResponse = {
 
 export function CameraAnalysisEditScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const analysisResult = useCameraStore((state) => state.analysisResult);
   const clearAnalysisResult = useCameraStore((state) => state.clearAnalysisResult);
 
@@ -45,7 +47,10 @@ export function CameraAnalysisEditScreen() {
   return (
     <View className="flex-1 bg-surface-card">
       <Header title="AI 분석 결과" variant="back" />
-      <ScrollView contentContainerClassName="px-5 pt-4 pb-6">
+      <ScrollView
+        contentContainerClassName="px-5 pt-4"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+      >
         <CameraAnalysisForm
           analysis={analysisResult ?? MOCK_ANALYSIS}
           onCancel={() => router.back()}
