@@ -1,5 +1,5 @@
 export { Header } from './Header';
-export { CustomTabBar } from './CustomTabBar';
+export { CustomTabBar, TAB_BAR_BASE_HEIGHT } from './CustomTabBar';
 export { SearchBar } from './SearchBar';
 export { SkeletonCard } from './SkeletonCard';
 export { DDayBadge } from './DDayBadge';

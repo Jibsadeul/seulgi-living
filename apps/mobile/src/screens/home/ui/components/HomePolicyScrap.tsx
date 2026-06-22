@@ -1,4 +1,5 @@
 import { View, Text } from 'react-native';
+import { useRouter } from 'expo-router';
 import { DDayBadge } from '@/shared/ui/DDayBadge';
 import { HomeSectionHeader } from './HomeSectionHeader';
 
@@ -20,9 +21,14 @@ const MOCK_POLICIES = [
 ];
 
 export function HomePolicyScrap() {
+  const router = useRouter();
+
   return (
     <View className="bg-surface-default pt-5 px-4 pb-6 mt-3">
-      <HomeSectionHeader title="청년정책 즐겨찾기" onMorePress={() => {}} />
+      <HomeSectionHeader
+        title="청년정책 즐겨찾기"
+        onMorePress={() => router.push('/(stack)/scraps')}
+      />
       <View className="gap-3">
         {MOCK_POLICIES.map((policy) => (
           <View

@@ -9,8 +9,9 @@
 
 ## 진입 경로
 
-- 홈 화면 `PoliciesScrapPreview`의 `onMorePress` (현재 빈 함수 `() => {}`) → 이 화면으로 연결
-- 라우트: `(stack)/policies/scraps.tsx` (탭바 없음, 뒤로가기 가능한 스택 화면)
+- 홈 화면 `PoliciesScrapPreview`의 `onMorePress` → 이 화면으로 연결
+- 라우트: `(stack)/scraps.tsx` (탭바 없음, 뒤로가기 가능한 스택 화면)
+- 이 화면은 레시피 스크랩과 공통으로 쓰는 `screens/scraps`(`ScrapsScreen`)의 "청년정책" 탭으로 구현된다(`POLICY-022` 참고). 화면 조립/UI는 `screens/scraps/specs/scraps-ui.spec.md`를 따르고, 이 문서는 정책 데이터 흐름만 다룬다.
 
 ---
 
