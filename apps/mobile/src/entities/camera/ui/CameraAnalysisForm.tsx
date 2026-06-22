@@ -1,11 +1,12 @@
+import { INGREDIENT_CATEGORY_LABELS, INGREDIENT_CATEGORY_OPTIONS } from '@/entities/fridge';
 import { Ionicons } from '@expo/vector-icons';
+import { IngredientCategory } from '@repo/contract';
 import { useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import type {
   CameraAnalysisItem,
   CameraAnalysisSource,
   CameraAnalyzeResponse,
-  FridgeCategory,
 } from '../model/camera.model';
 
 type SaveTarget = 'groceries' | 'fridge';
@@ -18,24 +19,7 @@ type CameraAnalysisFormProps = {
   analysis: CameraAnalyzeResponse;
 };
 
-const FRIDGE_CATEGORY_LABELS: Record<FridgeCategory, string> = {
-  VEGETABLE: '채소',
-  FRUIT: '과일',
-  MEAT: '육류',
-  SEAFOOD: '해산물',
-  EGG_DAIRY: '계란/유제품',
-  GRAIN_NOODLE: '곡류/면',
-  PROCESSED: '가공식품',
-  SAUCE_SEASONING: '소스/양념',
-  OTHER: '기타',
-};
-
-const DEFAULT_CATEGORY: FridgeCategory = 'OTHER';
-
-const FRIDGE_CATEGORY_OPTIONS = Object.entries(FRIDGE_CATEGORY_LABELS).map(([value, label]) => ({
-  label,
-  value: value as FridgeCategory,
-}));
+const DEFAULT_CATEGORY: IngredientCategory = 'OTHER';
 
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -313,8 +297,8 @@ function CategoryDropdown({
   value,
   onChange,
 }: {
-  value: FridgeCategory;
-  onChange: (value: FridgeCategory) => void;
+  value: IngredientCategory;
+  onChange: (value: IngredientCategory) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const close = () => setIsOpen(false);
@@ -325,7 +309,9 @@ function CategoryDropdown({
         className="min-h-11 flex-row items-center justify-between rounded-[10px] bg-gray-5 px-3"
         onPress={() => setIsOpen(true)}
       >
-        <Text className="text-base font-medium text-gray-90">{FRIDGE_CATEGORY_LABELS[value]}</Text>
+        <Text className="text-base font-medium text-gray-90">
+          {INGREDIENT_CATEGORY_LABELS[value]}
+        </Text>
         <Ionicons color="#717171" name="chevron-down" size={18} />
       </Pressable>
 
@@ -337,7 +323,7 @@ function CategoryDropdown({
           >
             <Text className="px-2 py-3 text-base font-bold text-gray-90">카테고리</Text>
             <ScrollView showsVerticalScrollIndicator={false}>
-              {FRIDGE_CATEGORY_OPTIONS.map((option) => {
+              {INGREDIENT_CATEGORY_OPTIONS.map((option) => {
                 const isSelected = option.value === value;
 
                 return (

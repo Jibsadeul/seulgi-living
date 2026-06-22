@@ -13,6 +13,8 @@ export {
   CATEGORY_FILTERS,
   getCategoryLabel,
   getFoodIcon,
+  INGREDIENT_CATEGORY_LABELS,
+  INGREDIENT_CATEGORY_OPTIONS,
   PRESET_INGREDIENTS,
 } from './model/fridge.model';
 export type { PresetIngredient } from './model/fridge.model';

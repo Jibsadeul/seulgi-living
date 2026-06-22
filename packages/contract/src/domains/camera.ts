@@ -63,7 +63,6 @@ export const cameraAnalyzeResponseSchema = z
 
 export type CameraAnalysisSource = z.infer<typeof cameraAnalysisSourceSchema>;
 export type CameraAnalysisDate = z.infer<typeof cameraAnalysisDateSchema>;
-export type FridgeCategory = z.infer<typeof fridgeCategorySchema>;
 export type CameraAnalyzeRequest = z.infer<typeof cameraAnalyzeRequestSchema>;
 export type CameraAnalysisItem = z.infer<typeof cameraAnalysisItemSchema>;
 export type CameraAnalyzeResponse = z.infer<typeof cameraAnalyzeResponseSchema>;

@@ -72,6 +72,15 @@ const CATEGORY_LABEL_MAP: Record<IngredientCategory, string> = {
   OTHER: '기타',
 };
 
+export const INGREDIENT_CATEGORY_LABELS: Record<IngredientCategory, string> = CATEGORY_LABEL_MAP;
+
+export const INGREDIENT_CATEGORY_OPTIONS = Object.entries(INGREDIENT_CATEGORY_LABELS).map(
+  ([value, label]) => ({
+    label,
+    value: value as IngredientCategory,
+  }),
+);
+
 export function getCategoryLabel(category: IngredientCategory): string {
   return CATEGORY_LABEL_MAP[category];
 }
