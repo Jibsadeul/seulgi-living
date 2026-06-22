@@ -1,12 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
-import { IngredientCategory } from '@repo/contract';
-import { useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
 import type {
   CameraAnalysisItem,
   CameraAnalysisSource,
   CameraAnalyzeResponse,
 } from '@/entities/camera';
+import { Ionicons } from '@expo/vector-icons';
+import { IngredientCategory } from '@repo/contract';
+import { useMemo, useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { FieldLabel, FormInput } from './CameraAnalysisFields';
 import { CategoryDropdown } from './CategoryDropdown';
 import { PurchaseDatePicker } from './PurchaseDatePicker';
@@ -19,6 +19,7 @@ type EditableCameraAnalysisItem = CameraAnalysisItem & {
 
 type CameraAnalysisFormProps = {
   analysis: CameraAnalyzeResponse;
+  onCancel: () => void;
 };
 
 const DEFAULT_CATEGORY: IngredientCategory = 'OTHER';
@@ -83,7 +84,7 @@ function parsePrice(value: string) {
   return parsed;
 }
 
-export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
+export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormProps) {
   const isReceipt = analysis.source === 'RECEIPT';
   const [purchaseDate, setPurchaseDate] = useState(formatDate(analysis.date));
   const [saveTargets, setSaveTargets] = useState<SaveTarget[]>(
@@ -133,9 +134,8 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
 
   return (
     <View className="gap-5">
-      <View className="gap-3 rounded-2xl border border-gray-20 bg-surface-default p-4">
-        <Text className="text-sm leading-5 text-gray-70">AI 분석 결과입니다.</Text>
-        <Text className="text-sm leading-5 text-gray-70">
+      <View className="gap-3 rounded-2xl bg-main-10 border border-gray-20 p-4">
+        <Text className="text-sm font-medium leading-5 text-gray-70">
           정확하지 않은 항목은 수정하거나 삭제하고, 누락된 항목은 추가해 주세요.
         </Text>
         <View className="flex-row items-center gap-1 border-t border-gray-20 pt-3">
@@ -310,7 +310,10 @@ export function CameraAnalysisForm({ analysis }: CameraAnalysisFormProps) {
         )}
 
         <View className="flex-row gap-3">
-          <Pressable className="min-h-[52px] w-[108px] items-center justify-center rounded-xl bg-gray-10">
+          <Pressable
+            className="min-h-[52px] w-[108px] items-center justify-center rounded-xl bg-gray-10"
+            onPress={onCancel}
+          >
             <Text className="text-base font-bold text-gray-80">취소</Text>
           </Pressable>
           <Pressable
