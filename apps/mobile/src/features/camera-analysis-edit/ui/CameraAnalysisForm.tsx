@@ -116,6 +116,7 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
   const isSaveDisabled = isReceipt && saveTargets.length === 0;
   const isFridgeOnlySelected =
     isReceipt && saveTargets.length === 1 && saveTargets.includes('fridge');
+  const isCategoryRequired = !isReceipt || saveTargets.includes('fridge');
   const isGroceryFieldsDisabled = isFridgeOnlySelected;
   const isPriceRequired = isReceipt && saveTargets.includes('groceries');
 
@@ -187,6 +188,10 @@ export function CameraAnalysisForm({ analysis, onCancel }: CameraAnalysisFormPro
             field === 'unit' ||
             field === 'price'
           ) {
+            if (field === 'category' && !isCategoryRequired) {
+              return;
+            }
+
             itemErrors[field] = issue.message;
           }
         });
