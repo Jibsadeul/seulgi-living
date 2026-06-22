@@ -46,6 +46,14 @@ export const policyListQuerySchema = z.object({
 });
 export type PolicyListQuery = z.infer<typeof policyListQuerySchema>;
 
+// 정책 스크랩 목록 요청 파라미터 (앱 → BFF)
+export const policyScrapListQuerySchema = z.object({
+  sortBy: z.enum(['deadline', 'recent']).default('deadline'),
+  page: z.coerce.number().min(1).default(1),
+  limit: z.coerce.number().min(1).max(50).default(15),
+});
+export type PolicyScrapListQuery = z.infer<typeof policyScrapListQuerySchema>;
+
 // 정책 목록 응답 (BFF → 앱)
 export const policyListResponseSchema = z.object({
   items: z.array(policySchema),

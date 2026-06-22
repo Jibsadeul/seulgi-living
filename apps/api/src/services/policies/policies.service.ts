@@ -3,6 +3,7 @@ import {
   type PolicyBanner,
   policyListQuerySchema,
   policyBannerSchema,
+  policyScrapListQuerySchema,
 } from '@repo/contract';
 import { prisma } from '@repo/db';
 import { fetchYouthPolicies } from '@/shared/external/youth-policy.client';
@@ -249,6 +250,40 @@ export async function getPolicies(
     prisma.policy.count({ where }),
   ]);
 
+  const sigunguNameMap = await buildSigunguNameMap(rows);
+  return { items: rows.map((row) => toPolicy(row, sigunguNameMap)), total, page, limit };
+}
+
+// 스크랩한 정책 목록
+export async function getScrappedPolicies(
+  memberId: string | null,
+  query: unknown,
+): Promise<{ items: Policy[]; total: number; page: number; limit: number }> {
+  if (!memberId) throw errors.unauthorized();
+
+  const { sortBy, page, limit } = policyScrapListQuerySchema.parse(query);
+
+  const where = { userId: memberId };
+
+  const [scraps, total] = await prisma.$transaction([
+    prisma.policyScrap.findMany({
+      where,
+      orderBy: sortBy === 'recent' ? { createdAt: 'desc' } : { policy: { applyEndDate: 'asc' } },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        policy: {
+          include: {
+            _count: { select: { scraps: true } },
+            scraps: buildScrapsInclude(memberId),
+          },
+        },
+      },
+    }),
+    prisma.policyScrap.count({ where }),
+  ]);
+
+  const rows = scraps.map((scrap) => scrap.policy);
   const sigunguNameMap = await buildSigunguNameMap(rows);
   return { items: rows.map((row) => toPolicy(row, sigunguNameMap)), total, page, limit };
 }
