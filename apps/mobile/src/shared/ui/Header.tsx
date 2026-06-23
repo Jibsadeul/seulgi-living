@@ -6,9 +6,10 @@ import { Ionicons } from '@expo/vector-icons';
 interface HeaderProps {
   title: string;
   variant?: 'default' | 'back' | 'detail';
+  onBackPress?: () => void;
 }
 
-export function Header({ title, variant = 'default' }: HeaderProps) {
+export function Header({ title, variant = 'default', onBackPress }: HeaderProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -18,7 +19,7 @@ export function Header({ title, variant = 'default' }: HeaderProps) {
       style={{ paddingTop: insets.top, height: 64 + insets.top }}
     >
       {variant !== 'default' && (
-        <Pressable className="mr-2 p-1" onPress={() => router.back()}>
+        <Pressable className="mr-2 p-1" onPress={onBackPress ?? (() => router.back())}>
           <Ionicons name="arrow-back" size={24} color="#1D1D1D" />
         </Pressable>
       )}
