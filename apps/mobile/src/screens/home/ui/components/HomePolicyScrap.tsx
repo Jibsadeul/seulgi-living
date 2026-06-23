@@ -1,52 +1,52 @@
-import { View, Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { DDayBadge } from '@/shared/ui/DDayBadge';
+import { PolicySearchResultCard, useScrappedPolicies } from '@/entities/policies';
+import { useMemberStore } from '@/entities/members';
+import { SkeletonCard } from '@/shared/ui';
 import { HomeSectionHeader } from './HomeSectionHeader';
 
-const MOCK_POLICIES = [
-  {
-    id: '1',
-    title: 'OO시 청년 빛세 지원',
-    description: '주거 부담 완화 지원 사업',
-    daysLeft: 3,
-    deadlineLabel: '신청마감',
-  },
-  {
-    id: '2',
-    title: '자취생 전기 감면 정책',
-    description: '에너지 취약계층 특별 지원',
-    daysLeft: 7,
-    deadlineLabel: '신청마감',
-  },
-];
+const SCRAP_PREVIEW_SIZE = 3;
+
+function getSectionTitle(nickname: string | null) {
+  return nickname ? `${nickname}님이 스크랩한 청년정책` : '내가 스크랩한 청년정책';
+}
 
 export function HomePolicyScrap() {
   const router = useRouter();
+  const nickname = useMemberStore((state) => state.nickname);
+  const { data, isLoading, isError } = useScrappedPolicies('recent');
+  const policies = data?.pages[0]?.items.slice(0, SCRAP_PREVIEW_SIZE) ?? [];
 
   return (
     <View className="bg-surface-default pt-5 px-4 pb-6 mt-3">
       <HomeSectionHeader
-        title="청년정책 즐겨찾기"
+        title={getSectionTitle(nickname)}
         onMorePress={() => router.push('/(stack)/scraps')}
       />
-      <View className="gap-3">
-        {MOCK_POLICIES.map((policy) => (
-          <View
-            key={policy.id}
-            className="flex-row items-center bg-surface-card rounded-xl p-3.5 gap-3"
-          >
-            <View className="w-11 h-11 rounded-[10px] bg-gray-20 shrink-0" />
-            <View className="flex-1 gap-1">
-              <Text className="text-[13px] font-semibold text-gray-90">{policy.title}</Text>
-              <Text className="text-xs text-gray-60">{policy.description}</Text>
-            </View>
-            <View className="items-center gap-1 shrink-0">
-              <DDayBadge daysLeft={policy.daysLeft} />
-              <Text className="text-[10px] text-gray-50">{policy.deadlineLabel}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
+
+      {isLoading ? (
+        <View className="gap-3">
+          {Array.from({ length: SCRAP_PREVIEW_SIZE }).map((_, index) => (
+            <SkeletonCard key={index} height={112} />
+          ))}
+        </View>
+      ) : isError ? (
+        <View className="items-center justify-center py-12">
+          <Text className="text-sm text-gray-50 text-center">
+            스크랩한 청년정책을 불러오지 못했어요
+          </Text>
+        </View>
+      ) : policies.length === 0 ? (
+        <View className="items-center justify-center py-12">
+          <Text className="text-sm text-gray-50 text-center">스크랩한 청년정책이 없어요</Text>
+        </View>
+      ) : (
+        <View className="gap-3">
+          {policies.map((policy) => (
+            <PolicySearchResultCard key={policy.id} policy={policy} />
+          ))}
+        </View>
+      )}
     </View>
   );
 }

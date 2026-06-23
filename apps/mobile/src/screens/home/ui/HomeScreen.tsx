@@ -9,8 +9,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getCurrentMember, type MemberMe, useMemberStore } from '@/entities/members';
 import { MemberInfoBottomSheet } from '@/screens/members';
+import { TAB_BAR_BASE_HEIGHT } from '@/shared/ui';
 import { HomeFridgePreview } from './components/HomeFridgePreview';
 import { HomeHeader } from './components/HomeHeader';
 import { HomePolicyScrap } from './components/HomePolicyScrap';
@@ -18,6 +20,7 @@ import { HomeRecipeScrap } from './components/HomeRecipeScrap';
 
 export function HomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [member, setMember] = useState<MemberMe | null>(null);
   const [isMemberInfoOpen, setIsMemberInfoOpen] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(false);
@@ -71,6 +74,7 @@ export function HomeScreen() {
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         onScroll={handleScroll}
+        contentContainerStyle={{ paddingBottom: TAB_BAR_BASE_HEIGHT + insets.bottom + 24 }}
       >
         <HomeHeader
           username={member?.nickname ?? undefined}
@@ -82,8 +86,11 @@ export function HomeScreen() {
       </ScrollView>
       <Animated.View
         pointerEvents={isNearBottom ? 'none' : 'auto'}
-        className="absolute bottom-[108px] right-4"
-        style={{ opacity: chatButtonOpacity }}
+        className="absolute right-4"
+        style={{
+          bottom: TAB_BAR_BASE_HEIGHT + insets.bottom + 16,
+          opacity: chatButtonOpacity,
+        }}
       >
         <Pressable
           accessibilityLabel="AI 챗 열기"
