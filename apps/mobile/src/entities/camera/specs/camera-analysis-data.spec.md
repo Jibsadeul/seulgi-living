@@ -9,7 +9,7 @@ camera entity는 영수증/식재료 이미지 분석 결과를 공통 데이터
 ### entities/camera
 
 - 카메라 분석 결과의 단일 데이터 구조를 정의한다.
-- `source` 값과 `FridgeCategory` 값은 contract 스키마를 그대로 따른다.
+- `source` 값과 `IngredientCategory` 값은 contract 스키마를 그대로 따른다.
 - mobile은 Gemini를 직접 호출하지 않고 API 응답만 파싱한다.
 
 ## 데이터 구조

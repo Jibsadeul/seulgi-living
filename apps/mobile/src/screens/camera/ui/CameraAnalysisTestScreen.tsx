@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import {
   analyzeCameraImage,
   getCameraAnalysisSource,
@@ -15,6 +13,9 @@ import {
   readImageUriAsBase64,
   type ImagePickSource,
 } from '@/shared/lib/image';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
 
 type CameraAnalysisTestScreenProps = {
   mode?: string;
@@ -22,6 +23,7 @@ type CameraAnalysisTestScreenProps = {
 };
 
 export function CameraAnalysisTestScreen({ mode, imageUri }: CameraAnalysisTestScreenProps) {
+  const router = useRouter();
   const selectedMode: CameraCaptureMode | undefined = isCameraCaptureMode(mode) ? mode : undefined;
   const title = selectedMode ? getCameraCaptureLabel(selectedMode) : '카메라';
   const analysisResult = useCameraStore((state) => state.analysisResult);
@@ -55,6 +57,7 @@ export function CameraAnalysisTestScreen({ mode, imageUri }: CameraAnalysisTestS
       });
 
       setAnalysisResult(analysis);
+      router.push('/camera-analysis-result');
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : '분석 중 오류가 발생했습니다.');
     } finally {
