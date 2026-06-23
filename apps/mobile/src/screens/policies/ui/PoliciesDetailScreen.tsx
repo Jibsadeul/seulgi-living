@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Header } from '@/shared/ui';
 import { usePolicyDetail, usePolicyScrap } from '@/entities/policies';
@@ -10,6 +11,7 @@ import { PolicyDetailBottomCta } from './components/detail/PolicyDetailBottomCta
 export function PoliciesDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { data: policy, isLoading, isError, refetch } = usePolicyDetail(id ?? '');
   const { mutate: toggleScrap } = usePolicyScrap();
 
@@ -66,8 +68,9 @@ export function PoliciesDetailScreen() {
       />
 
       <ScrollView
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingBottom: 32 + insets.bottom }}
       >
         <PolicyDetailHero policy={policy} />
         <PolicyDetailQuickInfoGrid policy={policy} />

@@ -12,7 +12,7 @@ export function PolicyDetailApplyTab({ policy }: Props) {
     <View className="px-5 py-3" style={{ gap: 24 }}>
       {hasApplyInfo && (
         <View style={{ gap: 5 }}>
-          <Text style={{ fontSize: 15, fontWeight: '500', color: '#0B1C30' }}>신청 방법</Text>
+          <Text style={{ fontSize: 13, fontWeight: '500', color: '#0B1C30' }}>신청 방법</Text>
           <View
             style={{
               backgroundColor: '#FFFFFF',
@@ -24,12 +24,12 @@ export function PolicyDetailApplyTab({ policy }: Props) {
             }}
           >
             {policy.applyMethod && (
-              <Text style={{ fontSize: 14, fontWeight: '400', color: '#000000' }}>
+              <Text style={{ fontSize: 13, fontWeight: '400', color: '#000000' }}>
                 {policy.applyMethod}
               </Text>
             )}
             {policy.screeningMethod && (
-              <Text style={{ fontSize: 14, fontWeight: '400', color: '#434655' }}>
+              <Text style={{ fontSize: 13, fontWeight: '400', color: '#434655' }}>
                 심사방법: {policy.screeningMethod}
               </Text>
             )}
@@ -40,7 +40,7 @@ export function PolicyDetailApplyTab({ policy }: Props) {
       {policy.requiredDocuments.length > 0 && (
         <View style={{ gap: 16 }}>
           <View className="flex-row items-center justify-between">
-            <Text style={{ fontSize: 15, fontWeight: '500', color: '#0B1C30' }}>
+            <Text style={{ fontSize: 13, fontWeight: '500', color: '#0B1C30' }}>
               필수 제출 서류
             </Text>
             <Text style={{ fontSize: 12, fontWeight: '500', color: '#757575' }}>
@@ -62,7 +62,7 @@ export function PolicyDetailApplyTab({ policy }: Props) {
                 }}
               >
                 <Text
-                  style={{ flex: 1, fontSize: 14, fontWeight: '500', color: '#0B1C30' }}
+                  style={{ flex: 1, fontSize: 13, fontWeight: '500', color: '#0B1C30' }}
                   numberOfLines={1}
                 >
                   {doc.name}
@@ -89,7 +89,7 @@ export function PolicyDetailApplyTab({ policy }: Props) {
       )}
 
       {!hasApplyInfo && policy.requiredDocuments.length === 0 && (
-        <Text style={{ fontSize: 14, color: '#757575' }}>등록된 신청방법 정보가 없습니다.</Text>
+        <Text style={{ fontSize: 13, color: '#757575' }}>등록된 신청방법 정보가 없습니다.</Text>
       )}
     </View>
   );

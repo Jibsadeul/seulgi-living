@@ -10,7 +10,7 @@ export function PolicyDetailContentTab({ policy }: Props) {
     <View className="px-5 py-3" style={{ gap: 24 }}>
       {policy.content && (
         <View style={{ gap: 5 }}>
-          <Text style={{ fontSize: 15, fontWeight: '500', color: '#0B1C30' }}>상세 내용</Text>
+          <Text style={{ fontSize: 13, fontWeight: '500', color: '#0B1C30' }}>상세 내용</Text>
           <View
             style={{
               backgroundColor: '#FFFFFF',
@@ -20,7 +20,7 @@ export function PolicyDetailContentTab({ policy }: Props) {
               padding: 16,
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: '500', color: '#434655' }}>
+            <Text style={{ fontSize: 13, fontWeight: '500', color: '#434655' }}>
               {policy.content}
             </Text>
           </View>
@@ -29,7 +29,7 @@ export function PolicyDetailContentTab({ policy }: Props) {
 
       {policy.notice && (
         <View style={{ gap: 5 }}>
-          <Text style={{ fontSize: 15, fontWeight: '500', color: '#0B1C30' }}>유의사항</Text>
+          <Text style={{ fontSize: 13, fontWeight: '500', color: '#0B1C30' }}>유의사항</Text>
           <View
             style={{
               backgroundColor: '#FFFFFF',
@@ -39,7 +39,7 @@ export function PolicyDetailContentTab({ policy }: Props) {
               padding: 16,
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: '500', color: '#434655' }}>
+            <Text style={{ fontSize: 13, fontWeight: '500', color: '#434655' }}>
               {policy.notice}
             </Text>
           </View>
@@ -47,7 +47,7 @@ export function PolicyDetailContentTab({ policy }: Props) {
       )}
 
       {!policy.content && !policy.notice && (
-        <Text style={{ fontSize: 14, color: '#757575' }}>등록된 지원내용 정보가 없습니다.</Text>
+        <Text style={{ fontSize: 13, color: '#757575' }}>등록된 지원내용 정보가 없습니다.</Text>
       )}
     </View>
   );

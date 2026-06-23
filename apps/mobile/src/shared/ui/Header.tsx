@@ -2,6 +2,9 @@ import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import ScrapIcon from '@assets/icons/scrap.svg';
+import ScrappedIcon from '@assets/icons/scrapped.svg';
+import ShareIcon from '@assets/icons/share.svg';
 
 interface HeaderProps {
   title: string;
@@ -39,14 +42,14 @@ export function Header({
       {variant === 'detail' && (
         <View className="flex-row items-center gap-4">
           <Pressable className="p-1" onPress={onBookmarkPress}>
-            <Ionicons
-              name={isScrapped ? 'bookmark' : 'bookmark-outline'}
-              size={22}
-              color={isScrapped ? '#EF7722' : '#1D1D1D'}
-            />
+            {isScrapped ? (
+              <ScrappedIcon width={30} height={30} />
+            ) : (
+              <ScrapIcon width={30} height={30} />
+            )}
           </Pressable>
           <Pressable className="p-1">
-            <Ionicons name="share-outline" size={22} color="#1D1D1D" />
+            <ShareIcon width={28} height={28} />
           </Pressable>
         </View>
       )}

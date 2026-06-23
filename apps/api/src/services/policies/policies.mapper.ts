@@ -98,6 +98,13 @@ export function buildScrapsInclude(memberId: string | null) {
   return memberId ? { where: { userId: memberId } } : { where: { id: BigInt(-1) } };
 }
 
+// 온통청년 API 텍스트 필드 앞에 흔히 붙는 불릿/구분 기호를 제거한다.
+const LEADING_SYMBOL_PATTERN = /^[□○●■▶•·∙ㅁㅇ\-*\s]+/;
+
+function stripLeadingSymbols(text: string): string {
+  return text.trim().replace(LEADING_SYMBOL_PATTERN, '');
+}
+
 const AMOUNT_PATTERN = /(?:최대|월|연|시급|건당|1회당|1인당)?\s?[\d,]+\s?(?:만원|원)/;
 
 // plcySprtCn(자유 형식 텍스트)에서 금액 패턴을 best-effort로 추출해 Quick Info 그리드의 "지원금액" 셀에 쓴다.
@@ -108,14 +115,13 @@ function extractAmountLabel(content: string | undefined): string | null {
 
   const lines = content
     .split('\n')
-    .map((line) => line.trim().replace(/^[□○·\-\s]+/, ''))
+    .map((line) => stripLeadingSymbols(line))
     .filter(Boolean);
 
   for (const line of lines) {
     if (line.includes('소득')) continue;
-    if (!AMOUNT_PATTERN.test(line)) continue;
-    if (line.length <= 40) return line;
-    return line.match(AMOUNT_PATTERN)?.[0] ?? null;
+    const match = line.match(AMOUNT_PATTERN);
+    if (match) return match[0];
   }
 
   return null;
@@ -141,10 +147,17 @@ function buildBasicQualification(raw: YouthPolicyDetailRaw): string | null {
 }
 
 // 정책 상세 raw(실시간 단건 조회) → contract PolicyDetail 변환
+// syncedOverride: plcyNo 단건 필터 조회 시 외부 API가 대/중분류·키워드를 null로 반환하는 결함을
+// 보완하기 위해 DB Policy 테이블 값을 우선 사용한다 (POLICY-031, POLICY-033).
 export function toPolicyDetail(
   raw: YouthPolicyDetailRaw,
   sigunguNameMap: Map<string, string>,
   isScrapped: boolean,
+  syncedOverride?: {
+    largeCategory: string | null;
+    mediumCategory: string | null;
+    keywords: string | null;
+  },
 ): PolicyDetail {
   const startDate = parseDate(raw.bizPrdBgngYmd) ?? parseDate(raw.aplyYmd?.slice(0, 8));
   const endDate = parseDate(raw.bizPrdEndYmd) ?? parseDate(raw.aplyYmd?.slice(8));
@@ -163,9 +176,10 @@ export function toPolicyDetail(
   return policyDetailSchema.parse({
     id: raw.plcyNo,
     name: raw.plcyNm,
-    description: raw.plcyExplnCn ?? null,
-    largeCategory: raw.lclsfNm ?? null,
-    mediumCategory: raw.mclsfNm ?? null,
+    description: raw.plcyExplnCn ? stripLeadingSymbols(raw.plcyExplnCn) : null,
+    largeCategory: syncedOverride?.largeCategory ?? raw.lclsfNm ?? null,
+    mediumCategory: syncedOverride?.mediumCategory ?? raw.mclsfNm ?? null,
+    keywords: syncedOverride?.keywords ?? raw.plcyKywdNm ?? null,
     noAgeLimit: raw.sprtTrgtAgeLmtYn === 'Y',
     ageMin: raw.sprtTrgtMinAge ?? null,
     ageMax: raw.sprtTrgtMaxAge ?? null,

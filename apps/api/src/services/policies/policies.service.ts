@@ -334,7 +334,10 @@ export async function unscrapPolicy(memberId: string | null, policyId: string): 
   });
 }
 
-// 정책 상세 — Policy 테이블을 조회하지 않고 매 요청마다 온통청년 API를 실시간 호출한다.
+// 정책 상세 — 콘텐츠는 매 요청마다 온통청년 API를 실시간 호출한다.
+// 예외: 대/중분류·키워드(lclsfNm/mclsfNm/plcyKywdNm)는 plcyNo 단건 필터 조회 시 외부 API가
+// 항상 null로 반환하는 결함이 확인되어(목록 조회 시에는 정상), 크론으로 동기화된 DB Policy
+// 테이블 값으로 보완한다 (POLICY-031, POLICY-033).
 export async function getPolicyDetail(
   plcyNo: string,
   memberId: string | null,
@@ -342,14 +345,24 @@ export async function getPolicyDetail(
   const raw = await fetchYouthPolicyDetail(plcyNo);
   if (!raw) throw errors.notFound('정책을 찾을 수 없습니다.');
 
-  const isScrapped = memberId
-    ? (await prisma.policyScrap.findFirst({
-        where: { policyId: plcyNo, userId: memberId },
-        select: { id: true },
-      })) !== null
-    : false;
+  const [isScrappedRow, syncedPolicy] = await Promise.all([
+    memberId
+      ? prisma.policyScrap.findFirst({
+          where: { policyId: plcyNo, userId: memberId },
+          select: { id: true },
+        })
+      : null,
+    prisma.policy.findUnique({
+      where: { id: plcyNo },
+      select: { largeCategory: true, mediumCategory: true, keywords: true },
+    }),
+  ]);
 
   const sigunguNameMap = await buildSigunguNameMap([{ zipCd: raw.zipCd ?? null }]);
 
-  return toPolicyDetail(raw, sigunguNameMap, isScrapped);
+  return toPolicyDetail(raw, sigunguNameMap, isScrappedRow !== null, {
+    largeCategory: syncedPolicy?.largeCategory ?? null,
+    mediumCategory: syncedPolicy?.mediumCategory ?? null,
+    keywords: syncedPolicy?.keywords ?? null,
+  });
 }

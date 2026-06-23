@@ -87,6 +87,7 @@ export const policyDetailSchema = z.object({
   description: z.string().nullable().optional(),
   largeCategory: z.string().nullable().optional(),
   mediumCategory: z.string().nullable().optional(),
+  keywords: z.string().nullable().optional(),
   noAgeLimit: z.boolean(),
   ageMin: z.coerce.number().nullable().optional(),
   ageMax: z.coerce.number().nullable().optional(),
