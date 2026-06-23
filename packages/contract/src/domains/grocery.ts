@@ -37,6 +37,7 @@ export const groceryListItemSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   price: z.number().int(),
+  purchaseDate: dateStringSchema,
   quantityText: z.string().nullable(),
 });
 

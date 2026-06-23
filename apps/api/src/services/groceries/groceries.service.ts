@@ -69,6 +69,7 @@ export async function getGroceryList(memberId: string, year: number, month: numb
         id: string;
         name: string;
         price: number;
+        purchaseDate: string;
         quantityText: string | null;
       }[];
     }
@@ -83,6 +84,7 @@ export async function getGroceryList(memberId: string, year: number, month: numb
       id: item.id,
       name: item.name,
       price: item.price,
+      purchaseDate: date,
       quantityText: item.quantityText,
     });
 

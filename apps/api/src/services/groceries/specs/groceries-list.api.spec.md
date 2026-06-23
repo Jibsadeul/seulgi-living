@@ -33,6 +33,7 @@
         "id": "uuid",
         "name": "국산 햇감자",
         "price": 5200,
+        "purchaseDate": "2024-05-14",
         "quantityText": "1개"
       }
     ]
@@ -49,6 +50,7 @@
 - 응답 그룹은 `date` 기준 내림차순, 즉 구매일 최신순으로 정렬한다
 - 각 그룹의 `items`는 `createdAt DESC`, `id DESC` 순으로 정렬한다
 - `date`는 `YYYY-MM-DD` 형식 문자열로 반환한다
+- 각 item의 `purchaseDate`는 수정 폼 초기값으로 사용할 수 있도록 해당 item의 구매일을 `YYYY-MM-DD` 형식 문자열로 반환한다
 - `dailyTotal`은 해당 날짜 items의 `price` 합계다
 - 내역이 없으면 빈 배열 `[]`을 반환한다
 - `quantityText`는 DB 값이 없으면 `null`로 반환한다
