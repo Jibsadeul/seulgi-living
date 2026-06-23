@@ -213,7 +213,7 @@ export async function getRecipeList(queryInput: unknown, context: ListRecipesCon
         r.name AS name,
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
-        COALESCE(r.thumbnail_url, r.main_image_url) AS "imageUrl",
+        r.main_image_url AS "imageUrl",
         COUNT(rs.recipe_id)::int AS "scrapCount",
         ${isSavedExpression} AS "isSaved"
       FROM recipes r
@@ -261,7 +261,7 @@ export async function getScrappedRecipeList(queryInput: unknown, memberId: strin
         r.name AS name,
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
-        COALESCE(r.thumbnail_url, r.main_image_url) AS "imageUrl",
+        r.main_image_url AS "imageUrl",
         COUNT(all_scraps.recipe_id)::int AS "scrapCount",
         TRUE AS "isSaved"
       FROM recipe_scraps user_scrap
@@ -312,7 +312,7 @@ export async function getMyRecipeList(queryInput: unknown, memberId: string) {
         r.name AS name,
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
-        COALESCE(r.thumbnail_url, r.main_image_url) AS "imageUrl",
+        r.main_image_url AS "imageUrl",
         COUNT(all_scraps.recipe_id)::int AS "scrapCount",
         EXISTS (
           SELECT 1
@@ -733,7 +733,7 @@ async function getSimpleRecommendations(
         r.name AS name,
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
-        COALESCE(r.thumbnail_url, r.main_image_url) AS "imageUrl",
+        r.main_image_url AS "imageUrl",
         COUNT(rs.recipe_id)::int AS "scrapCount",
         EXISTS (
           SELECT 1 FROM recipe_scraps saved
@@ -824,7 +824,7 @@ async function getFridgeRecommendations(userId: string, page: number, size: numb
         r.name AS name,
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
-        COALESCE(r.thumbnail_url, r.main_image_url) AS "imageUrl",
+        r.main_image_url AS "imageUrl",
         COUNT(rs.recipe_id)::int AS "scrapCount",
         EXISTS (
           SELECT 1 FROM recipe_scraps saved
