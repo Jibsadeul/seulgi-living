@@ -1,4 +1,4 @@
-import { putGroceryBudgetBodySchema } from '@repo/contract';
+import { grocerySummaryResponseSchema, putGroceryBudgetBodySchema } from '@repo/contract';
 import { prisma } from '@repo/db';
 
 export async function upsertGroceryBudget(
@@ -13,5 +13,26 @@ export async function upsertGroceryBudget(
     where: { userId_year_month: { userId: memberId, year, month } },
     update: { budget: body.budget },
     create: { userId: memberId, year, month, budget: body.budget },
+  });
+}
+
+export async function getGrocerySummary(memberId: string, year: number, month: number) {
+  const start = new Date(year, month - 1, 1);
+  const end = new Date(year, month, 1);
+
+  const [budgetRecord, spentResult] = await Promise.all([
+    prisma.groceryBudget.findUnique({
+      where: { userId_year_month: { userId: memberId, year, month } },
+      select: { budget: true },
+    }),
+    prisma.groceryPurchaseItem.aggregate({
+      where: { userId: memberId, purchasedAt: { gte: start, lt: end } },
+      _sum: { price: true },
+    }),
+  ]);
+
+  return grocerySummaryResponseSchema.parse({
+    budget: budgetRecord?.budget ?? null,
+    spent: spentResult._sum.price ?? 0,
   });
 }
