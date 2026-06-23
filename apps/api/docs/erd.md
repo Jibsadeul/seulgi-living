@@ -117,6 +117,18 @@
 
 ### 장보기 내역
 
+**`grocery_budgets`**
+| 컬럼 | 타입 | 제약 |
+|------------|-------------|---------------------------|
+| id | UUID | PK, NOT NULL |
+| user_id | UUID | FK → members.id, NOT NULL |
+| year | INTEGER | NOT NULL |
+| month | INTEGER | NOT NULL (1–12) |
+| budget | INTEGER | NOT NULL |
+| created_at | TIMESTAMPTZ | NOT NULL |
+
+> UNIQUE(user_id, year, month)
+
 **`grocery_purchase_items`** (구 `food_expense_items`)
 | 컬럼 | 타입 | 제약 |
 |------|------|------|

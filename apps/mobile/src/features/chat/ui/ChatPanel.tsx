@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Animated,
+  Easing,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -31,6 +33,7 @@ const MAIN_COLOR = '#EF7722';
 const TEXT_COLOR = '#1F2933';
 const BORDER_COLOR = '#E8E1DA';
 const CHAT_RETRY_MESSAGE = '답변을 생성하지 못했어요. 잠시 후 다시 시도해주세요.';
+const LOADING_DOT_DELAYS = [0, 160, 320];
 
 const markdownStyles: MarkedStyles = {
   text: {
@@ -148,6 +151,58 @@ function ModelMessageContent({ content, typing }: { content: string; typing: boo
     <View>
       {markdown}
       {typing ? <Text style={styles.cursor}> |</Text> : null}
+    </View>
+  );
+}
+
+function LoadingDots() {
+  const dotAnimations = useRef(LOADING_DOT_DELAYS.map(() => new Animated.Value(0))).current;
+
+  useEffect(() => {
+    const animations = dotAnimations.map((animation, index) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(LOADING_DOT_DELAYS[index]),
+          Animated.timing(animation, {
+            toValue: 1,
+            duration: 220,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+          }),
+          Animated.timing(animation, {
+            toValue: 0,
+            duration: 220,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: false,
+          }),
+          Animated.delay(1200 - LOADING_DOT_DELAYS[index] - 440),
+        ]),
+      ),
+    );
+
+    animations.forEach((animation) => animation.start());
+
+    return () => {
+      animations.forEach((animation) => animation.stop());
+    };
+  }, [dotAnimations]);
+
+  return (
+    <View style={styles.loadingBubble}>
+      {dotAnimations.map((animation, index) => (
+        <Animated.View
+          key={LOADING_DOT_DELAYS[index]}
+          style={[
+            styles.loadingDot,
+            {
+              backgroundColor: animation.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['#C9BDB2', MAIN_COLOR],
+              }),
+            },
+          ]}
+        />
+      ))}
     </View>
   );
 }
@@ -385,7 +440,7 @@ export function ChatPanel() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <View>
@@ -516,11 +571,7 @@ export function ChatPanel() {
                       <ModelMessageContent content={message.content} typing={typing} />
                     )
                   ) : (
-                    <View style={styles.loadingBubble}>
-                      <View style={styles.loadingDot} />
-                      <View style={styles.loadingDot} />
-                      <View style={styles.loadingDot} />
-                    </View>
+                    <LoadingDots />
                   )}
                 </View>
               </View>

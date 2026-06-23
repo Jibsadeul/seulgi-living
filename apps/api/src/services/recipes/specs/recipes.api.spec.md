@@ -130,7 +130,7 @@
 - 헤더가 없으면 비로그인으로 처리하고 모든 레시피의 `isSaved`를 `false`로 응답한다.
 - 개발 환경(`ALLOW_DEV_MEMBER_HEADER=true`)에서는 `x-member-id` 헤더로도 사용자를 식별할 수 있다.
 - 기본 목록은 `source`가 `PUBLIC`인 레시피와 `USER`인 레시피를 모두 포함한다.
-- `imageUrl`은 `thumbnailUrl`이 있으면 `thumbnailUrl`, 없으면 `mainImageUrl` 값을 응답한다.
+- `imageUrl`은 `mainImageUrl` 값을 응답한다.
 - `keyword`는 레시피 `name`과 `ingredients`의 `items` 문자열을 대상으로 검색한다.
 - `cookingMethod`가 여러 개 전달되면 해당 요리 방법 중 하나라도 일치하는 레시피를 조회한다.
 - `category`가 여러 개 전달되면 해당 요리 종류 중 하나라도 일치하는 레시피를 조회한다.
@@ -564,7 +564,7 @@ null
 - `size`가 100보다 크면 오류를 반환한다.
 - `isSaved`는 현재 사용자 기준 실제 스크랩 여부로 계산한다.
 - `scrapCount`는 `recipe_scraps` 관계를 집계해서 계산한다.
-- `imageUrl`은 `thumbnailUrl`이 있으면 `thumbnailUrl`, 없으면 `mainImageUrl` 값을 응답한다.
+- `imageUrl`은 `mainImageUrl` 값을 응답한다.
 - 작성한 레시피가 없으면 `items`는 빈 배열, `totalCount`는 0, `hasNextPage`는 `false`로 응답한다.
 
 ## 검증 기준
@@ -648,7 +648,7 @@ null
 - `size`가 100보다 크면 오류를 반환한다.
 - 각 레시피의 `isSaved`는 `true`로 응답한다.
 - `scrapCount`는 `recipe_scraps` 관계를 집계해서 계산한다.
-- `imageUrl`은 `thumbnailUrl`이 있으면 `thumbnailUrl`, 없으면 `mainImageUrl` 값을 응답한다.
+- `imageUrl`은 `mainImageUrl` 값을 응답한다.
 - 스크랩한 레시피가 없으면 `items`는 빈 배열, `totalCount`는 0, `hasNextPage`는 `false`로 응답한다.
 
 ## 검증 기준
@@ -762,7 +762,7 @@ null
 - `type`이 없거나 유효하지 않으면 `400`
 - 페이지네이션 규칙은 기존 `/api/recipes`와 동일 (`page` 최솟값 1, `size` 범위 1~100)
 - `isSaved`는 현재 사용자 기준 스크랩 여부
-- `imageUrl`은 `thumbnailUrl`이 있으면 `thumbnailUrl`, 없으면 `mainImageUrl`
+- `imageUrl`은 `mainImageUrl` 값을 응답한다.
 
 ## 검증 기준
 
