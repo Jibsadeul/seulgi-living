@@ -1,2 +1,2 @@
-export { CameraAnalysisTestScreen } from './ui/CameraAnalysisTestScreen';
+export { CameraAnalysisScreen } from './ui/CameraAnalysisScreen';
 export { CameraAnalysisEditScreen } from './ui/CameraAnalysisEditScreen';
