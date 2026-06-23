@@ -24,6 +24,7 @@ type RefreshResult =
   | { status: 'sessionExpired' }
   | { status: 'temporaryFailure'; message: string };
 
+const COMMON_API_ERROR_MESSAGE = '오류가 발생했습니다.';
 const SESSION_EXPIRED_MESSAGE = '로그인이 만료되었습니다. 다시 로그인해주세요.';
 const REFRESH_TEMPORARY_FAILURE_MESSAGE =
   '서버 오류로 로그인 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.';
@@ -32,8 +33,27 @@ function toUrl(path: string) {
   return `${API_BASE_URL.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
+function formatApiErrorMessage(status: number) {
+  return __DEV__ ? `[${status}] ${COMMON_API_ERROR_MESSAGE}` : COMMON_API_ERROR_MESSAGE;
+}
+
 function isApiErrorBody(value: unknown): value is ApiErrorBody {
   return Boolean(value && typeof value === 'object' && 'error' in value);
+}
+
+function logApiError(response: Response, url: string, body: unknown) {
+  if (!__DEV__) {
+    return;
+  }
+
+  const error = isApiErrorBody(body) ? body.error : undefined;
+
+  console.error('[API Error]', {
+    status: response.status,
+    code: error?.code,
+    message: error?.message,
+    url,
+  });
 }
 
 async function readJson(response: Response, url: string): Promise<unknown> {
@@ -169,15 +189,15 @@ async function apiRequestInternal<T>(
     await clearTokens();
     showAppToast({ type: 'warning', text: SESSION_EXPIRED_MESSAGE });
     router.replace('/(auth)/login');
+    throw new Error(SESSION_EXPIRED_MESSAGE);
   }
 
   if (!response.ok) {
-    const message =
-      isApiErrorBody(json) && json.error?.message
-        ? json.error.message
-        : `API 요청에 실패했습니다. (${response.status})`;
+    const errorMessage = formatApiErrorMessage(response.status);
 
-    throw new Error(message);
+    logApiError(response, url, json);
+    showAppToast({ type: 'error', text: errorMessage });
+    throw new Error(errorMessage);
   }
 
   return responseSchema.parse(json);
