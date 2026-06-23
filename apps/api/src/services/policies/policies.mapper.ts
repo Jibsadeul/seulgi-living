@@ -98,6 +98,29 @@ export function buildScrapsInclude(memberId: string | null) {
   return memberId ? { where: { userId: memberId } } : { where: { id: BigInt(-1) } };
 }
 
+const AMOUNT_PATTERN = /(?:최대|월|연|시급|건당|1회당|1인당)?\s?[\d,]+\s?(?:만원|원)/;
+
+// plcySprtCn(자유 형식 텍스트)에서 금액 패턴을 best-effort로 추출해 Quick Info 그리드의 "지원금액" 셀에 쓴다.
+// 모든 정책을 정확히 파싱할 수는 없다 — "소득기준" 같은 자격조건 문장은 지원금액으로 오인되기 쉬워 제외하고,
+// 매칭되는 줄이 없으면 null을 반환해 화면에서 "지원내용 탭에서 확인" 같은 폴백으로 처리하게 한다.
+function extractAmountLabel(content: string | undefined): string | null {
+  if (!content) return null;
+
+  const lines = content
+    .split('\n')
+    .map((line) => line.trim().replace(/^[□○·\-\s]+/, ''))
+    .filter(Boolean);
+
+  for (const line of lines) {
+    if (line.includes('소득')) continue;
+    if (!AMOUNT_PATTERN.test(line)) continue;
+    if (line.length <= 40) return line;
+    return line.match(AMOUNT_PATTERN)?.[0] ?? null;
+  }
+
+  return null;
+}
+
 // 연령 + 소득조건을 한 텍스트로 합쳐 "지원자격 - 기본 자격요건" 영역에 노출한다.
 function buildBasicQualification(raw: YouthPolicyDetailRaw): string | null {
   const lines: string[] = [];
@@ -156,6 +179,7 @@ export function toPolicyDetail(
     supervisingAgency: raw.sprvsnInstCdNm ?? null,
     operatingAgency: raw.operInstCdNm ?? null,
     referenceUrls,
+    amountLabel: extractAmountLabel(raw.plcySprtCn),
     content: raw.plcySprtCn ?? null,
     notice: raw.etcMttrCn ?? null,
     basicQualification: buildBasicQualification(raw),

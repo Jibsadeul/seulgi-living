@@ -8,6 +8,7 @@ export {
   usePolicyScrap,
   useInfinitePolicies,
   useScrappedPolicies,
+  usePolicyDetail,
   type PolicySearchParams,
   type PolicyScrapSortBy,
 } from './model/usePolicy';
@@ -20,4 +21,4 @@ export {
   isUrgentDeadline,
 } from './model/policies.model';
 export { policyKeys } from './api/keys';
-export type { Policy, PolicyBanner, PolicyListQuery } from './api/policies.schema';
+export type { Policy, PolicyBanner, PolicyListQuery, PolicyDetail } from './api/policies.schema';

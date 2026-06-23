@@ -100,6 +100,8 @@ export const policyDetailSchema = z.object({
   supervisingAgency: z.string().nullable().optional(),
   operatingAgency: z.string().nullable().optional(),
   referenceUrls: z.array(z.string()),
+  // Quick Info 그리드 — plcySprtCn에서 정규식으로 추출한 best-effort 금액 라벨 (못 찾으면 null)
+  amountLabel: z.string().nullable().optional(),
   // 지원내용 탭
   content: z.string().nullable().optional(),
   notice: z.string().nullable().optional(),

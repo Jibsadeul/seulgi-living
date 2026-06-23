@@ -39,24 +39,25 @@
 
 ### 필드 매핑
 
-| 응답 필드                                                | 원본 API 필드                                                                                    | 비고                                         |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------- |
-| `name`, `largeCategory`, `mediumCategory`, `description` | `plcyNm`, `lclsfNm`, `mclsfNm`, `plcyExplnCn`                                                    |                                              |
-| `ageMin/Max`, `noAgeLimit`                               | `sprtTrgtMinAge/Max`, `sprtTrgtAgeLmtYn`                                                         |                                              |
-| `applyStartDate/EndDate`, `applyPeriodType`              | `bizPrdBgngYmd/EndYmd`, `aplyPrdSeCd`                                                            | `daysLeft` 계산에 기존 `calcDaysLeft` 재사용 |
-| `applicationUrl`                                         | `aplyUrlAddr`                                                                                    | 하단 고정 CTA                                |
-| `region`                                                 | `zipCd` → DB `Sigungu` 조회                                                                      | 기존 `buildRegionLabel` 재사용               |
-| `supervisingAgency`, `operatingAgency`                   | `sprvsnInstCdNm`, `operInstCdNm`                                                                 |                                              |
-| `referenceUrls`                                          | `refUrlAddr1`, `refUrlAddr2`                                                                     | null 가능                                    |
-| 지원내용 탭 `content`                                    | `plcySprtCn`                                                                                     |                                              |
-| 지원내용 탭 `notice`                                     | `etcMttrCn`                                                                                      | 빨간 테두리 경고 카드로 표시                 |
-| 지원자격 탭 `basicQualification`                         | 연령(`sprtTrgtMinAge/Max`) + 소득조건(`earnCndSeCd/earnMinAmt/earnMaxAmt/earnEtcCn`) 조합 텍스트 |                                              |
-| 지원자격 탭 `detailQualification`                        | `addAplyQlfcCndCn`                                                                               |                                              |
-| 지원자격 탭 `exclusionTarget`                            | `ptcpPrpTrgtCn`                                                                                  | 빨간 테두리 경고 카드로 표시                 |
-| 신청방법 탭 `applyMethod`                                | `plcyAplyMthdCn`                                                                                 |                                              |
-| 신청방법 탭 `screeningMethod`                            | `srngMthdCn`                                                                                     |                                              |
-| 신청방법 탭 `requiredDocuments`                          | `sbmsnDcmntCn` 파싱                                                                              | 아래 "제출서류 파싱 + 링크 매핑" 참고        |
-| `isScrapped`                                             | DB `PolicyScrap`                                                                                 |                                              |
+| 응답 필드                                                | 원본 API 필드                                                                                    | 비고                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| `name`, `largeCategory`, `mediumCategory`, `description` | `plcyNm`, `lclsfNm`, `mclsfNm`, `plcyExplnCn`                                                    |                                                        |
+| `ageMin/Max`, `noAgeLimit`                               | `sprtTrgtMinAge/Max`, `sprtTrgtAgeLmtYn`                                                         |                                                        |
+| `applyStartDate/EndDate`, `applyPeriodType`              | `bizPrdBgngYmd/EndYmd`, `aplyPrdSeCd`                                                            | `daysLeft` 계산에 기존 `calcDaysLeft` 재사용           |
+| `applicationUrl`                                         | `aplyUrlAddr`                                                                                    | 하단 고정 CTA                                          |
+| `region`                                                 | `zipCd` → DB `Sigungu` 조회                                                                      | 기존 `buildRegionLabel` 재사용                         |
+| `supervisingAgency`, `operatingAgency`                   | `sprvsnInstCdNm`, `operInstCdNm`                                                                 |                                                        |
+| `referenceUrls`                                          | `refUrlAddr1`, `refUrlAddr2`                                                                     | null 가능                                              |
+| Quick Info `amountLabel`                                 | `plcySprtCn`에서 정규식 best-effort 추출(`POLICY-029`)                                           | 못 찾으면 `null`, 화면에서 "지원내용 탭에서 확인" 폴백 |
+| 지원내용 탭 `content`                                    | `plcySprtCn`                                                                                     |                                                        |
+| 지원내용 탭 `notice`                                     | `etcMttrCn`                                                                                      | 빨간 테두리 경고 카드로 표시                           |
+| 지원자격 탭 `basicQualification`                         | 연령(`sprtTrgtMinAge/Max`) + 소득조건(`earnCndSeCd/earnMinAmt/earnMaxAmt/earnEtcCn`) 조합 텍스트 |                                                        |
+| 지원자격 탭 `detailQualification`                        | `addAplyQlfcCndCn`                                                                               |                                                        |
+| 지원자격 탭 `exclusionTarget`                            | `ptcpPrpTrgtCn`                                                                                  | 빨간 테두리 경고 카드로 표시                           |
+| 신청방법 탭 `applyMethod`                                | `plcyAplyMthdCn`                                                                                 |                                                        |
+| 신청방법 탭 `screeningMethod`                            | `srngMthdCn`                                                                                     |                                                        |
+| 신청방법 탭 `requiredDocuments`                          | `sbmsnDcmntCn` 파싱                                                                              | 아래 "제출서류 파싱 + 링크 매핑" 참고                  |
+| `isScrapped`                                             | DB `PolicyScrap`                                                                                 |                                                        |
 
 ### 제출서류 파싱 + 링크 매핑
 
@@ -77,8 +78,9 @@
 
 ### 모바일
 
-- `entities/policies`에 `usePolicyDetail(id)` 신규 쿼리 훅 추가 (`policyKeys.detail(id)`)
-- 스크랩 토글은 기존 `usePolicyScrap` mutation을 재사용하고, 캐시 갱신 대상에 `detail` 쿼리를 추가한다
+- `entities/policies`에 `usePolicyDetail(id)` 신규 쿼리 훅 추가 (`policyKeys.detail(id)`, `enabled: id.length > 0`)
+- 스크랩 토글은 기존 `usePolicyScrap` mutation을 재사용하고, 캐시 갱신 대상에 `detail` 쿼리를 추가한다(즉시 재요청 없이 `refetchType: 'none'`으로 stale 표시만, `POLICY-028`)
+- 공통 `shared/ui/Header.tsx`(`detail` variant)에 선택적 props `isScrapped?`/`onBookmarkPress?`를 추가해 북마크 아이콘을 실제 스크랩 토글에 연동한다. 안 넘기면 기존처럼 비활성 껍데기로 동작해 레시피 상세 화면 등 다른 호출부엔 영향 없다
 
 ---
 
@@ -87,7 +89,7 @@
 1. **헤더**: 공통 `Header` `detail` variant, blur 배경
 2. **Hero**: 카테고리 칩 + D-day/마감 뱃지, 정책명, 요약 설명
 3. **Quick Info 2x2**: 지원금액 / 지원대상 / 신청기간 / 주관기관
-4. **스티키 탭 3개**: 지원자격 / 지원내용 / 신청방법
+4. **탭 3개**: 지원자격 / 지원내용 / 신청방법 (Figma의 "스티키" 동작은 구현하지 않음 — `useState`로 단순 탭 전환만 적용, 스크롤 중 상단 고정은 범위 제외)
    - 지원자격: 기본 자격요건 → 상세조건 → 지원 제외대상 (경고 카드, 빨간 테두리)
    - 지원내용: 상세 내용 → 유의사항 (경고 카드, 빨간 테두리)
    - 신청방법: 신청 방법 → 필수 제출서류 (카드 리스트, 일부 기관 이동 버튼)
@@ -102,13 +104,13 @@
 
 ## 에러 처리
 
-| 상황                        | 처리                                              |
-| --------------------------- | ------------------------------------------------- |
-| 외부 API 호출 실패/타임아웃 | 전체 화면 에러 상태 + 재시도 버튼                 |
-| 정책 없음(빈 결과)          | 404 → Empty State + 뒤로가기                      |
-| 비로그인 스크랩 시도        | 로그인 안내 토스트 (기존 패턴)                    |
-| 스크랩 토글 실패            | 낙관적 업데이트 롤백 + 토스트                     |
-| 마감된 정책                 | 차단하지 않고 마감 뱃지만 표시, CTA는 그대로 노출 |
+| 상황                        | 처리                                                                                                                                                                     |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 외부 API 호출 실패/타임아웃 | 전체 화면 에러 상태 + 재시도 버튼                                                                                                                                        |
+| 정책 없음(404)              | 별도 Empty State 없이 일반 에러 화면과 동일 처리(`POLICY-030`) — `client.ts`가 상태코드를 보존하지 않아 구분 불가, `ApiError` 도입은 별도 작업(`local/WORK.md`)으로 분리 |
+| 비로그인 스크랩 시도        | 로그인 안내 토스트 (기존 패턴)                                                                                                                                           |
+| 스크랩 토글 실패            | 낙관적 업데이트 롤백 + 토스트                                                                                                                                            |
+| 마감된 정책                 | 차단하지 않고 마감 뱃지만 표시, CTA는 그대로 노출                                                                                                                        |
 
 ---
 
