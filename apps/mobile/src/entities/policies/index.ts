@@ -19,6 +19,7 @@ export {
   getAgeLabel,
   getDeadlineLabel,
   isUrgentDeadline,
+  registerPolicyDeadline,
 } from './model/policies.model';
 export { policyKeys } from './api/keys';
 export type { Policy, PolicyBanner, PolicyListQuery, PolicyDetail } from './api/policies.schema';

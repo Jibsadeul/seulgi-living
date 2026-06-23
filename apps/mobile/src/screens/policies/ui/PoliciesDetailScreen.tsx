@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Share, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Header } from '@/shared/ui';
@@ -18,6 +18,14 @@ export function PoliciesDetailScreen() {
   function handleBookmarkPress() {
     if (!policy) return;
     toggleScrap({ policyId: policy.id, isScrapped: !policy.isScrapped });
+  }
+
+  function handleSharePress() {
+    if (!policy) return;
+    const lines = [policy.name];
+    if (policy.description) lines.push(policy.description);
+    if (policy.applicationUrl) lines.push(policy.applicationUrl);
+    Share.share({ message: lines.join('\n') });
   }
 
   if (isLoading) {
@@ -65,6 +73,7 @@ export function PoliciesDetailScreen() {
         variant="detail"
         isScrapped={policy.isScrapped}
         onBookmarkPress={handleBookmarkPress}
+        onSharePress={handleSharePress}
       />
 
       <ScrollView

@@ -12,6 +12,7 @@ interface HeaderProps {
   onBackPress?: () => void;
   isScrapped?: boolean;
   onBookmarkPress?: () => void;
+  onSharePress?: () => void;
 }
 
 export function Header({
@@ -20,6 +21,7 @@ export function Header({
   onBackPress,
   isScrapped,
   onBookmarkPress,
+  onSharePress,
 }: HeaderProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -48,7 +50,7 @@ export function Header({
               <ScrapIcon width={30} height={30} />
             )}
           </Pressable>
-          <Pressable className="p-1">
+          <Pressable className="p-1" onPress={onSharePress}>
             <ShareIcon width={28} height={28} />
           </Pressable>
         </View>
