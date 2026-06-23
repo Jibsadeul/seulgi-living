@@ -1,4 +1,8 @@
-import { grocerySummaryResponseSchema, putGroceryBudgetBodySchema } from '@repo/contract';
+import {
+  groceryListResponseSchema,
+  grocerySummaryResponseSchema,
+  putGroceryBudgetBodySchema,
+} from '@repo/contract';
 import { prisma } from '@repo/db';
 
 export async function upsertGroceryBudget(
@@ -35,4 +39,52 @@ export async function getGrocerySummary(memberId: string, year: number, month: n
     budget: budgetRecord?.budget ?? null,
     spent: spentResult._sum.price ?? 0,
   });
+}
+
+export async function getGroceryList(memberId: string, year: number, month: number) {
+  const start = new Date(year, month - 1, 1);
+  const end = new Date(year, month, 1);
+
+  const items = await prisma.groceryPurchaseItem.findMany({
+    where: { userId: memberId, purchasedAt: { gte: start, lt: end } },
+    orderBy: [{ purchasedAt: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      quantityText: true,
+      purchasedAt: true,
+    },
+  });
+
+  const groups = new Map<
+    string,
+    {
+      date: string;
+      dailyTotal: number;
+      items: {
+        id: string;
+        itemName: string;
+        price: number;
+        quantityText: string | null;
+      }[];
+    }
+  >();
+
+  for (const item of items) {
+    const date = item.purchasedAt.toISOString().slice(0, 10);
+    const group = groups.get(date) ?? { date, dailyTotal: 0, items: [] };
+
+    group.dailyTotal += item.price;
+    group.items.push({
+      id: item.id,
+      itemName: item.name,
+      price: item.price,
+      quantityText: item.quantityText,
+    });
+
+    groups.set(date, group);
+  }
+
+  return groceryListResponseSchema.parse([...groups.values()]);
 }
