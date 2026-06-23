@@ -1,4 +1,5 @@
-import { View } from 'react-native';
+import { useCallback, useEffect } from 'react';
+import { BackHandler, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PolicyFilterBottomSheet } from '@/entities/policies';
@@ -32,6 +33,20 @@ export function PoliciesSearchResultScreen() {
     closeFilterSheet,
   } = usePolicySearchResults();
 
+  // 형제 탭(policies-results -> policies) 이동은 router.back() 히스토리에 안 쌓여
+  // 헤더 버튼/Android 시스템 뒤로가기(제스처·버튼) 모두 정책 메인으로 명시 이동시킨다.
+  const handleBack = useCallback(() => {
+    router.navigate('/(tabs)/policies' as never);
+  }, [router]);
+
+  useEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
+      handleBack();
+      return true;
+    });
+    return () => subscription.remove();
+  }, [handleBack]);
+
   return (
     <View className="flex-1 bg-surface-card" style={{ paddingTop: insets.top }}>
       <PoliciesSearchHeader
@@ -39,7 +54,7 @@ export function PoliciesSearchResultScreen() {
         keyword={keyword}
         onChangeKeyword={setKeyword}
         onSubmit={handleSubmit}
-        onBack={() => router.back()}
+        onBack={handleBack}
       />
 
       <PoliciesSearchResultList

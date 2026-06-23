@@ -7,38 +7,23 @@ type AddAllDayEventParams = {
   notes?: string;
 };
 
-// 권한 요청 → 쓰기 가능한 캘린더 탐색 → 종일 이벤트 등록까지 처리하는 범용 유틸 (도메인 무관).
+// OS 네이티브 "일정 추가" 화면을 열어 사용자가 직접 저장/취소/수정하게 한다 (도메인 무관 범용 유틸).
+// 시스템 UI가 권한·캘린더 선택을 자체 처리하므로 별도 권한 요청이나 캘린더 탐색이 필요 없다.
 export async function addAllDayEventToCalendar({
   title,
   date,
   notes,
-}: AddAllDayEventParams): Promise<boolean> {
-  const { status } = await Calendar.requestCalendarPermissionsAsync();
-  if (status !== 'granted') {
-    showAppToast({ type: 'warning', text: '캘린더 접근 권한이 필요합니다.' });
-    return false;
-  }
-
-  const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
-  const targetCalendar = calendars.find((cal) => cal.allowsModifications) ?? calendars[0];
-  if (!targetCalendar) {
-    showAppToast({ type: 'error', text: '등록 가능한 캘린더를 찾을 수 없습니다.' });
-    return false;
-  }
-
+}: AddAllDayEventParams): Promise<void> {
   try {
-    await Calendar.createEventAsync(targetCalendar.id, {
+    await Calendar.createEventInCalendarAsync({
       title,
       startDate: date,
       endDate: date,
       allDay: true,
       notes,
     });
-    showAppToast({ type: 'success', text: '캘린더에 등록했습니다.' });
-    return true;
   } catch {
     showAppToast({ type: 'error', text: '캘린더 등록에 실패했습니다.' });
-    return false;
   }
 }
 
