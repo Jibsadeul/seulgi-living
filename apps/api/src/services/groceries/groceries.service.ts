@@ -3,8 +3,10 @@ import {
   groceryListResponseSchema,
   grocerySummaryResponseSchema,
   putGroceryBudgetBodySchema,
+  updateGroceryBodySchema,
 } from '@repo/contract';
 import { prisma } from '@repo/db';
+import { errors } from '@/shared/lib/error';
 
 export async function upsertGroceryBudget(
   memberId: string,
@@ -102,4 +104,26 @@ export async function createGroceryItem(memberId: string, bodyInput: unknown): P
       quantityText: body.quantityText ?? null,
     },
   });
+}
+
+export async function updateGroceryItem(
+  memberId: string,
+  groceryId: string,
+  bodyInput: unknown,
+): Promise<void> {
+  const body = updateGroceryBodySchema.parse(bodyInput);
+
+  const result = await prisma.groceryPurchaseItem.updateMany({
+    where: { id: groceryId, userId: memberId },
+    data: {
+      name: body.name,
+      price: body.price,
+      purchasedAt: new Date(`${body.purchaseDate}T00:00:00.000Z`),
+      quantityText: body.quantityText ?? null,
+    },
+  });
+
+  if (result.count === 0) {
+    throw errors.notFound('장보기 내역을 찾을 수 없습니다.');
+  }
 }

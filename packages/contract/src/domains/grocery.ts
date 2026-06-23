@@ -55,6 +55,12 @@ export const createGroceryBodySchema = z.object({
   quantityText: z.string().min(1).max(20).optional(),
 });
 
+export const groceryIdParamsSchema = z.object({
+  groceryId: z.string().uuid(),
+});
+
+export const updateGroceryBodySchema = createGroceryBodySchema;
+
 export type GroceryBudgetQuery = z.infer<typeof groceryBudgetQuerySchema>;
 export type PutGroceryBudgetBody = z.infer<typeof putGroceryBudgetBodySchema>;
 export type GrocerySummaryQuery = z.infer<typeof grocerySummaryQuerySchema>;
@@ -64,3 +70,5 @@ export type GroceryListItem = z.infer<typeof groceryListItemSchema>;
 export type GroceryListGroup = z.infer<typeof groceryListGroupSchema>;
 export type GroceryListResponse = z.infer<typeof groceryListResponseSchema>;
 export type CreateGroceryBody = z.infer<typeof createGroceryBodySchema>;
+export type GroceryIdParams = z.infer<typeof groceryIdParamsSchema>;
+export type UpdateGroceryBody = z.infer<typeof updateGroceryBodySchema>;
