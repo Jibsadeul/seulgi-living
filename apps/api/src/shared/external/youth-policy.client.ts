@@ -22,8 +22,28 @@ export interface YouthPolicyRaw {
   lastMdfcnDt?: string;
 }
 
+// 정책 상세 원본 (실시간 단건 조회 — 목록 동기화용 YouthPolicyRaw보다 필드가 많음)
+export interface YouthPolicyDetailRaw extends YouthPolicyRaw {
+  plcySprtCn?: string;
+  plcyAplyMthdCn?: string;
+  srngMthdCn?: string;
+  sbmsnDcmntCn?: string;
+  etcMttrCn?: string;
+  addAplyQlfcCndCn?: string;
+  ptcpPrpTrgtCn?: string;
+  sprvsnInstCdNm?: string;
+  operInstCdNm?: string;
+  refUrlAddr1?: string;
+  refUrlAddr2?: string;
+  earnCndSeCd?: string;
+  earnMinAmt?: string | number;
+  earnMaxAmt?: string | number;
+  earnEtcCn?: string;
+  sprtSclCnt?: string | number;
+}
+
 // 정책 api 응답 구조
-interface YouthPolicyListResponse {
+interface YouthPolicyListResponse<T = YouthPolicyRaw> {
   resultCode: number;
   result: {
     pagging: {
@@ -31,7 +51,7 @@ interface YouthPolicyListResponse {
       pageNum: number;
       pageSize: number;
     };
-    youthPolicyList?: YouthPolicyRaw[];
+    youthPolicyList?: T[];
   };
 }
 
@@ -63,4 +83,29 @@ export async function fetchYouthPolicies(
     policies: data.result?.youthPolicyList ?? [],
     totalCount: data.result?.pagging?.totCount ?? 0,
   };
+}
+
+// 정책 상세 단건 실시간 조회 (plcyNo로 필터링, BFF가 매 요청마다 호출)
+export async function fetchYouthPolicyDetail(plcyNo: string): Promise<YouthPolicyDetailRaw | null> {
+  const apiKey = process.env.YOUTH_POLICY_API_KEY;
+  if (!apiKey) throw new Error('YOUTH_POLICY_API_KEY is not set');
+
+  const params = new URLSearchParams({
+    apiKeyNm: apiKey,
+    pageNum: '1',
+    pageSize: '1',
+    pageType: '1',
+    rtnType: 'json',
+    plcyNo,
+  });
+
+  const response = await fetch(`${BASE_URL}?${params}`, {
+    next: { revalidate: 1800 }, // 정책 내용은 30분 내 거의 안 바뀜 — 외부 API 호출 횟수를 사용자 수와 무관하게 줄임
+  });
+
+  if (!response.ok) throw new Error(`Youth Policy API error: ${response.status}`);
+
+  const data = (await response.json()) as YouthPolicyListResponse<YouthPolicyDetailRaw>;
+
+  return data.result?.youthPolicyList?.[0] ?? null;
 }

@@ -71,3 +71,45 @@ export const policyListResponseSchema = z.object({
   limit: z.number(),
 });
 export type PolicyListResponse = z.infer<typeof policyListResponseSchema>;
+
+// 제출서류 항목 (정책 상세 응답에 포함)
+export const policyRequiredDocumentSchema = z.object({
+  name: z.string(),
+  agencyName: z.string().optional(),
+  agencyUrl: z.string().optional(),
+});
+export type PolicyRequiredDocument = z.infer<typeof policyRequiredDocumentSchema>;
+
+// 정책 상세 응답 (BFF → 앱) — 온통청년 API 실시간 조회 결과, policySchema와 별도 타입
+export const policyDetailSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  largeCategory: z.string().nullable().optional(),
+  mediumCategory: z.string().nullable().optional(),
+  noAgeLimit: z.boolean(),
+  ageMin: z.coerce.number().nullable().optional(),
+  ageMax: z.coerce.number().nullable().optional(),
+  applyPeriodType: z.string().nullable().optional(),
+  applyStartDate: z.string().nullable().optional(),
+  applyEndDate: z.string().nullable().optional(),
+  applicationUrl: z.string().nullable().optional(),
+  daysLeft: z.number().nullable(),
+  isScrapped: z.boolean(),
+  region: z.string().nullable(),
+  supervisingAgency: z.string().nullable().optional(),
+  operatingAgency: z.string().nullable().optional(),
+  referenceUrls: z.array(z.string()),
+  // 지원내용 탭
+  content: z.string().nullable().optional(),
+  notice: z.string().nullable().optional(),
+  // 지원자격 탭
+  basicQualification: z.string().nullable().optional(),
+  detailQualification: z.string().nullable().optional(),
+  exclusionTarget: z.string().nullable().optional(),
+  // 신청방법 탭
+  applyMethod: z.string().nullable().optional(),
+  screeningMethod: z.string().nullable().optional(),
+  requiredDocuments: z.array(policyRequiredDocumentSchema),
+});
+export type PolicyDetail = z.infer<typeof policyDetailSchema>;
