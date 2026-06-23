@@ -26,7 +26,7 @@ export const groceryListQuerySchema = z.object({
 
 export const groceryListItemSchema = z.object({
   id: z.string().uuid(),
-  itemName: z.string(),
+  name: z.string(),
   price: z.number().int(),
   quantityText: z.string().nullable(),
 });

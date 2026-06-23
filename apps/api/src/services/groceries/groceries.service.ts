@@ -64,7 +64,7 @@ export async function getGroceryList(memberId: string, year: number, month: numb
       dailyTotal: number;
       items: {
         id: string;
-        itemName: string;
+        name: string;
         price: number;
         quantityText: string | null;
       }[];
@@ -78,7 +78,7 @@ export async function getGroceryList(memberId: string, year: number, month: numb
     group.dailyTotal += item.price;
     group.items.push({
       id: item.id,
-      itemName: item.name,
+      name: item.name,
       price: item.price,
       quantityText: item.quantityText,
     });

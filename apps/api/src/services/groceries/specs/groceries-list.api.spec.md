@@ -31,7 +31,7 @@
     "items": [
       {
         "id": "uuid",
-        "itemName": "국산 햇감자",
+        "name": "국산 햇감자",
         "price": 5200,
         "quantityText": "1개"
       }
