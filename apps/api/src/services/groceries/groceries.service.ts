@@ -129,3 +129,13 @@ export async function updateGroceryItem(
     throw errors.notFound('장보기 내역을 찾을 수 없습니다.');
   }
 }
+
+export async function deleteGroceryItem(memberId: string, groceryId: string): Promise<void> {
+  const result = await prisma.groceryPurchaseItem.deleteMany({
+    where: { id: groceryId, userId: memberId },
+  });
+
+  if (result.count === 0) {
+    throw errors.notFound('장보기 내역을 찾을 수 없습니다.');
+  }
+}
