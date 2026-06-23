@@ -44,6 +44,7 @@ model Member {
   recipeScraps         RecipeScrap[]
   fridgeIngredients    FridgeIngredient[]
   groceryPurchaseItems GroceryPurchaseItem[]
+  groceryBudgets       GroceryBudget[]
   policyScraps         PolicyScrap[]
 
   @@map("members")
@@ -177,13 +178,27 @@ enum FridgeIngredientCategory {
 }
 
 
+model GroceryBudget {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  year      Int
+  month     Int
+  budget    Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user Member @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, year, month])
+  @@map("grocery_budgets")
+}
+
 model GroceryPurchaseItem {
   id           String   @id @default(uuid()) @db.Uuid
   userId       String   @map("user_id") @db.Uuid
   name         String   @db.VarChar(50)
   quantityText String?  @map("quantity_text") @db.VarChar(20)
   price        Int
-  purchasedAt  DateTime @map("purchased_at") @db.Timestamp(6)
+  purchasedAt  DateTime @default(dbgenerated("CURRENT_DATE")) @map("purchased_at") @db.Date
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   user Member @relation(fields: [userId], references: [id], onDelete: Cascade)
