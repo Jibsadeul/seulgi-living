@@ -1,12 +1,13 @@
 import {
   type Policy,
   type PolicyBanner,
+  type PolicyDetail,
   policyListQuerySchema,
   policyBannerSchema,
   policyScrapListQuerySchema,
 } from '@repo/contract';
 import { prisma } from '@repo/db';
-import { fetchYouthPolicies } from '@/shared/external/youth-policy.client';
+import { fetchYouthPolicies, fetchYouthPolicyDetail } from '@/shared/external/youth-policy.client';
 import { errors } from '@/shared/lib/error';
 import { calcAge, calcDaysLeft } from './policies.utils';
 import {
@@ -15,6 +16,7 @@ import {
   collectZipCodes,
   rawToUpsertData,
   toPolicy,
+  toPolicyDetail,
   type PolicyRow,
 } from './policies.mapper';
 
@@ -330,4 +332,24 @@ export async function unscrapPolicy(memberId: string | null, policyId: string): 
   await prisma.policyScrap.deleteMany({
     where: { userId: memberId, policyId },
   });
+}
+
+// 정책 상세 — Policy 테이블을 조회하지 않고 매 요청마다 온통청년 API를 실시간 호출한다.
+export async function getPolicyDetail(
+  plcyNo: string,
+  memberId: string | null,
+): Promise<PolicyDetail> {
+  const raw = await fetchYouthPolicyDetail(plcyNo);
+  if (!raw) throw errors.notFound('정책을 찾을 수 없습니다.');
+
+  const isScrapped = memberId
+    ? (await prisma.policyScrap.findFirst({
+        where: { policyId: plcyNo, userId: memberId },
+        select: { id: true },
+      })) !== null
+    : false;
+
+  const sigunguNameMap = await buildSigunguNameMap([{ zipCd: raw.zipCd ?? null }]);
+
+  return toPolicyDetail(raw, sigunguNameMap, isScrapped);
 }
