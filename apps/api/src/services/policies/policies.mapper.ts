@@ -89,13 +89,47 @@ export function buildRegionFilter(sigunguId: string | string[] | null | undefine
     OR: [
       { noZipLimit: true },
       { zipCd: null },
-      { OR: ids.map((id) => ({ zipCd: { contains: id } })) },
+      {
+        // zipCd는 쉼표로 이어붙인 시군구 코드 목록이라, 단순 contains는 다른 지역 코드 안에
+        // id가 부분 문자열로 우연히 포함되는 경우까지 매칭한다(예: '11'이 '50110' 안에도 들어있음).
+        // 각 코드 항목의 시작 위치(문자열 맨 앞 또는 쉼표 바로 다음)에서만 일치하도록 제한한다.
+        OR: ids.flatMap((id) => [{ zipCd: { startsWith: id } }, { zipCd: { contains: `,${id}` } }]),
+      },
     ],
   };
 }
 
 export function buildScrapsInclude(memberId: string | null) {
   return memberId ? { where: { userId: memberId } } : { where: { id: BigInt(-1) } };
+}
+
+// 온통청년 API 텍스트 필드 앞에 흔히 붙는 불릿/구분 기호를 제거한다.
+const LEADING_SYMBOL_PATTERN = /^[□○●■▶•·∙ㅁㅇ\-*\s]+/;
+
+function stripLeadingSymbols(text: string): string {
+  return text.trim().replace(LEADING_SYMBOL_PATTERN, '');
+}
+
+const AMOUNT_PATTERN = /(?:최대|월|연|시급|건당|1회당|1인당)?\s?[\d,]+\s?(?:만원|원)/;
+
+// plcySprtCn(자유 형식 텍스트)에서 금액 패턴을 best-effort로 추출해 Quick Info 그리드의 "지원금액" 셀에 쓴다.
+// 모든 정책을 정확히 파싱할 수는 없다 — "소득기준" 같은 자격조건 문장은 지원금액으로 오인되기 쉬워 제외하고,
+// 매칭되는 줄이 없으면 null을 반환해 화면에서 "지원내용 탭에서 확인" 같은 폴백으로 처리하게 한다.
+function extractAmountLabel(content: string | undefined): string | null {
+  if (!content) return null;
+
+  const lines = content
+    .split('\n')
+    .map((line) => stripLeadingSymbols(line))
+    .filter(Boolean);
+
+  for (const line of lines) {
+    if (line.includes('소득')) continue;
+    const match = line.match(AMOUNT_PATTERN);
+    if (match) return match[0];
+  }
+
+  return null;
 }
 
 // 연령 + 소득조건을 한 텍스트로 합쳐 "지원자격 - 기본 자격요건" 영역에 노출한다.
@@ -118,10 +152,17 @@ function buildBasicQualification(raw: YouthPolicyDetailRaw): string | null {
 }
 
 // 정책 상세 raw(실시간 단건 조회) → contract PolicyDetail 변환
+// syncedOverride: plcyNo 단건 필터 조회 시 외부 API가 대/중분류·키워드를 null로 반환하는 결함을
+// 보완하기 위해 DB Policy 테이블 값을 우선 사용한다 (POLICY-031, POLICY-033).
 export function toPolicyDetail(
   raw: YouthPolicyDetailRaw,
   sigunguNameMap: Map<string, string>,
   isScrapped: boolean,
+  syncedOverride?: {
+    largeCategory: string | null;
+    mediumCategory: string | null;
+    keywords: string | null;
+  },
 ): PolicyDetail {
   const startDate = parseDate(raw.bizPrdBgngYmd) ?? parseDate(raw.aplyYmd?.slice(0, 8));
   const endDate = parseDate(raw.bizPrdEndYmd) ?? parseDate(raw.aplyYmd?.slice(8));
@@ -140,9 +181,10 @@ export function toPolicyDetail(
   return policyDetailSchema.parse({
     id: raw.plcyNo,
     name: raw.plcyNm,
-    description: raw.plcyExplnCn ?? null,
-    largeCategory: raw.lclsfNm ?? null,
-    mediumCategory: raw.mclsfNm ?? null,
+    description: raw.plcyExplnCn ? stripLeadingSymbols(raw.plcyExplnCn) : null,
+    largeCategory: syncedOverride?.largeCategory ?? raw.lclsfNm ?? null,
+    mediumCategory: syncedOverride?.mediumCategory ?? raw.mclsfNm ?? null,
+    keywords: syncedOverride?.keywords ?? raw.plcyKywdNm ?? null,
     noAgeLimit: raw.sprtTrgtAgeLmtYn === 'Y',
     ageMin: raw.sprtTrgtMinAge ?? null,
     ageMax: raw.sprtTrgtMaxAge ?? null,
@@ -156,6 +198,7 @@ export function toPolicyDetail(
     supervisingAgency: raw.sprvsnInstCdNm ?? null,
     operatingAgency: raw.operInstCdNm ?? null,
     referenceUrls,
+    amountLabel: extractAmountLabel(raw.plcySprtCn),
     content: raw.plcySprtCn ?? null,
     notice: raw.etcMttrCn ?? null,
     basicQualification: buildBasicQualification(raw),

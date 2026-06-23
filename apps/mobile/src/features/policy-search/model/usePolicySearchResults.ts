@@ -1,28 +1,20 @@
 import { useRef, useState } from 'react';
 import { TextInput } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
 import {
   useInfinitePolicies,
+  type FilterSection,
   type PolicyFilterValues,
   type PolicySearchParams,
 } from '@/entities/policies';
-import { getSidoList } from '@/entities/regions';
+import { useSidoList } from '@/entities/regions';
 
-export const PERIOD_LABEL: Record<'0057001' | '0057002', string> = {
-  '0057001': '마감기한순',
-  '0057002': '상시',
+export type PolicySearchResultParams = {
+  largeCategory?: string;
+  deadlineOnly?: string;
+  keyword?: string;
 };
 
-export type FilterSection = 'category' | 'region' | 'supportType' | 'period';
-
-export function usePolicySearchResults() {
-  const params = useLocalSearchParams<{
-    largeCategory?: string;
-    deadlineOnly?: string;
-    keyword?: string;
-  }>();
-
+export function usePolicySearchResults(params: PolicySearchResultParams) {
   const inputRef = useRef<TextInput>(null);
   const [keyword, setKeyword] = useState(params.keyword ?? '');
   const [submittedKeyword, setSubmittedKeyword] = useState(params.keyword ?? '');
@@ -35,7 +27,7 @@ export function usePolicySearchResults() {
   const [hasOpenedFilterSheet, setHasOpenedFilterSheet] = useState(false);
   const [excludeExpired, setExcludeExpired] = useState(true);
 
-  const { data: sidoList } = useQuery({ queryKey: ['sido'], queryFn: getSidoList });
+  const { data: sidoList } = useSidoList();
   const regionLabels = filterValues.zipCd
     ?.map((id) => sidoList?.find((sido) => sido.id === id)?.name)
     .filter((name): name is string => !!name);

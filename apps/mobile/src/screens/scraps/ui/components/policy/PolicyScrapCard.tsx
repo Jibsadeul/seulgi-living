@@ -56,12 +56,12 @@ export function PolicyScrapCard({ policy }: Props) {
         {Icon && <Icon width={24} height={24} />}
       </View>
 
-      <View className="flex-1" style={{ gap: 4 }}>
-        <View className="flex-row items-center" style={{ gap: 10 }}>
+      <View className="flex-1" style={{ gap: 8 }}>
+        <View className="flex-row items-center" style={{ gap: 15 }}>
           <View
             className="rounded"
             style={{
-              paddingHorizontal: 6,
+              paddingHorizontal: 4,
               paddingVertical: 2,
               borderWidth: 1,
               borderColor: accent,
@@ -91,7 +91,7 @@ export function PolicyScrapCard({ policy }: Props) {
           </View>
         </View>
 
-        <Text style={{ fontSize: 15, fontWeight: '700', color: '#1B1C1A' }} numberOfLines={1}>
+        <Text style={{ fontSize: 13, fontWeight: '600', color: '#1B1C1A' }} numberOfLines={1}>
           {policy.name}
         </Text>
 

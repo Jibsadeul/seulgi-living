@@ -3,6 +3,7 @@ export {
   useRecommendedPolicies,
   useInfinitePolicies,
   useScrappedPolicies,
+  usePolicyDetail,
   type PolicySearchParams,
   type PolicyScrapSortBy,
 } from '../api/queries';

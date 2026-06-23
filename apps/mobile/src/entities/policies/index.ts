@@ -8,6 +8,7 @@ export {
   usePolicyScrap,
   useInfinitePolicies,
   useScrappedPolicies,
+  usePolicyDetail,
   type PolicySearchParams,
   type PolicyScrapSortBy,
 } from './model/usePolicy';
@@ -18,6 +19,9 @@ export {
   getAgeLabel,
   getDeadlineLabel,
   isUrgentDeadline,
+  registerPolicyDeadline,
+  PERIOD_LABEL,
+  type FilterSection,
 } from './model/policies.model';
 export { policyKeys } from './api/keys';
-export type { Policy, PolicyBanner, PolicyListQuery } from './api/policies.schema';
+export type { Policy, PolicyBanner, PolicyListQuery, PolicyDetail } from './api/policies.schema';

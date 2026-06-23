@@ -87,6 +87,7 @@ export const policyDetailSchema = z.object({
   description: z.string().nullable().optional(),
   largeCategory: z.string().nullable().optional(),
   mediumCategory: z.string().nullable().optional(),
+  keywords: z.string().nullable().optional(),
   noAgeLimit: z.boolean(),
   ageMin: z.coerce.number().nullable().optional(),
   ageMax: z.coerce.number().nullable().optional(),
@@ -100,6 +101,8 @@ export const policyDetailSchema = z.object({
   supervisingAgency: z.string().nullable().optional(),
   operatingAgency: z.string().nullable().optional(),
   referenceUrls: z.array(z.string()),
+  // Quick Info 그리드 — plcySprtCn에서 정규식으로 추출한 best-effort 금액 라벨 (못 찾으면 null)
+  amountLabel: z.string().nullable().optional(),
   // 지원내용 탭
   content: z.string().nullable().optional(),
   notice: z.string().nullable().optional(),
