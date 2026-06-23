@@ -1,4 +1,5 @@
 import {
+  createGroceryBodySchema,
   groceryListResponseSchema,
   grocerySummaryResponseSchema,
   putGroceryBudgetBodySchema,
@@ -87,4 +88,18 @@ export async function getGroceryList(memberId: string, year: number, month: numb
   }
 
   return groceryListResponseSchema.parse([...groups.values()]);
+}
+
+export async function createGroceryItem(memberId: string, bodyInput: unknown): Promise<void> {
+  const body = createGroceryBodySchema.parse(bodyInput);
+
+  await prisma.groceryPurchaseItem.create({
+    data: {
+      userId: memberId,
+      name: body.name,
+      price: body.price,
+      purchasedAt: new Date(`${body.purchaseDate}T00:00:00.000Z`),
+      quantityText: body.quantityText ?? null,
+    },
+  });
 }

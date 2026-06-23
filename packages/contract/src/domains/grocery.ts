@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+const dateStringSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((value) => {
+    const date = new Date(`${value}T00:00:00.000Z`);
+
+    return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+  });
+
 export const groceryBudgetQuerySchema = z.object({
   year: z.coerce.number().int().min(1000).max(9999),
   month: z.coerce.number().int().min(1).max(12),
@@ -39,6 +48,13 @@ export const groceryListGroupSchema = z.object({
 
 export const groceryListResponseSchema = z.array(groceryListGroupSchema);
 
+export const createGroceryBodySchema = z.object({
+  name: z.string().min(1).max(50),
+  price: z.number().int().min(0),
+  purchaseDate: dateStringSchema,
+  quantityText: z.string().min(1).max(20).optional(),
+});
+
 export type GroceryBudgetQuery = z.infer<typeof groceryBudgetQuerySchema>;
 export type PutGroceryBudgetBody = z.infer<typeof putGroceryBudgetBodySchema>;
 export type GrocerySummaryQuery = z.infer<typeof grocerySummaryQuerySchema>;
@@ -47,3 +63,4 @@ export type GroceryListQuery = z.infer<typeof groceryListQuerySchema>;
 export type GroceryListItem = z.infer<typeof groceryListItemSchema>;
 export type GroceryListGroup = z.infer<typeof groceryListGroupSchema>;
 export type GroceryListResponse = z.infer<typeof groceryListResponseSchema>;
+export type CreateGroceryBody = z.infer<typeof createGroceryBodySchema>;

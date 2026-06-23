@@ -1,11 +1,11 @@
 import { withHandler } from '@/shared/lib/handler';
 import { getCurrentMemberId } from '@/shared/middleware/auth';
 import { errors } from '@/shared/lib/error';
-import { jsonResponse, optionsResponse } from '@/shared/lib/response';
+import { jsonResponse, noContentResponse, optionsResponse } from '@/shared/lib/response';
 import { groceryListQuerySchema } from '@repo/contract';
-import { getGroceryList } from '@/services/groceries/groceries.service';
+import { createGroceryItem, getGroceryList } from '@/services/groceries/groceries.service';
 
-export const OPTIONS = () => optionsResponse('GET, OPTIONS');
+export const OPTIONS = () => optionsResponse('GET, POST, OPTIONS');
 
 export const GET = withHandler(async (request) => {
   const memberId = await getCurrentMemberId(request);
@@ -20,4 +20,14 @@ export const GET = withHandler(async (request) => {
   const groceries = await getGroceryList(memberId, query.year, query.month);
 
   return jsonResponse(groceries);
+});
+
+export const POST = withHandler(async (request) => {
+  const memberId = await getCurrentMemberId(request);
+  if (!memberId) throw errors.unauthorized();
+
+  const body = await request.json();
+  await createGroceryItem(memberId, body);
+
+  return noContentResponse();
 });
