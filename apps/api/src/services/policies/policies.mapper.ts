@@ -89,7 +89,12 @@ export function buildRegionFilter(sigunguId: string | string[] | null | undefine
     OR: [
       { noZipLimit: true },
       { zipCd: null },
-      { OR: ids.map((id) => ({ zipCd: { contains: id } })) },
+      {
+        // zipCd는 쉼표로 이어붙인 시군구 코드 목록이라, 단순 contains는 다른 지역 코드 안에
+        // id가 부분 문자열로 우연히 포함되는 경우까지 매칭한다(예: '11'이 '50110' 안에도 들어있음).
+        // 각 코드 항목의 시작 위치(문자열 맨 앞 또는 쉼표 바로 다음)에서만 일치하도록 제한한다.
+        OR: ids.flatMap((id) => [{ zipCd: { startsWith: id } }, { zipCd: { contains: `,${id}` } }]),
+      },
     ],
   };
 }
