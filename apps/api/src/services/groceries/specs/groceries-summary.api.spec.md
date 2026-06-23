@@ -37,8 +37,8 @@
 ### 규칙
 
 - `getCurrentMemberId`로 현재 사용자 확인. 인증 실패 시 `401` throw
-- `year`이 정수가 아니거나 1000 미만이거나 9999 초과이면 `400` 반환
-- `month`가 1 미만이거나 12 초과이면 `400` 반환
+- query의 `year`가 없거나 정수가 아니거나 1000 미만이거나 9999 초과이면 `400` 반환
+- query의 `month`가 없거나 1 미만이거나 12 초과이면 `400` 반환
 - `budget`은 `grocery_budgets`에서 `(user_id, year, month)` 기준으로 조회. 없으면 `null`
 - `spent`는 `grocery_purchase_items`에서 `user_id`와 `purchased_at`이 해당 연월인 항목의 `price` 합계. 내역 없으면 `0`
 - 모든 요청 검증은 `packages/contract`의 Zod 스키마로 처리한다

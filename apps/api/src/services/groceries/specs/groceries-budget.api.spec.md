@@ -41,8 +41,8 @@
 
 - `getCurrentMemberId`로 현재 사용자 확인. 인증 실패 시 `401` throw
 - `(user_id, year, month)` 조합으로 upsert 처리
-- query의 `year`이 정수가 아니거나 1000 미만이거나 9999 초과이면 `400` 반환
-- query의 `month`가 1 미만이거나 12 초과이면 `400` 반환
+- query의 `year`가 없거나 정수가 아니거나 1000 미만이거나 9999 초과이면 `400` 반환
+- query의 `month`가 없거나 1 미만이거나 12 초과이면 `400` 반환
 - `budget`이 0 미만이거나 99,999,999 초과이면 `400` 반환
 - 모든 요청 검증은 `packages/contract`의 Zod 스키마로 처리한다
 

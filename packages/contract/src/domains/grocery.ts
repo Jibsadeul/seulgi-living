@@ -9,9 +9,17 @@ const dateStringSchema = z
     return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
   });
 
+const requiredNumberQuerySchema = z
+  .string({
+    required_error: 'Required',
+    invalid_type_error: 'Required',
+  })
+  .min(1, 'Required')
+  .pipe(z.coerce.number().int());
+
 export const groceryBudgetQuerySchema = z.object({
-  year: z.coerce.number().int().min(1000).max(9999),
-  month: z.coerce.number().int().min(1).max(12),
+  year: requiredNumberQuerySchema.pipe(z.number().min(1000).max(9999)),
+  month: requiredNumberQuerySchema.pipe(z.number().min(1).max(12)),
 });
 
 export const putGroceryBudgetBodySchema = z.object({
@@ -19,8 +27,8 @@ export const putGroceryBudgetBodySchema = z.object({
 });
 
 export const grocerySummaryQuerySchema = z.object({
-  year: z.coerce.number().int().min(1000).max(9999),
-  month: z.coerce.number().int().min(1).max(12),
+  year: requiredNumberQuerySchema.pipe(z.number().min(1000).max(9999)),
+  month: requiredNumberQuerySchema.pipe(z.number().min(1).max(12)),
 });
 
 export const grocerySummaryResponseSchema = z.object({
@@ -29,8 +37,8 @@ export const grocerySummaryResponseSchema = z.object({
 });
 
 export const groceryListQuerySchema = z.object({
-  year: z.coerce.number().int().min(1000).max(9999),
-  month: z.coerce.number().int().min(1).max(12),
+  year: requiredNumberQuerySchema.pipe(z.number().min(1000).max(9999)),
+  month: requiredNumberQuerySchema.pipe(z.number().min(1).max(12)),
 });
 
 export const groceryListItemSchema = z.object({

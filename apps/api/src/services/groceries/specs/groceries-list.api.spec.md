@@ -44,8 +44,8 @@
 ### 규칙
 
 - `getCurrentMemberId`로 현재 사용자 확인. 인증 실패 시 `401` throw
-- query의 `year`이 정수가 아니거나 1000 미만이거나 9999 초과이면 `400` 반환
-- query의 `month`가 1 미만이거나 12 초과이면 `400` 반환
+- query의 `year`가 없거나 정수가 아니거나 1000 미만이거나 9999 초과이면 `400` 반환
+- query의 `month`가 없거나 1 미만이거나 12 초과이면 `400` 반환
 - `grocery_purchase_items`에서 현재 사용자와 해당 연월의 `purchased_at` 기준으로 조회한다
 - 응답 그룹은 `date` 기준 내림차순, 즉 구매일 최신순으로 정렬한다
 - 각 그룹의 `items`는 `createdAt DESC`, `id DESC` 순으로 정렬한다
