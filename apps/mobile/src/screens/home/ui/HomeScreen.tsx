@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getCurrentMember, type MemberMe, useMemberStore } from '@/entities/members';
+import { SettingsMenuBottomSheet } from '@/features/member-settings';
 import { MemberInfoBottomSheet } from '@/screens/members';
 import { TAB_BAR_BASE_HEIGHT } from '@/shared/ui';
 import { HomeFridgePreview } from './components/HomeFridgePreview';
@@ -22,6 +23,7 @@ export function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [member, setMember] = useState<MemberMe | null>(null);
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const [isMemberInfoOpen, setIsMemberInfoOpen] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(false);
   const lastScrollYRef = useRef(0);
@@ -78,7 +80,7 @@ export function HomeScreen() {
       >
         <HomeHeader
           username={member?.nickname ?? undefined}
-          onSettingsPress={() => setIsMemberInfoOpen(true)}
+          onSettingsPress={() => setIsSettingsMenuOpen(true)}
         />
         <HomeFridgePreview />
         <HomeRecipeScrap />
@@ -107,6 +109,11 @@ export function HomeScreen() {
           <Ionicons name="chatbubbles" size={24} color="#FFFFFF" />
         </Pressable>
       </Animated.View>
+      <SettingsMenuBottomSheet
+        visible={isSettingsMenuOpen}
+        onClose={() => setIsSettingsMenuOpen(false)}
+        onEditProfilePress={() => setIsMemberInfoOpen(true)}
+      />
       <MemberInfoBottomSheet
         visible={isMemberInfoOpen}
         mode="edit"
