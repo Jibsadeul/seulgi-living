@@ -20,6 +20,8 @@ export {
   getDeadlineLabel,
   isUrgentDeadline,
   registerPolicyDeadline,
+  PERIOD_LABEL,
+  type FilterSection,
 } from './model/policies.model';
 export { policyKeys } from './api/keys';
 export type { Policy, PolicyBanner, PolicyListQuery, PolicyDetail } from './api/policies.schema';

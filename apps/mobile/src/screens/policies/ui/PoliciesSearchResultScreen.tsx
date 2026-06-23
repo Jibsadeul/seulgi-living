@@ -1,15 +1,16 @@
 import { useCallback, useEffect } from 'react';
 import { BackHandler, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PolicyFilterBottomSheet } from '@/entities/policies';
-import { usePolicySearchResults } from '@/features/policy-search';
-import { PoliciesSearchHeader } from './components/PoliciesSearchHeader';
-import { PoliciesSearchResultList } from './components/PoliciesSearchResultList';
+import { usePolicySearchResults, type PolicySearchResultParams } from '@/features/policy-search';
+import { PoliciesSearchHeader } from './components/search/PoliciesSearchHeader';
+import { PoliciesSearchResultList } from './components/search/PoliciesSearchResultList';
 
 export function PoliciesSearchResultScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<PolicySearchResultParams>();
   const {
     inputRef,
     keyword,
@@ -31,7 +32,7 @@ export function PoliciesSearchResultScreen() {
     hasOpenedFilterSheet,
     openFilterSheet,
     closeFilterSheet,
-  } = usePolicySearchResults();
+  } = usePolicySearchResults(params);
 
   // 형제 탭(policies-results -> policies) 이동은 router.back() 히스토리에 안 쌓여
   // 헤더 버튼/Android 시스템 뒤로가기(제스처·버튼) 모두 정책 메인으로 명시 이동시킨다.

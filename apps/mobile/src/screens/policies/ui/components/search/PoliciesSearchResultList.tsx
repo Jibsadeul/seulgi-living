@@ -1,8 +1,12 @@
 import { FlatList, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { PolicySearchResultCard, type Policy, type PolicyFilterValues } from '@/entities/policies';
-import type { FilterSection } from '@/features/policy-search';
+import {
+  PolicySearchResultCard,
+  type FilterSection,
+  type Policy,
+  type PolicyFilterValues,
+} from '@/entities/policies';
 import { SkeletonCard, TAB_BAR_BASE_HEIGHT } from '@/shared/ui';
 import { PoliciesSearchFilterChips } from './PoliciesSearchFilterChips';
 
