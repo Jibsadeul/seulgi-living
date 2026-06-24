@@ -22,7 +22,7 @@ type BudgetCardAction = {
 type Props = {
   summary: GroceryBudgetSummary;
   primaryAction: BudgetCardAction;
-  onMorePress: () => void;
+  onMorePress?: () => void;
   isLoading?: boolean;
 };
 
@@ -59,9 +59,11 @@ export function GroceryBudgetSummaryCard({
     >
       <View className="mb-4 flex-row items-center justify-between">
         <Text className="text-sm font-bold text-gray-90">이번 달 장보기 요약</Text>
-        <Pressable onPress={onMorePress} hitSlop={8}>
-          <Text className="text-xs font-semibold text-main-100">더 보기 &gt;</Text>
-        </Pressable>
+        {onMorePress && (
+          <Pressable onPress={onMorePress} hitSlop={8}>
+            <Text className="text-xs font-semibold text-main-100">더 보기 &gt;</Text>
+          </Pressable>
+        )}
       </View>
 
       {isLoading ? (

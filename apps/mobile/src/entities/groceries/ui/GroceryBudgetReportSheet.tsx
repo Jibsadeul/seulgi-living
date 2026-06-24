@@ -120,7 +120,7 @@ export function GroceryBudgetReportSheet({
   dailyGroups,
 }: Props) {
   const sheetRef = useRef<BottomSheet>(null);
-  const snapPoints = useMemo(() => ['85%'], []);
+  const snapPoints = useMemo(() => ['50%', '70%', '95%'], []);
   const spentPercent = budget !== null && budget > 0 ? Math.round((spent / budget) * 100) : 0;
 
   const calendarCells = useMemo(

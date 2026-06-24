@@ -1,7 +1,10 @@
 import {
+  GroceryBudgetEditSheet,
+  GroceryBudgetSummaryCard,
   useCreateGroceryMutation,
   useDeleteGroceryMutation,
   useGroceryListQuery,
+  useGrocerySummaryQuery,
   useUpdateGroceryMutation,
   type CreateGroceryBody,
   type GroceryListGroup,
@@ -456,6 +459,7 @@ export function GroceriesListScreen() {
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [fabMenuStep, setFabMenuStep] = useState<FabMenuStep>('mode');
   const [isDirectInputOpen, setIsDirectInputOpen] = useState(false);
+  const [isBudgetEditOpen, setIsBudgetEditOpen] = useState(false);
   const [editItem, setEditItem] = useState<GroceryListItem | null>(null);
   const [actionMenu, setActionMenu] = useState<{
     item: GroceryListItem;
@@ -478,6 +482,7 @@ export function GroceriesListScreen() {
     [selectedMonth.month, selectedMonth.year],
   );
   const listQuery = useGroceryListQuery(query);
+  const summaryQuery = useGrocerySummaryQuery(query);
 
   const handleRetry = () => {
     void listQuery.refetch();
@@ -548,15 +553,27 @@ export function GroceriesListScreen() {
           </Pressable>
         </View>
 
+        <GroceryBudgetSummaryCard
+          summary={summaryQuery.data ?? { budget: null, spent: 0 }}
+          primaryAction={{
+            label: '예산 수정',
+            iconName: 'create-outline',
+            onPress: () => setIsBudgetEditOpen(true),
+          }}
+          isLoading={summaryQuery.isLoading}
+        />
+
         {listQuery.isLoading ? (
-          <View className="gap-4">
+          <View className="mt-4 gap-4">
             <SkeletonCard height={180} />
             <SkeletonCard height={132} />
           </View>
         ) : listQuery.isError ? (
-          <ErrorState onRetry={handleRetry} />
+          <View className="mt-4">
+            <ErrorState onRetry={handleRetry} />
+          </View>
         ) : (
-          <View className="gap-4">
+          <View className="mt-4 gap-4">
             {listQuery.data && listQuery.data.length > 0 ? (
               <View className="gap-3">
                 {listQuery.data.map((group) => (
@@ -663,6 +680,13 @@ export function GroceriesListScreen() {
           setIsDirectInputOpen(false);
           setEditItem(null);
         }}
+      />
+
+      <GroceryBudgetEditSheet
+        isOpen={isBudgetEditOpen}
+        query={query}
+        currentBudget={summaryQuery.data?.budget ?? null}
+        onClose={() => setIsBudgetEditOpen(false)}
       />
 
       <GroceryItemDropdown

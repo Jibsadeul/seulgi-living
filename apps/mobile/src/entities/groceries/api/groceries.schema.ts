@@ -4,6 +4,7 @@ export {
   groceryListItemSchema,
   groceryListQuerySchema,
   groceryListResponseSchema,
+  putGroceryBudgetBodySchema,
   grocerySummaryQuerySchema,
   grocerySummaryResponseSchema,
   type CreateGroceryBody,
@@ -14,5 +15,6 @@ export {
   type GroceryDailyGroupReport,
   type GrocerySummaryQuery,
   type GrocerySummaryResponse,
+  type PutGroceryBudgetBody,
   type UpdateGroceryBody,
 } from '@repo/contract';
