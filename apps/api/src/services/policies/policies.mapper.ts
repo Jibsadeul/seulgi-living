@@ -142,10 +142,16 @@ function buildBasicQualification(raw: YouthPolicyDetailRaw): string | null {
     lines.push(`만 ${raw.sprtTrgtMinAge ?? ''}~${raw.sprtTrgtMaxAge ?? ''}세`);
   }
 
+  // earnMinAmt/earnMaxAmt가 둘 다 0이면 "소득 기준 없음"을 의미하는 것으로 보임 — 그대로 찍으면
+  // "소득 기준: 0~0"처럼 의미 없는 문구가 되므로, 둘 중 하나라도 0보다 큰 값일 때만 노출한다.
+  const minAmt = raw.earnMinAmt != null ? Number(raw.earnMinAmt) : null;
+  const maxAmt = raw.earnMaxAmt != null ? Number(raw.earnMaxAmt) : null;
+  const hasIncomeAmount = (minAmt != null && minAmt > 0) || (maxAmt != null && maxAmt > 0);
+
   if (raw.earnEtcCn) {
     lines.push(raw.earnEtcCn);
-  } else if (raw.earnMinAmt != null || raw.earnMaxAmt != null) {
-    lines.push(`소득 기준: ${raw.earnMinAmt ?? ''}~${raw.earnMaxAmt ?? ''}`);
+  } else if (hasIncomeAmount) {
+    lines.push(`소득 기준: ${minAmt ?? ''}~${maxAmt ?? ''}`);
   }
 
   return lines.length > 0 ? lines.join('\n') : null;

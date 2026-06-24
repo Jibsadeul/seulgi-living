@@ -52,6 +52,18 @@ export const PERIOD_LABEL: Record<'0057001' | '0057002', string> = {
 
 export type FilterSection = 'category' | 'region' | 'supportType' | 'period';
 
+// 상세 화면의 자유 형식 텍스트(지원자격/지원내용 등)를 줄 단위 항목으로 분리한다.
+// 글머리표(○ - • * "1." "2)" 등)는 항목 UI가 대신 보여주므로 제거한다.
+// 숫자만으로는 매칭하지 않음 — "2026년 발급분"처럼 내용에 포함된 숫자를 잘못 지우면 안 됨.
+const LEADING_BULLET_PATTERN = /^(?:[□○●■▶•·∙ㅁㅇ\-*]|\d+[.)])+\s*/;
+
+export function splitToBulletLines(text: string): string[] {
+  return text
+    .split(/[\n\r]/)
+    .map((line) => line.replace(LEADING_BULLET_PATTERN, '').trim())
+    .filter((line) => line.length > 0);
+}
+
 // 정책 신청 마감일을 기기 캘린더에 종일 일정으로 등록한다. "상시" 정책(applyEndDate 없음)은 호출하지 않는다.
 export async function registerPolicyDeadline(
   policy: Pick<PolicyDetail, 'name' | 'applyEndDate' | 'applicationUrl'>,

@@ -20,6 +20,7 @@ export {
   getDeadlineLabel,
   isUrgentDeadline,
   registerPolicyDeadline,
+  splitToBulletLines,
   PERIOD_LABEL,
   type FilterSection,
 } from './model/policies.model';
