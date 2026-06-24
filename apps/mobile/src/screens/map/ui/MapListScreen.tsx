@@ -11,13 +11,16 @@ import {
   useMap,
   useMapStore,
 } from '@/entities/map';
+import { TAB_BAR_BASE_HEIGHT } from '@/shared/ui';
 
 export function MapListScreen() {
   const insets = useSafeAreaInsets();
+  const locationButtonOffset = TAB_BAR_BASE_HEIGHT + insets.bottom + 16;
   const {
     webViewRef,
     onWebViewMessage,
     moveToCurrentLocation,
+    isLocating,
     selectCategory,
     searchKeyword,
     focusMarker,
@@ -54,7 +57,11 @@ export function MapListScreen() {
 
         <MapCategoryFilter selected={selectedCategory} onSelect={selectCategory} />
 
-        <MapLocationButton onPress={moveToCurrentLocation} />
+        <MapLocationButton
+          onPress={moveToCurrentLocation}
+          bottomOffset={locationButtonOffset}
+          isLoading={isLocating}
+        />
       </View>
 
       <MapResultBottomSheet
