@@ -1,8 +1,8 @@
 import {
   useCreateGroceryMutation,
   useDeleteGroceryMutation,
-  useUpdateGroceryMutation,
   useGroceryListQuery,
+  useUpdateGroceryMutation,
   type CreateGroceryBody,
   type GroceryListGroup,
   type GroceryListItem,
@@ -361,9 +361,8 @@ function GroceryDirectInputSheet({
     >
       <BottomSheetView style={{ flex: 1 }}>
         <View className="flex-row items-center justify-between px-4 pb-4">
-          <View style={{ width: 22 }} />
           <Text className="text-base font-bold text-gray-90">
-            {editItem ? '장보기 수정' : '장보기 직접 입력'}
+            {editItem ? '장보기 내역 수정' : '장보기 내역 입력'}
           </Text>
           <Pressable onPress={handleClose} hitSlop={8}>
             <Ionicons name="close" size={22} color="#1D1D1D" />
