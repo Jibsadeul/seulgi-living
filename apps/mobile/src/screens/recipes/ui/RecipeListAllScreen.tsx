@@ -19,6 +19,7 @@ import {
   type RecipePreview,
   type RecipeTag,
   type RecipeCategory,
+  type RecipeSort,
   type CookingMethod,
   type RecipeLevel,
 } from '@/entities/recipes';
@@ -71,7 +72,14 @@ export function RecipeListAllScreen() {
   const [filters, setFilters] = useState<RecipeFilters>(EMPTY_FILTERS);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchText, setSearchText] = useState(initialKeyword ?? '');
+  const [sort, setSort] = useState<RecipeSort>('latest');
   const scrapMutation = useRecipeScrap();
+
+  const SORT_OPTIONS: { value: RecipeSort; label: string }[] = [
+    { value: 'latest', label: '최신순' },
+    { value: 'oldest', label: '오래된순' },
+    { value: 'popular', label: '인기순' },
+  ];
 
   const queryParams = useMemo(() => {
     const params: Record<string, unknown> = {};
@@ -88,8 +96,9 @@ export function RecipeListAllScreen() {
     if (keyword) {
       params.keyword = keyword;
     }
+    params.sort = sort;
     return params;
-  }, [filters, searchText]);
+  }, [filters, searchText, sort]);
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useRecipeListInfinite(queryParams);
@@ -108,6 +117,12 @@ export function RecipeListAllScreen() {
 
   function removeFilter(key: keyof RecipeFilters) {
     setFilters((prev) => ({ ...prev, [key]: '전체' }));
+  }
+
+  function handleSortToggle() {
+    const currentIndex = SORT_OPTIONS.findIndex((o) => o.value === sort);
+    const nextIndex = (currentIndex + 1) % SORT_OPTIONS.length;
+    setSort(SORT_OPTIONS[nextIndex].value);
   }
 
   function handleRecipePress(id: string) {
@@ -248,9 +263,18 @@ export function RecipeListAllScreen() {
                   ))}
             </ScrollView>
 
-            {/* 검색 결과 건수 */}
-            <View className="px-4 mt-2 mb-3">
+            {/* 검색 결과 건수 + 정렬 */}
+            <View className="flex-row items-center justify-between px-4 mt-2 mb-3">
               <Text className="text-xs text-gray-60">검색 결과 {totalCount}건</Text>
+              <Pressable
+                onPress={handleSortToggle}
+                className="flex-row items-center gap-1 px-2 py-1 rounded-full border border-gray-30"
+              >
+                <Ionicons name="swap-vertical" size={12} color="#717171" />
+                <Text className="text-xs text-gray-70">
+                  {SORT_OPTIONS.find((o) => o.value === sort)?.label}
+                </Text>
+              </Pressable>
             </View>
           </>
         }
@@ -279,7 +303,7 @@ export function RecipeListAllScreen() {
       <Pressable
         onPress={handleRecipeUploadPress}
         className="absolute right-4 flex-row items-center gap-1 bg-main-100 rounded-full px-4 py-3"
-        style={{ bottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 16 }}
+        style={{ bottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 4 }}
       >
         <Text className="text-white font-semibold text-sm">+ 레시피 입력</Text>
       </Pressable>

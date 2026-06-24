@@ -27,18 +27,20 @@ export function CookSearchScreen() {
         </Pressable>
         <View
           className="flex-1 flex-row items-center border border-main-100 rounded-full px-4"
-          style={{ height: 41, gap: 8 }}
+          style={{ height: 44, gap: 8 }}
         >
           <Ionicons name="search" size={16} color="#EF7722" />
           <TextInput
             ref={inputRef}
-            className="flex-1 text-sm text-gray-90"
+            className="flex-1 text-gray-90"
             placeholder="재료나 레시피를 입력하세요"
             placeholderTextColor="#C8C4D4"
             value={keyword}
             onChangeText={setKeyword}
             onSubmitEditing={handleSubmit}
             returnKeyType="search"
+            textAlignVertical="center"
+            style={{ fontSize: 12, padding: 0, includeFontPadding: false }}
           />
         </View>
       </View>

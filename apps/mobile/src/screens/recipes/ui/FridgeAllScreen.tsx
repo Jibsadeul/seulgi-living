@@ -20,6 +20,14 @@ import { FridgeCategoryFilter } from './components/FridgeCategoryFilter';
 const TAB_BAR_CONTAINER_HEIGHT = 87;
 const GRID_GAP = 12;
 
+type SortOption = 'registered' | 'newest' | 'oldest';
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'registered', label: '등록순' },
+  { value: 'newest', label: '최신순' },
+  { value: 'oldest', label: '오래된순' },
+];
+
 type MenuState = {
   ingredientId: string;
   position: MenuPosition;
@@ -82,6 +90,8 @@ export function FridgeAllScreen() {
 
   const [searchText, setSearchText] = useState('');
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(0);
+  const [sortOption, setSortOption] = useState<SortOption>('registered');
+  const [isSortOpen, setIsSortOpen] = useState(false);
   const [menu, setMenu] = useState<MenuState>(null);
   const [isFabOpen, setIsFabOpen] = useState(false);
 
@@ -104,8 +114,18 @@ export function FridgeAllScreen() {
       items = items.filter((item) => item.name.toLowerCase().includes(keyword));
     }
 
+    if (sortOption === 'newest') {
+      items = [...items].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    } else if (sortOption === 'oldest') {
+      items = [...items].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+    }
+
     return items;
-  }, [data?.items, selectedCategoryIndex, searchText]);
+  }, [data?.items, selectedCategoryIndex, searchText, sortOption]);
 
   function handleIncrement(id: string, currentQuantity: number) {
     updateQuantity.mutate({ ingredientId: id, quantity: currentQuantity + 1 });
@@ -192,6 +212,8 @@ export function FridgeAllScreen() {
         selectedIndex={selectedCategoryIndex}
         labels={categoryLabels}
         onSelect={setSelectedCategoryIndex}
+        sortLabel={SORT_OPTIONS.find((o) => o.value === sortOption)?.label}
+        onSortPress={() => setIsSortOpen(true)}
       />
 
       {isLoading ? (
@@ -277,6 +299,53 @@ export function FridgeAllScreen() {
           </Pressable>
         </View>
       )}
+
+      <Modal
+        visible={isSortOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsSortOpen(false)}
+      >
+        <Pressable className="flex-1" onPress={() => setIsSortOpen(false)}>
+          <View
+            style={{
+              position: 'absolute',
+              top: 160,
+              left: 16,
+              width: 140,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 12,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.12,
+              shadowRadius: 12,
+              elevation: 8,
+              paddingVertical: 8,
+            }}
+          >
+            {SORT_OPTIONS.map((option) => {
+              const isActive = sortOption === option.value;
+              return (
+                <Pressable
+                  key={option.value}
+                  className="flex-row items-center justify-between px-4 py-3"
+                  onPress={() => {
+                    setSortOption(option.value);
+                    setIsSortOpen(false);
+                  }}
+                >
+                  <Text
+                    className={`text-sm font-medium ${isActive ? 'text-main-100' : 'text-gray-70'}`}
+                  >
+                    {option.label}
+                  </Text>
+                  {isActive && <Ionicons name="checkmark" size={16} color="#EF7722" />}
+                </Pressable>
+              );
+            })}
+          </View>
+        </Pressable>
+      </Modal>
 
       <Modal
         visible={menu !== null}

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header, SearchBar } from '@/shared/ui';
 import { CookTabToggle, type CookMainTab } from './components/CookTabToggle';
@@ -13,8 +13,13 @@ const TAB_BAR_CONTAINER_HEIGHT = 87;
 
 export function CookMainScreen() {
   const router = useRouter();
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<CookMainTab>('recipe');
+
+  useEffect(() => {
+    setActiveTab(tab === 'fridge' ? 'fridge' : 'recipe');
+  }, [tab]);
 
   function handleSearchPress() {
     router.push('/(stack)/cook-search' as never);
@@ -72,7 +77,7 @@ export function CookMainScreen() {
           <Pressable
             onPress={handleRecipeUploadPress}
             className="absolute right-4 flex-row items-center gap-1 bg-main-100 rounded-full px-4 py-3"
-            style={{ bottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 16 }}
+            style={{ bottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 4 }}
           >
             <Text className="text-white font-semibold text-sm">+ 레시피 입력</Text>
           </Pressable>

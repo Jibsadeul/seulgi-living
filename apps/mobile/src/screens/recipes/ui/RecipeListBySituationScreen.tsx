@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { ActivityIndicator, Image, PanResponder, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '@/shared/ui';
@@ -77,6 +77,7 @@ export function RecipeListBySituationScreen() {
 
   const [activeCategory, setActiveCategory] = useState<SituationCategory>(initialCategory);
   const [page, setPage] = useState(1);
+  const [pageInput, setPageInput] = useState(String(page));
   const scrapMutation = useRecipeScrap();
 
   const currentMeta = CATEGORIES.find((c) => c.value === activeCategory)?.meta;
@@ -92,9 +93,25 @@ export function RecipeListBySituationScreen() {
   const totalCount = data?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
+  function goToPage(next: number) {
+    const clamped = Math.max(1, Math.min(next, totalPages));
+    setPage(clamped);
+    setPageInput(String(clamped));
+  }
+
   function handleCategoryChange(category: SituationCategory) {
     setActiveCategory(category);
     setPage(1);
+    setPageInput('1');
+  }
+
+  function handlePageInputSubmit() {
+    const parsed = parseInt(pageInput, 10);
+    if (Number.isNaN(parsed)) {
+      setPageInput(String(page));
+      return;
+    }
+    goToPage(parsed);
   }
 
   function handleToggleScrap(recipeId: string, currentlySaved: boolean) {
@@ -104,6 +121,32 @@ export function RecipeListBySituationScreen() {
   function handleRecipePress(id: string) {
     router.push({ pathname: '/(stack)/recipes/[id]', params: { id } } as never);
   }
+
+  const totalPagesRef = useRef(totalPages);
+  totalPagesRef.current = totalPages;
+
+  const SWIPE_THRESHOLD = 50;
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) =>
+        Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 10,
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx < -SWIPE_THRESHOLD) {
+          setPage((prev) => {
+            const next = Math.min(totalPagesRef.current, prev + 1);
+            setPageInput(String(next));
+            return next;
+          });
+        } else if (gestureState.dx > SWIPE_THRESHOLD) {
+          setPage((prev) => {
+            const next = Math.max(1, prev - 1);
+            setPageInput(String(next));
+            return next;
+          });
+        }
+      },
+    }),
+  ).current;
 
   return (
     <View className="flex-1 bg-surface-default">
@@ -146,16 +189,26 @@ export function RecipeListBySituationScreen() {
         <View className="flex-row items-center justify-between px-4 mt-4 mb-3">
           <Text className="text-xs text-gray-60">검색 결과 {totalCount}건</Text>
           <View className="flex-row items-center gap-2">
-            <Pressable onPress={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
+            <Pressable onPress={() => goToPage(page - 1)} disabled={page <= 1}>
               <Ionicons name="chevron-back" size={14} color={page <= 1 ? '#C6C6C6' : '#717171'} />
             </Pressable>
-            <Text className="text-xs text-gray-70">
-              {page} / {totalPages}
-            </Text>
-            <Pressable
-              onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-            >
+            <View className="flex-row items-center">
+              <View className="rounded px-2 py-0.5 border-b border-main-100">
+                <TextInput
+                  className="text-xs text-gray-90 text-center font-semibold"
+                  style={{ minWidth: 24, padding: 0, includeFontPadding: false }}
+                  keyboardType="number-pad"
+                  returnKeyType="done"
+                  value={pageInput}
+                  onChangeText={setPageInput}
+                  onSubmitEditing={handlePageInputSubmit}
+                  onBlur={handlePageInputSubmit}
+                  selectTextOnFocus
+                />
+              </View>
+              <Text className="text-xs text-gray-70"> / {totalPages}</Text>
+            </View>
+            <Pressable onPress={() => goToPage(page + 1)} disabled={page >= totalPages}>
               <Ionicons
                 name="chevron-forward"
                 size={14}
@@ -176,7 +229,7 @@ export function RecipeListBySituationScreen() {
             <Text className="text-sm text-gray-50 text-center">다른 카테고리를 선택해보세요.</Text>
           </View>
         ) : (
-          <View className="flex-row flex-wrap px-4 gap-3 pb-32">
+          <View className="flex-row flex-wrap px-4 gap-3 pb-32" {...panResponder.panHandlers}>
             {recipes.map((recipe) => {
               const tags = getRecipeTags(recipe.category, recipe.cookingMethod, recipe.level);
               return (
