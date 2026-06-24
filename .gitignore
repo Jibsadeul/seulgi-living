@@ -31,3 +31,5 @@ local/
 
 # playwright-mcp 산출물 (스냅샷/트레이스)
 .playwright-mcp/
+
+graphify-out/
