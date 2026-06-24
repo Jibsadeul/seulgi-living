@@ -11,6 +11,7 @@ export {
   type GroceryListItem,
   type GroceryListQuery,
   type GroceryListResponse,
+  type GroceryDailyGroupReport,
   type GrocerySummaryQuery,
   type GrocerySummaryResponse,
   type UpdateGroceryBody,

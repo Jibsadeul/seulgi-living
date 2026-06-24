@@ -1,7 +1,7 @@
+import { SkeletonCard } from '@/shared/ui/SkeletonCard';
 import { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { SkeletonCard } from '@/shared/ui/SkeletonCard';
 
 export type GroceryBudgetSummary = {
   budget: number | null;
@@ -58,7 +58,7 @@ export function GroceryBudgetSummaryCard({
       }}
     >
       <View className="mb-4 flex-row items-center justify-between">
-        <Text className="text-sm font-bold text-gray-90">가계부 요약</Text>
+        <Text className="text-sm font-bold text-gray-90">이번 달 장보기 요약</Text>
         <Pressable onPress={onMorePress} hitSlop={8}>
           <Text className="text-xs font-semibold text-main-100">더 보기 &gt;</Text>
         </Pressable>
@@ -94,18 +94,18 @@ export function GroceryBudgetSummaryCard({
         </>
       ) : (
         <>
-          <View className="mb-2.5 flex-row items-end justify-between">
+          <View className="mb-2.5 flex-row items-start justify-between">
             <View>
-              <Text className="mb-2 text-xs font-medium text-gray-60">이번 달 예산</Text>
+              <Text className="mb-2 text-xs font-medium text-gray-70">예산</Text>
               {hasBudget ? (
                 <Text className="text-base font-bold text-gray-50">{formatWon(budget)}</Text>
               ) : (
-                <Text className="text-sm font-medium text-gray-40">예산 미설정</Text>
+                <Text className="text-xs font-medium text-gray-40">미설정</Text>
               )}
             </View>
             <View className="items-end">
-              <Text className="mb-0.5 text-[10px] font-medium text-gray-70">사용 금액</Text>
-              <Text className="text-xl font-bold text-main-100">{formatCurrency(spent)}</Text>
+              <Text className="mb-0.5 text-xs font-medium text-gray-70">사용 금액</Text>
+              <Text className="text-lg font-bold text-main-100">{formatCurrency(spent)}</Text>
             </View>
           </View>
 
