@@ -7,10 +7,15 @@ export {
   type GroceryDailyGroup,
 } from './ui/GroceryBudgetReportSheet';
 export { GroceryCard } from './ui/GroceryCard';
-export { useGroceryListQuery, useGrocerySummaryQuery } from './model/useGrocery';
+export {
+  useCreateGroceryMutation,
+  useGroceryListQuery,
+  useGrocerySummaryQuery,
+} from './model/useGrocery';
 export { groceryKeys } from './api/keys';
 
 export type {
+  CreateGroceryBody,
   GroceryListGroup,
   GroceryListItem,
   GroceryListQuery,

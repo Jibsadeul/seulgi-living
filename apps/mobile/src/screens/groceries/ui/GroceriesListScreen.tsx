@@ -1,14 +1,17 @@
 import {
+  useCreateGroceryMutation,
   useGroceryListQuery,
+  type CreateGroceryBody,
   type GroceryListGroup,
   type GroceryListItem,
 } from '@/entities/groceries';
 import { pickImageUri, type ImagePickSource } from '@/shared/lib/image';
-import { Header, SkeletonCard } from '@/shared/ui';
+import { CalendarDatePicker, Header, SkeletonCard } from '@/shared/ui';
 import { Ionicons } from '@expo/vector-icons';
+import BottomSheet, { BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const;
@@ -73,6 +76,25 @@ function moveMonth({ year, month }: MonthState, amount: number): MonthState {
   const next = new Date(year, month - 1 + amount, 1);
 
   return { year: next.getFullYear(), month: next.getMonth() + 1 };
+}
+
+function formatDateInput(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function getDefaultPurchaseDate({ year, month }: MonthState) {
+  const now = new Date();
+  const isCurrentMonth = now.getFullYear() === year && now.getMonth() + 1 === month;
+
+  if (isCurrentMonth) {
+    return formatDateInput(now);
+  }
+
+  return `${year}-${String(month).padStart(2, '0')}-01`;
 }
 
 function formatCurrency(value: number) {
@@ -163,6 +185,175 @@ function EmptyListState() {
   );
 }
 
+function GroceryDirectInputSheet({
+  isOpen,
+  selectedMonth,
+  onClose,
+}: {
+  isOpen: boolean;
+  selectedMonth: MonthState;
+  onClose: () => void;
+}) {
+  const sheetRef = useRef<BottomSheet>(null);
+  const insets = useSafeAreaInsets();
+  const snapPoints = useMemo(() => ['76%'], []);
+  const createGrocery = useCreateGroceryMutation();
+  const [name, setName] = useState('');
+  const [priceText, setPriceText] = useState('');
+  const [purchaseDate, setPurchaseDate] = useState(() => getDefaultPurchaseDate(selectedMonth));
+  const [quantityText, setQuantityText] = useState('');
+
+  const resetForm = () => {
+    setName('');
+    setPriceText('');
+    setPurchaseDate(getDefaultPurchaseDate(selectedMonth));
+    setQuantityText('');
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+      sheetRef.current?.snapToIndex(0);
+    }
+  }, [isOpen, selectedMonth.month, selectedMonth.year]);
+
+  const handleClose = () => {
+    sheetRef.current?.close();
+  };
+
+  const price = priceText.length > 0 ? Number(priceText) : Number.NaN;
+  const trimmedName = name.trim();
+  const trimmedQuantityText = quantityText.trim();
+  const canSave =
+    trimmedName.length > 0 &&
+    trimmedName.length <= 50 &&
+    Number.isInteger(price) &&
+    price >= 0 &&
+    purchaseDate.length > 0 &&
+    (trimmedQuantityText.length === 0 || trimmedQuantityText.length <= 20);
+
+  const handleSave = () => {
+    if (!canSave || createGrocery.isPending) {
+      return;
+    }
+
+    const body: CreateGroceryBody = {
+      name: trimmedName,
+      price,
+      purchaseDate,
+      ...(trimmedQuantityText ? { quantityText: trimmedQuantityText } : {}),
+    };
+
+    createGrocery.mutate(body, {
+      onSuccess: handleClose,
+    });
+  };
+
+  return (
+    <BottomSheet
+      ref={sheetRef}
+      index={-1}
+      snapPoints={snapPoints}
+      enableDynamicSizing={false}
+      enablePanDownToClose
+      onClose={() => {
+        resetForm();
+        onClose();
+      }}
+      backgroundStyle={{
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        backgroundColor: '#FFFFFF',
+      }}
+      handleIndicatorStyle={{ backgroundColor: '#D8D8D8', width: 36 }}
+    >
+      <BottomSheetView style={{ flex: 1 }}>
+        <View className="flex-row items-center justify-between px-4 pb-4">
+          <View style={{ width: 22 }} />
+          <Text className="text-base font-bold text-gray-90">장보기 직접 입력</Text>
+          <Pressable onPress={handleClose} hitSlop={8}>
+            <Ionicons name="close" size={22} color="#1D1D1D" />
+          </Pressable>
+        </View>
+
+        <BottomSheetScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{
+            gap: 18,
+            paddingHorizontal: 16,
+            paddingBottom: 24,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View>
+            <Text className="mb-2 text-sm font-medium text-gray-90">품목명</Text>
+            <TextInput
+              className="rounded-xl bg-gray-5 px-4 text-sm text-gray-90"
+              style={{ height: 52 }}
+              placeholder="예: 삼겹살"
+              placeholderTextColor="#C8C4D4"
+              maxLength={50}
+              value={name}
+              onChangeText={setName}
+            />
+          </View>
+
+          <View>
+            <Text className="mb-2 text-sm font-medium text-gray-90">가격</Text>
+            <TextInput
+              className="rounded-xl bg-gray-5 px-4 text-sm text-gray-90"
+              style={{ height: 52 }}
+              placeholder="예: 14800"
+              placeholderTextColor="#C8C4D4"
+              keyboardType="number-pad"
+              value={priceText}
+              onChangeText={(value) => setPriceText(value.replace(/[^0-9]/g, ''))}
+            />
+          </View>
+
+          <View>
+            <Text className="mb-2 text-sm font-medium text-gray-90">구매일</Text>
+            <CalendarDatePicker value={purchaseDate} onChange={setPurchaseDate} />
+          </View>
+
+          <View>
+            <Text className="mb-2 text-sm font-medium text-gray-90">수량</Text>
+            <TextInput
+              className="rounded-xl bg-gray-5 px-4 text-sm text-gray-90"
+              style={{ height: 52 }}
+              placeholder="예: 400g"
+              placeholderTextColor="#C8C4D4"
+              maxLength={20}
+              value={quantityText}
+              onChangeText={setQuantityText}
+            />
+          </View>
+        </BottomSheetScrollView>
+
+        <View
+          className="flex-row px-4 pt-3"
+          style={{
+            gap: 12,
+            paddingBottom: Math.max(insets.bottom, 24) + 16,
+          }}
+        >
+          <Pressable
+            className={`h-12 flex-[2] items-center justify-center rounded-xl ${
+              canSave && !createGrocery.isPending ? 'bg-main-100' : 'bg-gray-30'
+            }`}
+            disabled={!canSave || createGrocery.isPending}
+            onPress={handleSave}
+          >
+            <Text className="text-sm font-bold text-white">
+              {createGrocery.isPending ? '저장 중' : '저장하기'}
+            </Text>
+          </Pressable>
+        </View>
+      </BottomSheetView>
+    </BottomSheet>
+  );
+}
+
 export function GroceriesListScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -171,6 +362,7 @@ export function GroceriesListScreen() {
   const [selectedMonth, setSelectedMonth] = useState<MonthState>(() => getCurrentMonth());
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [fabMenuStep, setFabMenuStep] = useState<FabMenuStep>('mode');
+  const [isDirectInputOpen, setIsDirectInputOpen] = useState(false);
   const query = useMemo(
     () => ({ year: selectedMonth.year, month: selectedMonth.month }),
     [selectedMonth.month, selectedMonth.year],
@@ -211,6 +403,7 @@ export function GroceriesListScreen() {
 
   const handleDirectInput = () => {
     closeFabMenu();
+    setIsDirectInputOpen(true);
   };
 
   return (
@@ -347,6 +540,12 @@ export function GroceriesListScreen() {
         />
         {!isFabOpen && <Text className="text-[10px] font-semibold text-white">추가</Text>}
       </Pressable>
+
+      <GroceryDirectInputSheet
+        isOpen={isDirectInputOpen}
+        selectedMonth={selectedMonth}
+        onClose={() => setIsDirectInputOpen(false)}
+      />
     </View>
   );
 }
