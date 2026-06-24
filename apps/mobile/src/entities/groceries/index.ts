@@ -10,6 +10,7 @@ export { GroceryCard } from './ui/GroceryCard';
 export {
   useCreateGroceryMutation,
   useDeleteGroceryMutation,
+  useUpdateGroceryMutation,
   useGroceryListQuery,
   useGrocerySummaryQuery,
 } from './model/useGrocery';
@@ -23,4 +24,5 @@ export type {
   GroceryListResponse,
   GrocerySummaryQuery,
   GrocerySummaryResponse,
+  UpdateGroceryBody,
 } from './api/groceries.schema';

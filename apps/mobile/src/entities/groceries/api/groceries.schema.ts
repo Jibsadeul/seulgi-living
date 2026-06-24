@@ -13,4 +13,5 @@ export {
   type GroceryListResponse,
   type GrocerySummaryQuery,
   type GrocerySummaryResponse,
+  type UpdateGroceryBody,
 } from '@repo/contract';

@@ -1,10 +1,12 @@
 import {
   useCreateGroceryMutation,
   useDeleteGroceryMutation,
+  useUpdateGroceryMutation,
   useGroceryListQuery,
   type CreateGroceryBody,
   type GroceryListGroup,
   type GroceryListItem,
+  type UpdateGroceryBody,
 } from '@/entities/groceries';
 import { pickImageUri, type ImagePickSource } from '@/shared/lib/image';
 import { CalendarDatePicker, Header, SkeletonCard } from '@/shared/ui';
@@ -226,11 +228,13 @@ function GroceryItemDropdown({
   item,
   position,
   onClose,
+  onEdit,
   onDelete,
 }: {
   item: GroceryListItem | null;
   position: DropdownPosition | null;
   onClose: () => void;
+  onEdit: (item: GroceryListItem) => void;
   onDelete: (id: string) => void;
 }) {
   if (!item || !position) return null;
@@ -251,7 +255,7 @@ function GroceryItemDropdown({
           elevation: 6,
         }}
       >
-        <Pressable className="px-5 py-3" onPress={onClose}>
+        <Pressable className="px-5 py-3" onPress={() => onEdit(item)}>
           <Text className="text-sm font-medium text-gray-90">수정</Text>
         </Pressable>
         <View className="border-b border-gray-10" />
@@ -266,16 +270,19 @@ function GroceryItemDropdown({
 function GroceryDirectInputSheet({
   isOpen,
   selectedMonth,
+  editItem,
   onClose,
 }: {
   isOpen: boolean;
   selectedMonth: MonthState;
+  editItem?: GroceryListItem;
   onClose: () => void;
 }) {
   const sheetRef = useRef<BottomSheet>(null);
   const insets = useSafeAreaInsets();
   const snapPoints = useMemo(() => ['76%'], []);
   const createGrocery = useCreateGroceryMutation();
+  const updateGrocery = useUpdateGroceryMutation();
   const [name, setName] = useState('');
   const [priceText, setPriceText] = useState('');
   const [purchaseDate, setPurchaseDate] = useState(() => getDefaultPurchaseDate(selectedMonth));
@@ -289,11 +296,17 @@ function GroceryDirectInputSheet({
   };
 
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return;
+    if (editItem) {
+      setName(editItem.name);
+      setPriceText(String(editItem.price));
+      setPurchaseDate(editItem.purchaseDate);
+      setQuantityText(editItem.quantityText ?? '');
+    } else {
       resetForm();
-      sheetRef.current?.snapToIndex(0);
     }
-  }, [isOpen, selectedMonth.month, selectedMonth.year]);
+    sheetRef.current?.snapToIndex(0);
+  }, [isOpen, selectedMonth.month, selectedMonth.year, editItem?.id]);
 
   const handleClose = () => {
     sheetRef.current?.close();
@@ -309,22 +322,23 @@ function GroceryDirectInputSheet({
     price >= 0 &&
     purchaseDate.length > 0 &&
     (trimmedQuantityText.length === 0 || trimmedQuantityText.length <= 20);
+  const isPending = createGrocery.isPending || updateGrocery.isPending;
 
   const handleSave = () => {
-    if (!canSave || createGrocery.isPending) {
-      return;
-    }
+    if (!canSave || isPending) return;
 
-    const body: CreateGroceryBody = {
+    const body: CreateGroceryBody & UpdateGroceryBody = {
       name: trimmedName,
       price,
       purchaseDate,
       ...(trimmedQuantityText ? { quantityText: trimmedQuantityText } : {}),
     };
 
-    createGrocery.mutate(body, {
-      onSuccess: handleClose,
-    });
+    if (editItem) {
+      updateGrocery.mutate({ id: editItem.id, body }, { onSuccess: handleClose });
+    } else {
+      createGrocery.mutate(body, { onSuccess: handleClose });
+    }
   };
 
   return (
@@ -348,7 +362,9 @@ function GroceryDirectInputSheet({
       <BottomSheetView style={{ flex: 1 }}>
         <View className="flex-row items-center justify-between px-4 pb-4">
           <View style={{ width: 22 }} />
-          <Text className="text-base font-bold text-gray-90">장보기 직접 입력</Text>
+          <Text className="text-base font-bold text-gray-90">
+            {editItem ? '장보기 수정' : '장보기 직접 입력'}
+          </Text>
           <Pressable onPress={handleClose} hitSlop={8}>
             <Ionicons name="close" size={22} color="#1D1D1D" />
           </Pressable>
@@ -417,13 +433,13 @@ function GroceryDirectInputSheet({
         >
           <Pressable
             className={`h-12 flex-[2] items-center justify-center rounded-xl ${
-              canSave && !createGrocery.isPending ? 'bg-main-100' : 'bg-gray-30'
+              canSave && !isPending ? 'bg-main-100' : 'bg-gray-30'
             }`}
-            disabled={!canSave || createGrocery.isPending}
+            disabled={!canSave || isPending}
             onPress={handleSave}
           >
             <Text className="text-sm font-bold text-white">
-              {createGrocery.isPending ? '저장 중' : '저장하기'}
+              {isPending ? '저장 중' : editItem ? '수정하기' : '저장하기'}
             </Text>
           </Pressable>
         </View>
@@ -441,6 +457,7 @@ export function GroceriesListScreen() {
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [fabMenuStep, setFabMenuStep] = useState<FabMenuStep>('mode');
   const [isDirectInputOpen, setIsDirectInputOpen] = useState(false);
+  const [editItem, setEditItem] = useState<GroceryListItem | null>(null);
   const [actionMenu, setActionMenu] = useState<{
     item: GroceryListItem;
     position: DropdownPosition;
@@ -450,6 +467,12 @@ export function GroceriesListScreen() {
   const handleDelete = (id: string) => {
     setActionMenu(null);
     deleteGrocery.mutate(id);
+  };
+
+  const handleEdit = (item: GroceryListItem) => {
+    setActionMenu(null);
+    setEditItem(item);
+    setIsDirectInputOpen(true);
   };
   const query = useMemo(
     () => ({ year: selectedMonth.year, month: selectedMonth.month }),
@@ -636,13 +659,18 @@ export function GroceriesListScreen() {
       <GroceryDirectInputSheet
         isOpen={isDirectInputOpen}
         selectedMonth={selectedMonth}
-        onClose={() => setIsDirectInputOpen(false)}
+        editItem={editItem ?? undefined}
+        onClose={() => {
+          setIsDirectInputOpen(false);
+          setEditItem(null);
+        }}
       />
 
       <GroceryItemDropdown
         item={actionMenu?.item ?? null}
         position={actionMenu?.position ?? null}
         onClose={() => setActionMenu(null)}
+        onEdit={handleEdit}
         onDelete={handleDelete}
       />
     </View>
