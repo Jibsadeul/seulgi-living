@@ -3,7 +3,12 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { Policy } from '@repo/contract';
 import { usePolicyScrap } from '../model/usePolicy';
-import { getAgeLabel, getDeadlineLabel, isUrgentDeadline } from '../model/policies.model';
+import {
+  formatPeriod,
+  getAgeLabel,
+  getDeadlineLabel,
+  isUrgentDeadline,
+} from '../model/policies.model';
 import ScrapIcon from '@assets/icons/scrap.svg';
 import ScrappedIcon from '@assets/icons/scrapped.svg';
 
@@ -102,11 +107,16 @@ export function PolicySearchResultCard({ policy }: Props) {
       </View>
 
       {/* 정책명 */}
+      <Text style={{ fontSize: 13, fontWeight: '500', color: '#0B1C30' }} numberOfLines={1}>
+        {policy.name}
+      </Text>
+
+      {/* 신청기한 */}
       <Text
-        style={{ fontSize: 13, fontWeight: '500', color: '#0B1C30', marginBottom: 8 }}
+        style={{ fontSize: 10, color: '#868686', marginTop: 4, marginBottom: 8 }}
         numberOfLines={1}
       >
-        {policy.name}
+        신청기한 {formatPeriod(policy)}
       </Text>
 
       {/* 보조 정보 */}

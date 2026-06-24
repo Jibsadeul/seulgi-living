@@ -13,7 +13,7 @@ export function PolicyBannerCard({ banner, nickname }: Props) {
   const router = useRouter();
   const copy =
     banner.conditionType === 'scrap'
-      ? `${nickname ?? ''}님이 스크랩해 둔 정책이에요.\n지금 신청하세요.`
+      ? `${nickname ?? ''}님이 스크랩한 정책\n지금 신청하세요.`
       : `놓치면 올해 끝! 마감이 ${banner.daysLeft}일 남았어요.`;
 
   function handleOpen() {
