@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Dimensions, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const;
@@ -25,6 +25,11 @@ type MonthState = {
 };
 
 type FabMenuStep = 'mode' | 'source';
+
+type DropdownPosition = {
+  top: number;
+  right: number;
+};
 
 function FabActionButton({
   label,
@@ -109,7 +114,24 @@ function formatDateLabel(dateText: string) {
   return `${year}. ${String(month).padStart(2, '0')}. ${String(day).padStart(2, '0')} (${weekday})`;
 }
 
-function GroceryItemRow({ item, isLast }: { item: GroceryListItem; isLast: boolean }) {
+function GroceryItemRow({
+  item,
+  isLast,
+  onOptionPress,
+}: {
+  item: GroceryListItem;
+  isLast: boolean;
+  onOptionPress: (position: DropdownPosition) => void;
+}) {
+  const buttonRef = useRef<View>(null);
+
+  const handleOptionPress = () => {
+    buttonRef.current?.measure((_x, _y, width, height, pageX, pageY) => {
+      const screenWidth = Dimensions.get('window').width;
+      onOptionPress({ top: pageY + height + 4, right: screenWidth - pageX - width });
+    });
+  };
+
   return (
     <View
       className={`flex-row items-center justify-between py-3 ${isLast ? '' : 'border-b border-gray-10'}`}
@@ -126,19 +148,28 @@ function GroceryItemRow({ item, isLast }: { item: GroceryListItem; isLast: boole
       </View>
       <View className="flex-row items-center">
         <Text className="text-sm font-semibold text-gray-90">{formatCurrency(item.price)}</Text>
-        <Pressable
-          accessibilityLabel={`${item.name} 옵션 열기`}
-          className="-mr-1 ml-2 h-8 items-center justify-center"
-          hitSlop={{ top: 8, bottom: 8, left: 12, right: 12 }}
-        >
-          <Ionicons name="ellipsis-vertical" size={14} color="#8E8E8E" />
-        </Pressable>
+        <View ref={buttonRef} className="-mr-1 ml-2">
+          <Pressable
+            accessibilityLabel={`${item.name} 옵션 열기`}
+            className="h-8 items-center justify-center px-1"
+            hitSlop={{ top: 8, bottom: 8, left: 12, right: 12 }}
+            onPress={handleOptionPress}
+          >
+            <Ionicons name="ellipsis-vertical" size={14} color="#8E8E8E" />
+          </Pressable>
+        </View>
       </View>
     </View>
   );
 }
 
-function GroceryDateGroupCard({ group }: { group: GroceryListGroup }) {
+function GroceryDateGroupCard({
+  group,
+  onOptionPress,
+}: {
+  group: GroceryListGroup;
+  onOptionPress: (item: GroceryListItem, position: DropdownPosition) => void;
+}) {
   return (
     <View className="rounded-2xl border border-gray-20 bg-surface-default p-4">
       <View className="mb-1 flex-row items-center justify-between">
@@ -148,7 +179,12 @@ function GroceryDateGroupCard({ group }: { group: GroceryListGroup }) {
         </Text>
       </View>
       {group.items.map((item, index) => (
-        <GroceryItemRow key={item.id} item={item} isLast={index === group.items.length - 1} />
+        <GroceryItemRow
+          key={item.id}
+          item={item}
+          isLast={index === group.items.length - 1}
+          onOptionPress={(position) => onOptionPress(item, position)}
+        />
       ))}
     </View>
   );
@@ -182,6 +218,45 @@ function EmptyListState() {
         영수증을 저장하거나 장보기 내역을 추가하면 이곳에서 확인할 수 있어요.
       </Text>
     </View>
+  );
+}
+
+function GroceryItemDropdown({
+  item,
+  position,
+  onClose,
+}: {
+  item: GroceryListItem | null;
+  position: DropdownPosition | null;
+  onClose: () => void;
+}) {
+  if (!item || !position) return null;
+
+  return (
+    <>
+      <Pressable className="absolute inset-0" onPress={onClose} />
+      <View
+        className="absolute overflow-hidden rounded-xl bg-surface-default"
+        style={{
+          top: position.top,
+          right: position.right,
+          minWidth: 110,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.12,
+          shadowRadius: 8,
+          elevation: 6,
+        }}
+      >
+        <Pressable className="px-5 py-3" onPress={onClose}>
+          <Text className="text-sm font-medium text-gray-90">수정</Text>
+        </Pressable>
+        <View className="border-b border-gray-10" />
+        <Pressable className="px-5 py-3" onPress={onClose}>
+          <Text className="text-sm font-medium text-point-100">삭제</Text>
+        </Pressable>
+      </View>
+    </>
   );
 }
 
@@ -363,6 +438,10 @@ export function GroceriesListScreen() {
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [fabMenuStep, setFabMenuStep] = useState<FabMenuStep>('mode');
   const [isDirectInputOpen, setIsDirectInputOpen] = useState(false);
+  const [actionMenu, setActionMenu] = useState<{
+    item: GroceryListItem;
+    position: DropdownPosition;
+  } | null>(null);
   const query = useMemo(
     () => ({ year: selectedMonth.year, month: selectedMonth.month }),
     [selectedMonth.month, selectedMonth.year],
@@ -450,7 +529,11 @@ export function GroceriesListScreen() {
             {listQuery.data && listQuery.data.length > 0 ? (
               <View className="gap-3">
                 {listQuery.data.map((group) => (
-                  <GroceryDateGroupCard key={group.date} group={group} />
+                  <GroceryDateGroupCard
+                    key={group.date}
+                    group={group}
+                    onOptionPress={(item, position) => setActionMenu({ item, position })}
+                  />
                 ))}
               </View>
             ) : (
@@ -545,6 +628,12 @@ export function GroceriesListScreen() {
         isOpen={isDirectInputOpen}
         selectedMonth={selectedMonth}
         onClose={() => setIsDirectInputOpen(false)}
+      />
+
+      <GroceryItemDropdown
+        item={actionMenu?.item ?? null}
+        position={actionMenu?.position ?? null}
+        onClose={() => setActionMenu(null)}
       />
     </View>
   );
