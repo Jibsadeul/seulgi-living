@@ -37,24 +37,44 @@ function BulletListCard({
         gap: 10,
       }}
     >
-      {lines.map((line, index) => (
-        <View key={`${index}-${line}`} className="flex-row items-start" style={{ gap: 10 }}>
-          {icon ? (
-            <Ionicons name={icon} size={18} color={iconColor} />
-          ) : (
-            <View
-              style={{
-                width: 5,
-                height: 5,
-                borderRadius: 3,
-                backgroundColor: iconColor,
-                marginTop: 7,
-              }}
-            />
-          )}
-          <Text style={{ flex: 1, fontSize: 13, fontWeight: '500', color: '#434655' }}>{line}</Text>
-        </View>
-      ))}
+      {lines.map(({ text: line, depth }, index) => {
+        // depth 2(* ※ 비고)는 글머리 점 없이 작은 보조 텍스트로 보여준다.
+        if (depth === 2) {
+          return (
+            <Text
+              key={`${index}-${line}`}
+              style={{ marginLeft: 14, fontSize: 12, color: '#8F9098' }}
+            >
+              {line}
+            </Text>
+          );
+        }
+
+        return (
+          <View
+            key={`${index}-${line}`}
+            className="flex-row items-start"
+            style={{ gap: 10, marginLeft: depth === 1 ? 14 : 0 }}
+          >
+            {icon && depth === 0 ? (
+              <Ionicons name={icon} size={18} color={iconColor} />
+            ) : (
+              <View
+                style={{
+                  width: depth === 1 ? 4 : 5,
+                  height: depth === 1 ? 4 : 5,
+                  borderRadius: 3,
+                  backgroundColor: iconColor,
+                  marginTop: 7,
+                }}
+              />
+            )}
+            <Text style={{ flex: 1, fontSize: 13, fontWeight: '500', color: '#434655' }}>
+              {line}
+            </Text>
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -72,7 +92,7 @@ export function PolicyDetailEligibilityTab({ policy }: Props) {
         <View style={{ gap: 5 }}>
           <Text style={{ fontSize: 13, fontWeight: '500', color: '#0B1C30' }}>기본 자격 요건</Text>
           <View style={{ gap: 8 }}>
-            {basicQualificationLines.map((line, index) => (
+            {basicQualificationLines.map(({ text: line }, index) => (
               <View
                 key={`${index}-${line}`}
                 className="flex-row items-start"

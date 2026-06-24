@@ -28,20 +28,40 @@ function BulletListCard({ text, borderColor = '#E3E3E3', dotColor }: BulletListC
         gap: 10,
       }}
     >
-      {lines.map((line, index) => (
-        <View key={`${index}-${line}`} className="flex-row items-start" style={{ gap: 10 }}>
+      {lines.map(({ text: line, depth }, index) => {
+        // depth 2(* ※ 비고)는 글머리 점 없이 작은 보조 텍스트로 보여준다.
+        if (depth === 2) {
+          return (
+            <Text
+              key={`${index}-${line}`}
+              style={{ marginLeft: 14, fontSize: 12, color: '#8F9098' }}
+            >
+              {line}
+            </Text>
+          );
+        }
+
+        return (
           <View
-            style={{
-              width: 5,
-              height: 5,
-              borderRadius: 3,
-              backgroundColor: dotColor,
-              marginTop: 7,
-            }}
-          />
-          <Text style={{ flex: 1, fontSize: 13, fontWeight: '500', color: '#434655' }}>{line}</Text>
-        </View>
-      ))}
+            key={`${index}-${line}`}
+            className="flex-row items-start"
+            style={{ gap: 10, marginLeft: depth === 1 ? 14 : 0 }}
+          >
+            <View
+              style={{
+                width: depth === 1 ? 4 : 5,
+                height: depth === 1 ? 4 : 5,
+                borderRadius: 3,
+                backgroundColor: dotColor,
+                marginTop: 7,
+              }}
+            />
+            <Text style={{ flex: 1, fontSize: 13, fontWeight: '500', color: '#434655' }}>
+              {line}
+            </Text>
+          </View>
+        );
+      })}
     </View>
   );
 }

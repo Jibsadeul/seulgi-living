@@ -78,6 +78,19 @@
 - 매칭되지 않으면 `agencyName`/`agencyUrl` 없이 텍스트만 노출한다.
 - 응답 형태: `requiredDocuments: { name: string; agencyName?: string; agencyUrl?: string }[]`
 
+### 자유 형식 텍스트 줄 단위 표시 (지원자격/지원내용/신청방법 탭, POLICY-039)
+
+`basicQualification`/`detailQualification`/`exclusionTarget`/`content`/`notice`/`applyMethod`/`screeningMethod`는 모두 외부 API 원문(자유 형식 텍스트)이라, 한 문단으로 그대로 보여주면 글머리표/줄바꿈이 뭉쳐서 읽기 어렵다. LLM 없이 모바일 클라이언트에서 규칙 기반으로 정리한다 (`entities/policies`의 `splitToBulletLines`).
+
+- 원문을 줄바꿈(`\n`/`\r`) 기준으로 나눠 각 줄을 별도 행(카드 내 bullet row)으로 표시한다.
+- 글머리표 종류로 들여쓰기 단계(depth)를 구분한다:
+  - depth 0(가장 큰 항목): `□○●■▶`, `"1."`/`"2)"` 숫자, `①~⑳`/`㉑~㉟` 같은 동그라미 숫자(유니코드 U+2460~2473, U+3251~325F)
+  - depth 1(하위 항목): `- • · ∙ ◦ ㅁ ㅇ`
+  - depth 2(비고/주석): `* ※` — 글머리 점 없이 작은 보조 텍스트(`#8F9098`, 12px)로 표시
+- 글머리표는 위 패턴에 매칭될 때만 제거한다. 숫자만으로는 매칭하지 않음 — "2026년 발급분"처럼 본문에 포함된 숫자를 잘못 지우면 안 된다.
+- "기본 자격 요건"(`basicQualification`)은 나이/소득기준처럼 짧고 독립된 조건이 줄바꿈으로 합쳐진 값이라, 한 카드 안에 행으로 나열하지 않고 **조건마다 별도 카드**로 분리해서 보여준다.
+- `earnMinAmt`/`earnMaxAmt`가 둘 다 0이면 "소득 기준 없음"으로 보고 소득 줄 자체를 생략한다(API `buildBasicQualification` 처리, "소득 기준: 0~0"처럼 의미 없는 문구 방지).
+
 ### 모바일
 
 - `entities/policies`에 `usePolicyDetail(id)` 신규 쿼리 훅 추가 (`policyKeys.detail(id)`, `enabled: id.length > 0`)
