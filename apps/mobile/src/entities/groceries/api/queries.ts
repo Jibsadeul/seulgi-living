@@ -34,8 +34,6 @@ export function useGroceryListQuery(query: GroceryListQuery) {
   return useQuery<GroceryListResponse>({
     queryKey: groceryKeys.list(query),
     queryFn: () =>
-      apiRequest(`/api/groceries?${buildGrocerySearchParams(query)}`, groceryListResponseSchema, {
-        skipAuth: true,
-      }),
+      apiRequest(`/api/groceries?${buildGrocerySearchParams(query)}`, groceryListResponseSchema),
   });
 }

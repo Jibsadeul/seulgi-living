@@ -33,7 +33,6 @@ export function useUpdateGroceryMutation() {
       apiRequest(`/api/groceries/${id}`, noContentSchema, {
         method: 'PUT',
         body,
-        skipAuth: true,
       }),
 
     onSuccess: () => {
@@ -55,7 +54,6 @@ export function useCreateGroceryMutation() {
       apiRequest('/api/groceries', noContentSchema, {
         method: 'POST',
         body,
-        skipAuth: true,
       }),
 
     onSuccess: () => {
