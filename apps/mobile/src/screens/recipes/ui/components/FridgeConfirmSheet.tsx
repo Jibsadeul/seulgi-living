@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetFooter, BottomSheetView } from '@gorhom/bottom-sheet';
+import type { BottomSheetFooterProps } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import {
   useAddFridgeIngredient,
@@ -54,6 +55,35 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
     setConfirmItems((prev) => prev.filter((item) => item.id !== id));
   }
 
+  const renderFooter = useCallback(
+    (props: BottomSheetFooterProps) => (
+      <BottomSheetFooter {...props} bottomInset={0}>
+        <View className="flex-row px-4 pb-8 pt-3 bg-white" style={{ gap: 10 }}>
+          <Pressable
+            onPress={() => setConfirmItems([])}
+            className="items-center justify-center rounded-2xl bg-gray-10"
+            style={{ width: 100, paddingVertical: 16 }}
+          >
+            <Text className="text-sm font-semibold text-gray-70">전체삭제</Text>
+          </Pressable>
+          <Pressable
+            className={`flex-1 items-center justify-center rounded-2xl ${
+              confirmItems.length > 0 && !isSubmitting ? 'bg-main-100' : 'bg-gray-30'
+            }`}
+            style={{ paddingVertical: 16 }}
+            disabled={confirmItems.length === 0 || isSubmitting}
+            onPress={handleConfirm}
+          >
+            <Text className="text-base font-bold text-white">
+              {isSubmitting ? '추가 중...' : `${confirmItems.length}개 재료 추가하기`}
+            </Text>
+          </Pressable>
+        </View>
+      </BottomSheetFooter>
+    ),
+    [confirmItems, isSubmitting],
+  );
+
   async function handleConfirm() {
     if (confirmItems.length === 0 || isSubmitting) return;
     setIsSubmitting(true);
@@ -102,6 +132,7 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
         backgroundColor: '#FFFFFF',
       }}
       handleIndicatorStyle={{ backgroundColor: '#D8D8D8', width: 36 }}
+      footerComponent={renderFooter}
     >
       <BottomSheetView style={{ flex: 1 }}>
         <View className="flex-row items-center justify-between px-4 pb-3">
@@ -118,7 +149,7 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
         <ScrollView
           className="flex-1 px-4"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 16 }}
+          contentContainerStyle={{ paddingBottom: 90 }}
         >
           {confirmItems.map((item) => {
             const Icon = getFoodIcon(item.imageKey);
@@ -171,30 +202,6 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
           })}
         </ScrollView>
 
-        <View
-          className="flex-row px-4 pb-8 pt-3 bg-white"
-          style={{ gap: 10 }}
-        >
-          <Pressable
-            onPress={() => setConfirmItems([])}
-            className="items-center justify-center rounded-2xl bg-gray-10"
-            style={{ width: 100, paddingVertical: 16 }}
-          >
-            <Text className="text-sm font-semibold text-gray-70">전체삭제</Text>
-          </Pressable>
-          <Pressable
-            className={`flex-1 items-center justify-center rounded-2xl ${
-              confirmItems.length > 0 && !isSubmitting ? 'bg-main-100' : 'bg-gray-30'
-            }`}
-            style={{ paddingVertical: 16 }}
-            disabled={confirmItems.length === 0 || isSubmitting}
-            onPress={handleConfirm}
-          >
-            <Text className="text-base font-bold text-white">
-              {isSubmitting ? '추가 중...' : `${confirmItems.length}개 재료 추가하기`}
-            </Text>
-          </Pressable>
-        </View>
       </BottomSheetView>
     </BottomSheet>
   );
