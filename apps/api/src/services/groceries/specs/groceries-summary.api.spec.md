@@ -23,15 +23,23 @@
 
 ### 응답 바디
 
-| 필드   | 타입           | 설명                                    |
-| ------ | -------------- | --------------------------------------- |
-| budget | number \| null | 해당 월 예산. 설정하지 않은 경우 `null` |
-| spent  | number         | 해당 월 지출 합계. 내역 없으면 `0`      |
+| 필드        | 타입                                     | 설명                                                         |
+| ----------- | ---------------------------------------- | ------------------------------------------------------------ |
+| budget      | number \| null                           | 해당 월 예산. 설정하지 않은 경우 `null`                      |
+| spent       | number                                   | 해당 월 지출 합계. 내역 없으면 `0`                           |
+| dailyGroups | `{ date: string, dailyTotal: number }[]` | 날짜별 지출 그룹. `date`는 `YYYY-MM-DD`. 지출 없는 날은 제외 |
 
 ### 응답 예시
 
 ```json
-{ "budget": 100000, "spent": 30000 }
+{
+  "budget": 100000,
+  "spent": 30000,
+  "dailyGroups": [
+    { "date": "2026-06-01", "dailyTotal": 12000 },
+    { "date": "2026-06-03", "dailyTotal": 18000 }
+  ]
+}
 ```
 
 ### 규칙
@@ -41,12 +49,13 @@
 - query의 `month`가 없거나 1 미만이거나 12 초과이면 `400` 반환
 - `budget`은 `grocery_budgets`에서 `(user_id, year, month)` 기준으로 조회. 없으면 `null`
 - `spent`는 `grocery_purchase_items`에서 `user_id`와 `purchased_at`이 해당 연월인 항목의 `price` 합계. 내역 없으면 `0`
+- `dailyGroups`는 해당 연월 구매 내역을 날짜별로 그룹핑한 결과. 구매 내역이 없는 날은 포함하지 않는다. `date`는 `YYYY-MM-DD` 형식. 날짜 오름차순 정렬
 - 모든 요청 검증은 `packages/contract`의 Zod 스키마로 처리한다
 
 ### 검증 기준
 
-- 유효한 요청 시 `budget`과 `spent`를 담은 `200` 응답을 반환한다
+- 유효한 요청 시 `budget`, `spent`, `dailyGroups`를 담은 `200` 응답을 반환한다
 - 해당 월 예산이 없으면 `budget`은 `null`을 반환한다
-- 해당 월 구매 내역이 없으면 `spent`는 `0`을 반환한다
+- 해당 월 구매 내역이 없으면 `spent`는 `0`, `dailyGroups`는 `[]`를 반환한다
 - `month`가 13이면 `400`을 반환한다
 - 인증 실패 시 `401`을 반환한다

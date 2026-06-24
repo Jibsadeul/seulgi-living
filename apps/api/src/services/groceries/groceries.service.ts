@@ -27,7 +27,7 @@ export async function getGrocerySummary(memberId: string, year: number, month: n
   const start = new Date(year, month - 1, 1);
   const end = new Date(year, month, 1);
 
-  const [budgetRecord, spentResult] = await Promise.all([
+  const [budgetRecord, spentResult, items] = await Promise.all([
     prisma.groceryBudget.findUnique({
       where: { userId_year_month: { userId: memberId, year, month } },
       select: { budget: true },
@@ -36,11 +36,25 @@ export async function getGrocerySummary(memberId: string, year: number, month: n
       where: { userId: memberId, purchasedAt: { gte: start, lt: end } },
       _sum: { price: true },
     }),
+    prisma.groceryPurchaseItem.findMany({
+      where: { userId: memberId, purchasedAt: { gte: start, lt: end } },
+      orderBy: [{ purchasedAt: 'asc' }],
+      select: { purchasedAt: true, price: true },
+    }),
   ]);
+
+  const groups = new Map<string, { date: string; dailyTotal: number }>();
+  for (const item of items) {
+    const date = item.purchasedAt.toISOString().slice(0, 10);
+    const group = groups.get(date) ?? { date, dailyTotal: 0 };
+    group.dailyTotal += item.price;
+    groups.set(date, group);
+  }
 
   return grocerySummaryResponseSchema.parse({
     budget: budgetRecord?.budget ?? null,
     spent: spentResult._sum.price ?? 0,
+    dailyGroups: [...groups.values()],
   });
 }
 
