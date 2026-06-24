@@ -49,7 +49,7 @@ export function CameraAnalysisEditScreen() {
       <Header title="AI 분석 결과" variant="back" />
       <ScrollView
         contentContainerClassName="px-5 pt-4"
-        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 24) + 16 }}
       >
         <CameraAnalysisForm
           analysis={analysisResult ?? MOCK_ANALYSIS}
