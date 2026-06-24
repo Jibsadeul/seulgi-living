@@ -1,76 +1,61 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header, SkeletonCard } from '@/shared/ui';
 import { useFridgeIngredients, getFoodIcon, type FridgeIngredient } from '@/entities/fridge';
+import { useRecipeList } from '@/entities/recipes';
 import { RescueIngredientChip } from './components/RescueIngredientChip';
 import { RescueFridgeDetailSheet } from './components/RescueFridgeDetailSheet';
+import { useRescueStore } from '../model/rescue.store';
 
 export function RescueFridgeScreen() {
   const router = useRouter();
-  const [searchText, setSearchText] = useState('');
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [customIngredients, setCustomIngredients] = useState<string[]>([]);
-  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
+  const {
+    selectedIds,
+    customIngredients,
+    toggleIngredient,
+    clearAll,
+  } = useRescueStore();
 
   const { data, isLoading } = useFridgeIngredients();
   const fridgeItems = data?.items ?? [];
   const hasFridgeItems = fridgeItems.length > 0;
 
-  function toggleIngredient(id: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  function handleSearchSubmit() {
-    const trimmed = searchText.trim();
-    if (!trimmed) return;
-
-    const match = fridgeItems.find((item) => item.name.toLowerCase() === trimmed.toLowerCase());
-    if (match) {
-      setSelectedIds((prev) => new Set(prev).add(match.id));
-    } else if (!customIngredients.includes(trimmed)) {
-      setCustomIngredients((prev) => [...prev, trimmed]);
-    }
-    setSearchText('');
-  }
-
-  function removeCustomIngredient(name: string) {
-    setCustomIngredients((prev) => prev.filter((n) => n !== name));
-  }
-
-  function handleClearAll() {
-    setSelectedIds(new Set());
-    setCustomIngredients([]);
-  }
-
   const selectedFridgeNames = useMemo(
     () => fridgeItems.filter((item) => selectedIds.has(item.id)).map((item) => item.name),
     [fridgeItems, selectedIds],
   );
-
   const allSelectedNames = [...selectedFridgeNames, ...customIngredients];
+  const hasSelection = allSelectedNames.length > 0;
+
+  const keyword = allSelectedNames.join(' ');
+  const { data: recipeData } = useRecipeList(
+    hasSelection ? { keyword, keywordMatch: 'all', size: 1 } : {},
+  );
+  const recipeCount = hasSelection ? (recipeData?.totalCount ?? 0) : 0;
+
+  const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
+
+  function removeSelectedItem(name: string) {
+    const fridgeMatch = fridgeItems.find((item) => item.name === name);
+    if (fridgeMatch) {
+      toggleIngredient(fridgeMatch.id);
+    } else {
+      useRescueStore.getState().removeCustomIngredient(name);
+    }
+  }
 
   function handleViewRecipes() {
-    if (allSelectedNames.length === 0) return;
-    const selectedItems = fridgeItems
-      .filter((item) => selectedIds.has(item.id))
-      .map((item) => ({ name: item.name, imageKey: item.imageKey }));
-    const customItems = customIngredients.map((name) => ({ name, imageKey: 'DEFAULT' }));
-    const items = [...selectedItems, ...customItems];
+    if (!hasSelection) return;
     router.push({
-      pathname: '/(stack)/rescue-confirm',
-      params: { items: JSON.stringify(items) },
+      pathname: '/(stack)/rescue-result',
+      params: { keyword },
     } as never);
   }
 
-  function handleDetailPress() {
-    setIsDetailSheetOpen(true);
+  function handleSearchPress() {
+    router.push('/(stack)/rescue-search' as never);
   }
 
   function handleAddIngredientPress() {
@@ -86,140 +71,132 @@ export function RescueFridgeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
       >
-        <View className="px-4 pt-4 pb-3">
-          <Text className="text-xl font-bold text-gray-90 leading-7">
+        <View className="px-4 pt-3 pb-2">
+          <Text className="text-lg font-bold text-gray-90 leading-6">
             남은 재료로 만드는{'\n'}최적의 식단 가이드
           </Text>
-          <Text className="text-sm text-gray-60 mt-2 leading-5">
-            가지고 계신 재료를 알려주세요.{'\n'}냉장고 파먹기를 도와드릴게요!
+          <Text className="text-xs text-gray-60 mt-1.5 leading-4">
+            재료를 선택하면 맞춤 레시피를 찾아드려요
           </Text>
         </View>
 
-        <View className="flex-row items-center justify-between px-4 mt-4 mb-2">
-          <Text className="text-sm font-semibold text-gray-90">지금 있는 재료를 선택하세요</Text>
-          {selectedIds.size > 0 && (
-            <Pressable onPress={handleClearAll}>
-              <Text className="text-xs text-main-100">모두 지우기</Text>
-            </Pressable>
-          )}
-        </View>
+        <Pressable
+          onPress={handleSearchPress}
+          className="mx-4 flex-row items-center gap-2 bg-surface-default border border-gray-30 rounded-full px-3 py-2"
+        >
+          <Ionicons name="search" size={16} color="#EF7722" />
+          <Text className="flex-1 text-xs text-gray-40">재료를 검색해보세요 (예: 감자)</Text>
+          <Text style={{ fontSize: 10 }} className="font-semibold text-main-100">Enter</Text>
+        </Pressable>
 
-        <View className="mx-4 flex-row items-center gap-2 bg-surface-default border border-gray-30 rounded-full px-4 py-3">
-          <Ionicons name="search" size={18} color="#EF7722" />
-          <TextInput
-            className="flex-1 text-sm text-gray-90"
-            placeholder="재료를 검색해보세요"
-            placeholderTextColor="#C6C6C6"
-            value={searchText}
-            onChangeText={setSearchText}
-            onSubmitEditing={handleSearchSubmit}
-            returnKeyType="done"
-          />
-          <Pressable onPress={handleSearchSubmit}>
-            <Text className="text-sm font-semibold text-main-100">추가</Text>
-          </Pressable>
-        </View>
-
-        <View className="flex-row items-center justify-between px-4 mt-6 mb-3">
-          <Text className="text-sm font-semibold text-gray-90">My 냉장고의 재료</Text>
-          {hasFridgeItems && (
-            <Pressable onPress={handleDetailPress}>
-              <Text className="text-xs text-main-100">자세히보기</Text>
-            </Pressable>
-          )}
-        </View>
-
-        {isLoading ? (
-          <View className="flex-row px-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <SkeletonCard key={i} width={80} height={96} />
-            ))}
+        <View className="mx-4 mt-4 bg-surface-default rounded-2xl border border-gray-20 overflow-hidden">
+          <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
+            <Text className="text-sm font-bold text-gray-90">My 냉장고 재료</Text>
+            {hasFridgeItems && (
+              <Pressable
+                onPress={() => setIsDetailSheetOpen(true)}
+                className="flex-row items-center gap-0.5"
+              >
+                <Text style={{ fontSize: 9 }} className="font-medium text-main-100">자세히보기</Text>
+                <Ionicons name="chevron-forward" size={10} color="#EF7722" />
+              </Pressable>
+            )}
           </View>
-        ) : hasFridgeItems ? (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}
-          >
-            {fridgeItems.map((item: FridgeIngredient) => (
-              <RescueIngredientChip
-                key={item.id}
-                label={item.name}
-                Icon={getFoodIcon(item.imageKey)}
-                selected={selectedIds.has(item.id)}
-                onPress={() => toggleIngredient(item.id)}
-              />
-            ))}
-          </ScrollView>
-        ) : (
-          <View className="items-center px-4 py-8">
-            <Ionicons name="leaf-outline" size={40} color="#C6C6C6" />
-            <Text className="text-sm text-gray-50 mt-3">아직 냉장고에 재료가 없어요</Text>
-            <Pressable
-              onPress={handleAddIngredientPress}
-              className="mt-4 bg-main-100 rounded-full px-6 py-3"
+
+          {isLoading ? (
+            <View className="flex-row px-4 pb-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <SkeletonCard key={i} width={80} height={96} />
+              ))}
+            </View>
+          ) : hasFridgeItems ? (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, gap: 16, paddingBottom: 16 }}
             >
-              <Text className="text-sm font-semibold text-white">재료 추가하러 가기</Text>
-            </Pressable>
-          </View>
-        )}
+              {fridgeItems.map((item: FridgeIngredient) => (
+                <RescueIngredientChip
+                  key={item.id}
+                  label={item.name}
+                  Icon={getFoodIcon(item.imageKey)}
+                  selected={selectedIds.has(item.id)}
+                  onPress={() => toggleIngredient(item.id)}
+                />
+              ))}
+            </ScrollView>
+          ) : (
+            <View className="items-center px-4 py-8">
+              <Ionicons name="leaf-outline" size={40} color="#C6C6C6" />
+              <Text className="text-sm text-gray-50 mt-3">아직 냉장고에 재료가 없어요</Text>
+              <Pressable
+                onPress={handleAddIngredientPress}
+                className="mt-4 bg-main-100 rounded-full px-6 py-3"
+              >
+                <Text className="text-sm font-semibold text-white">재료 추가하러 가기</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
 
-        {allSelectedNames.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingTop: 16 }}
-          >
-            {allSelectedNames.map((name) => {
-              const fridgeMatch = fridgeItems.find((item) => item.name === name);
-              return (
-                <View
-                  key={name}
-                  className="flex-row items-center gap-1.5 rounded-full border border-main-100 bg-main-10 px-3 py-1.5"
-                >
-                  <Text className="text-xs font-medium text-main-100">{name}</Text>
-                  <Pressable
-                    hitSlop={6}
-                    onPress={() => {
-                      if (fridgeMatch) {
-                        setSelectedIds((prev) => {
-                          const next = new Set(prev);
-                          next.delete(fridgeMatch.id);
-                          return next;
-                        });
-                      } else {
-                        removeCustomIngredient(name);
-                      }
-                    }}
+        {hasSelection && (
+          <View className="mx-4 mt-3 bg-surface-default rounded-2xl border border-gray-20 p-4">
+            <View className="flex-row items-center justify-between mb-3">
+              <Text className="text-sm font-bold text-gray-90">선택한 재료</Text>
+              <View className="bg-main-100 rounded-md px-2 py-0.5">
+                <Text className="text-xs font-bold text-white">{allSelectedNames.length}개</Text>
+              </View>
+            </View>
+            <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+              {allSelectedNames.map((name) => {
+                const fridgeMatch = fridgeItems.find((item) => item.name === name);
+                const Icon = fridgeMatch ? getFoodIcon(fridgeMatch.imageKey) : null;
+                return (
+                  <View
+                    key={name}
+                    className="flex-row items-center gap-1.5 rounded-full border border-main-100 bg-main-10 px-3 py-1.5"
                   >
-                    <Ionicons name="close-circle" size={16} color="#EF7722" />
-                  </Pressable>
-                </View>
-              );
-            })}
-          </ScrollView>
+                    {Icon && <Icon width={16} height={16} />}
+                    <Text className="text-xs font-medium text-main-100">{name}</Text>
+                    <Pressable hitSlop={6} onPress={() => removeSelectedItem(name)}>
+                      <Ionicons name="close-circle" size={16} color="#EF7722" />
+                    </Pressable>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
         )}
       </ScrollView>
 
       <View className="absolute bottom-0 left-0 right-0 px-4 pb-8 pt-3 bg-surface-card">
         <Pressable
           onPress={handleViewRecipes}
-          className="flex-row items-center justify-center gap-2 bg-main-100 rounded-full py-4"
+          className="flex-row items-center bg-main-100 rounded-full py-4 px-5"
         >
-          <Ionicons name="sparkles" size={18} color="#FFFFFF" />
-          <Text className="text-base font-bold text-white">지금 재료로 레시피 보러가기</Text>
-          <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
+          <Ionicons name="sparkles" size={20} color="#FFFFFF" />
+          <View className="flex-1 ml-3">
+            <Text className="text-base font-bold text-white">지금 재료로 레시피 추천받기</Text>
+            {hasSelection && (
+              <Text className="text-xs text-white mt-0.5" style={{ opacity: 0.8 }}>
+                현재 {recipeCount}개의 레시피 발견
+              </Text>
+            )}
+          </View>
+          <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
         </Pressable>
       </View>
 
-      <RescueFridgeDetailSheet
-        isOpen={isDetailSheetOpen}
-        onClose={() => setIsDetailSheetOpen(false)}
-        selectedIds={selectedIds}
-        onToggle={toggleIngredient}
-        onReset={handleClearAll}
-        onConfirm={() => setIsDetailSheetOpen(false)}
-      />
+      {isDetailSheetOpen && (
+        <RescueFridgeDetailSheet
+          isOpen={isDetailSheetOpen}
+          onClose={() => setIsDetailSheetOpen(false)}
+          selectedIds={selectedIds}
+          onToggle={toggleIngredient}
+          onReset={clearAll}
+          onConfirm={() => setIsDetailSheetOpen(false)}
+        />
+      )}
     </View>
   );
 }

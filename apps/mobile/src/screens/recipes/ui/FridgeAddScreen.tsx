@@ -171,21 +171,23 @@ export function FridgeAddScreen() {
         showsVerticalScrollIndicator={false}
       />
 
-      <View
-        className="absolute left-0 right-0 px-4"
-        style={{ bottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 8 }}
-      >
-        <Pressable
-          className={`flex-row items-center justify-center gap-2 py-4 rounded-xl ${
-            selectedCount > 0 ? 'bg-main-100' : 'bg-gray-30'
-          }`}
-          disabled={selectedCount === 0}
-          onPress={handleSubmitPress}
+      {!isDirectAddOpen && (
+        <View
+          className="absolute left-0 right-0 px-4"
+          style={{ bottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 8 }}
         >
-          <Ionicons name="cart-outline" size={20} color="#FFFFFF" />
-          <Text className="text-white font-bold text-base">{selectedCount}개 재료 추가하기</Text>
-        </Pressable>
-      </View>
+          <Pressable
+            className={`flex-row items-center justify-center gap-2 py-4 rounded-xl ${
+              selectedCount > 0 ? 'bg-main-100' : 'bg-gray-30'
+            }`}
+            disabled={selectedCount === 0}
+            onPress={handleSubmitPress}
+          >
+            <Ionicons name="cart-outline" size={20} color="#FFFFFF" />
+            <Text className="text-white font-bold text-base">{selectedCount}개 재료 추가하기</Text>
+          </Pressable>
+        </View>
+      )}
 
       <FridgeDirectAddSheet
         isOpen={isDirectAddOpen}

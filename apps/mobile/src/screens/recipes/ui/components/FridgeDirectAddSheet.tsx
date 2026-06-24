@@ -129,7 +129,7 @@ export function FridgeDirectAddSheet({ isOpen, onClose, onAdd }: Props) {
     });
 
     resetForm();
-    onClose();
+    sheetRef.current?.close();
   }
 
   const categorySelectOptions = CATEGORY_OPTIONS.map((c) => ({
@@ -158,9 +158,6 @@ export function FridgeDirectAddSheet({ isOpen, onClose, onAdd }: Props) {
     >
       <BottomSheetView style={{ flex: 1 }}>
         <View className="flex-row items-center justify-between px-4 pb-4">
-          <Pressable onPress={handleClose} hitSlop={8}>
-            <Text className="text-sm font-semibold text-main-100">Cancel</Text>
-          </Pressable>
           <Text className="text-base font-bold text-gray-90">식재료 직접 추가</Text>
           <Pressable onPress={handleClose} hitSlop={8}>
             <Ionicons name="close" size={22} color="#1D1D1D" />

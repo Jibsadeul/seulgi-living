@@ -18,22 +18,26 @@ export function FridgeCategoryFilter({
 }: Props) {
   return (
     <View className="flex-row items-center mt-3 mx-4">
-      <Pressable
-        className="flex-row items-center gap-1 px-3 py-1.5 bg-surface-default rounded-full border border-gray-20"
-        style={{
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.05,
-          shadowRadius: 2,
-          elevation: 1,
-        }}
-        onPress={onSortPress}
-      >
-        <Ionicons name="filter" size={12} color="#474553" />
-        <Text className="text-xs font-semibold text-gray-70">{sortLabel}</Text>
-      </Pressable>
+      {onSortPress && (
+        <>
+          <Pressable
+            className="flex-row items-center gap-1 px-3 py-1.5 bg-surface-default rounded-full border border-gray-20"
+            style={{
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 2,
+              elevation: 1,
+            }}
+            onPress={onSortPress}
+          >
+            <Ionicons name="filter" size={12} color="#474553" />
+            <Text className="text-xs font-semibold text-gray-70">{sortLabel}</Text>
+          </Pressable>
 
-      <View className="mx-1.5 w-px h-4 bg-gray-20" />
+          <View className="mx-1.5 w-px h-4 bg-gray-20" />
+        </>
+      )}
 
       <ScrollView
         horizontal
