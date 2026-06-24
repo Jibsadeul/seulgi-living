@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BottomSheet, { BottomSheetFooter, BottomSheetView } from '@gorhom/bottom-sheet';
 import type { BottomSheetFooterProps } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props) {
+  const insets = useSafeAreaInsets();
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['60%'], []);
   const addIngredient = useAddFridgeIngredient();
@@ -58,7 +60,10 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
   const renderFooter = useCallback(
     (props: BottomSheetFooterProps) => (
       <BottomSheetFooter {...props} bottomInset={0}>
-        <View className="flex-row px-4 pb-8 pt-3 bg-white" style={{ gap: 10 }}>
+        <View
+          className="flex-row px-4 pt-3 bg-white"
+          style={{ gap: 10, paddingBottom: insets.bottom + 16 }}
+        >
           <Pressable
             onPress={() => setConfirmItems([])}
             className="items-center justify-center rounded-2xl bg-gray-10"
@@ -201,7 +206,6 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
             );
           })}
         </ScrollView>
-
       </BottomSheetView>
     </BottomSheet>
   );

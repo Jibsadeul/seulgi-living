@@ -17,7 +17,7 @@ type ScrapVariables = {
   isSaved: boolean;
 };
 
-const noContentSchema = z.null();
+const okSchema = z.object({ ok: z.boolean() });
 
 type CreateRecipeInput = {
   name: string;
@@ -39,10 +39,7 @@ function buildRecipeFormData(input: CreateRecipeInput): FormData {
     .split(/[,\n]/)
     .map((s) => s.trim())
     .filter(Boolean);
-  formData.append(
-    'ingredients',
-    JSON.stringify([{ section: '재료', items: ingredientItems }]),
-  );
+  formData.append('ingredients', JSON.stringify([{ section: '재료', items: ingredientItems }]));
 
   const steps = input.steps.map((s) => ({ description: s.description, imageUrl: null }));
   formData.append('steps', JSON.stringify(steps));
@@ -125,7 +122,7 @@ export function useRecipeScrap() {
 
   return useMutation({
     mutationFn: ({ recipeId, isSaved }: ScrapVariables) =>
-      apiRequest(`/api/recipes/${recipeId}/scrap`, noContentSchema, {
+      apiRequest(`/api/recipes/${recipeId}/scrap`, okSchema, {
         method: isSaved ? 'POST' : 'DELETE',
       }),
 

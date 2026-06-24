@@ -11,7 +11,10 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import ScrapIcon from '@assets/icons/scrap.svg';
+import ScrappedIcon from '@assets/icons/scrapped.svg';
 import { Header, SearchBar } from '@/shared/ui';
+import { useDismissBack } from '@/shared/hooks/useDismissBack';
 import {
   useRecipeListInfinite,
   useRecipeScrap,
@@ -66,6 +69,7 @@ const FILTER_LEVEL_MAP: Record<string, RecipeLevel> = {
 const TAB_BAR_CONTAINER_HEIGHT = 87;
 
 export function RecipeListAllScreen() {
+  useDismissBack();
   const router = useRouter();
   const { keyword: initialKeyword } = useLocalSearchParams<{ keyword?: string }>();
   const insets = useSafeAreaInsets();
@@ -147,40 +151,48 @@ export function RecipeListAllScreen() {
       <Pressable
         onPress={() => handleRecipePress(item.id)}
         className="bg-surface-default rounded-2xl overflow-hidden"
-        style={{ width: '47.5%', marginRight: isLeft ? '5%' : 0 }}
+        style={{
+          width: '47.5%',
+          marginRight: isLeft ? '5%' : 0,
+          shadowColor: '#000000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.05,
+          shadowRadius: 12,
+          elevation: 2,
+        }}
       >
         {item.imageUrl ? (
           <View className="w-full aspect-square relative">
             <Image source={{ uri: item.imageUrl }} className="w-full h-full" resizeMode="cover" />
             <Pressable
               onPress={() => handleToggleScrap(item.id, item.isSaved)}
-              className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 items-center justify-center"
+              className="absolute top-2 right-2"
               hitSlop={8}
             >
-              <Ionicons
-                name={item.isSaved ? 'bookmark' : 'bookmark-outline'}
-                size={16}
-                color={item.isSaved ? '#EF7722' : '#8E8E8E'}
-              />
+              {item.isSaved ? (
+                <ScrappedIcon width={32} height={32} />
+              ) : (
+                <ScrapIcon width={32} height={32} />
+              )}
             </Pressable>
           </View>
         ) : (
           <View className="w-full aspect-square bg-gray-10 relative">
             <Pressable
               onPress={() => handleToggleScrap(item.id, item.isSaved)}
-              className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 items-center justify-center"
+              className="absolute top-2 right-2"
               hitSlop={8}
             >
-              <Ionicons
-                name={item.isSaved ? 'bookmark' : 'bookmark-outline'}
-                size={16}
-                color={item.isSaved ? '#EF7722' : '#8E8E8E'}
-              />
+              {item.isSaved ? (
+                <ScrappedIcon width={32} height={32} />
+              ) : (
+                <ScrapIcon width={32} height={32} />
+              )}
             </Pressable>
           </View>
         )}
 
-        <View className="p-2 gap-1">
+        <View className="p-3 gap-1.5">
           <Text className="text-sm font-semibold text-gray-90" numberOfLines={1}>
             {item.name}
           </Text>
@@ -192,7 +204,9 @@ export function RecipeListAllScreen() {
                   key={`${tag.label}-${tagIndex}`}
                   className={`px-2 py-0.5 rounded-full ${style.container}`}
                 >
-                  <Text className={`text-[10px] font-medium ${style.text}`}>{tag.label}</Text>
+                  <Text className={`font-medium ${style.text}`} style={{ fontSize: 9 }}>
+                    {tag.label}
+                  </Text>
                 </View>
               );
             })}
@@ -203,7 +217,7 @@ export function RecipeListAllScreen() {
   }
 
   return (
-    <View className="flex-1 bg-surface-default">
+    <View className="flex-1 bg-surface-card">
       <Header title="모든 레시피" variant="back" />
 
       <FlatList
@@ -211,7 +225,7 @@ export function RecipeListAllScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderRecipeItem}
         numColumns={2}
-        columnWrapperStyle={{ paddingHorizontal: 16 }}
+        columnWrapperStyle={{ paddingHorizontal: 16, marginBottom: 16 }}
         contentContainerStyle={{ paddingBottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 60 }}
         showsVerticalScrollIndicator={false}
         onEndReached={handleEndReached}
@@ -219,7 +233,7 @@ export function RecipeListAllScreen() {
         ListHeaderComponent={
           <>
             {/* 검색바 */}
-            <View className="mt-3 mb-2">
+            <View className="mt-4 mb-3">
               <SearchBar
                 placeholder="오늘 뭐 먹지? 재료나 레시피 검색"
                 value={searchText}
@@ -231,7 +245,7 @@ export function RecipeListAllScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingVertical: 8 }}
+              contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingVertical: 10 }}
             >
               <Pressable
                 onPress={() => setIsFilterOpen(true)}
@@ -240,31 +254,38 @@ export function RecipeListAllScreen() {
                 <Ionicons name="options-outline" size={18} color="#FFFFFF" />
               </Pressable>
 
-              {activeFilterEntries.length > 0
-                ? activeFilterEntries.map(([key, value]) => (
-                    <Pressable
-                      key={key}
-                      onPress={() => removeFilter(key)}
-                      className="flex-row items-center gap-1 px-4 py-2 rounded-full bg-main-100"
-                    >
-                      <Text className="text-sm font-medium text-white">{value}</Text>
-                      <Ionicons name="close" size={14} color="#FFFFFF" />
-                    </Pressable>
-                  ))
-                : ['음식종류', '요리방법', '난이도'].map((label) => (
-                    <Pressable
-                      key={label}
-                      onPress={() => setIsFilterOpen(true)}
-                      className="flex-row items-center gap-1 px-4 py-2 rounded-full border border-gray-30 bg-surface-default"
-                    >
-                      <Text className="text-sm text-gray-70">{label}</Text>
-                      <Ionicons name="chevron-down" size={14} color="#717171" />
-                    </Pressable>
-                  ))}
+              {(
+                [
+                  ['foodType', '음식종류'],
+                  ['cookMethod', '요리방법'],
+                  ['difficulty', '난이도'],
+                ] as [keyof RecipeFilters, string][]
+              ).map(([key, label]) => {
+                const isActive = filters[key] !== '전체';
+                return isActive ? (
+                  <Pressable
+                    key={key}
+                    onPress={() => removeFilter(key)}
+                    className="flex-row items-center justify-center gap-1 h-10 px-4 rounded-full bg-main-100"
+                  >
+                    <Text className="text-sm font-medium text-white">{filters[key]}</Text>
+                    <Ionicons name="close" size={14} color="#FFFFFF" />
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    key={key}
+                    onPress={() => setIsFilterOpen(true)}
+                    className="flex-row items-center justify-center gap-1 h-10 px-4 rounded-full border border-gray-30 bg-surface-default"
+                  >
+                    <Text className="text-sm text-gray-70">{label}</Text>
+                    <Ionicons name="chevron-down" size={14} color="#717171" />
+                  </Pressable>
+                );
+              })}
             </ScrollView>
 
             {/* 검색 결과 건수 + 정렬 */}
-            <View className="flex-row items-center justify-between px-4 mt-2 mb-3">
+            <View className="flex-row items-center justify-between px-4 mt-3 mb-4">
               <Text className="text-xs text-gray-60">검색 결과 {totalCount}건</Text>
               <Pressable
                 onPress={handleSortToggle}

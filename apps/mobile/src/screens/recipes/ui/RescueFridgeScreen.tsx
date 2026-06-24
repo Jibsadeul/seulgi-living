@@ -1,22 +1,21 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Header, SkeletonCard } from '@/shared/ui';
+import { Header, SearchBar, SkeletonCard } from '@/shared/ui';
 import { useFridgeIngredients, getFoodIcon, type FridgeIngredient } from '@/entities/fridge';
 import { useRecipeList } from '@/entities/recipes';
 import { RescueIngredientChip } from './components/RescueIngredientChip';
 import { RescueFridgeDetailSheet } from './components/RescueFridgeDetailSheet';
 import { useRescueStore } from '../model/rescue.store';
+import { useDismissBack } from '@/shared/hooks/useDismissBack';
 
 export function RescueFridgeScreen() {
+  useDismissBack();
   const router = useRouter();
-  const {
-    selectedIds,
-    customIngredients,
-    toggleIngredient,
-    clearAll,
-  } = useRescueStore();
+  const insets = useSafeAreaInsets();
+  const { selectedIds, customIngredients, toggleIngredient, clearAll } = useRescueStore();
 
   const { data, isLoading } = useFridgeIngredients();
   const fridgeItems = data?.items ?? [];
@@ -80,14 +79,7 @@ export function RescueFridgeScreen() {
           </Text>
         </View>
 
-        <Pressable
-          onPress={handleSearchPress}
-          className="mx-4 flex-row items-center gap-2 bg-surface-default border border-gray-30 rounded-full px-3 py-2"
-        >
-          <Ionicons name="search" size={16} color="#EF7722" />
-          <Text className="flex-1 text-xs text-gray-40">재료를 검색해보세요 (예: 감자)</Text>
-          <Text style={{ fontSize: 10 }} className="font-semibold text-main-100">Enter</Text>
-        </Pressable>
+        <SearchBar placeholder="재료를 검색해보세요 (예: 감자)" onPress={handleSearchPress} />
 
         <View className="mx-4 mt-4 bg-surface-default rounded-2xl border border-gray-20 overflow-hidden">
           <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
@@ -97,7 +89,9 @@ export function RescueFridgeScreen() {
                 onPress={() => setIsDetailSheetOpen(true)}
                 className="flex-row items-center gap-0.5"
               >
-                <Text style={{ fontSize: 9 }} className="font-medium text-main-100">자세히보기</Text>
+                <Text style={{ fontSize: 9 }} className="font-medium text-main-100">
+                  자세히보기
+                </Text>
                 <Ionicons name="chevron-forward" size={10} color="#EF7722" />
               </Pressable>
             )}
@@ -169,7 +163,10 @@ export function RescueFridgeScreen() {
         )}
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 px-4 pb-8 pt-3 bg-surface-card">
+      <View
+        className="absolute bottom-0 left-0 right-0 px-4 pt-3 bg-surface-card"
+        style={{ paddingBottom: insets.bottom + 16 }}
+      >
         <Pressable
           onPress={handleViewRecipes}
           className="flex-row items-center bg-main-100 rounded-full py-4 px-5"

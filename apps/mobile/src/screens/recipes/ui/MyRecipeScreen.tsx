@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { ActivityIndicator, Dimensions, FlatList, Image, Modal, Pressable, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Image,
+  Modal,
+  Pressable,
+  Text,
+  View,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +23,7 @@ import {
   type RecipePreview,
   type RecipeTag,
 } from '@/entities/recipes';
+import { useDismissBack } from '@/shared/hooks/useDismissBack';
 
 const TAG_STYLES: Record<RecipeTag['variant'], { container: string; text: string }> = {
   pink: { container: 'bg-tag-pink', text: 'text-tagText-pink' },
@@ -36,6 +46,7 @@ const COLUMN_GAP = 12;
 const CARD_WIDTH = (Dimensions.get('window').width - HORIZONTAL_PADDING * 2 - COLUMN_GAP) / 2;
 
 export function MyRecipeScreen() {
+  useDismissBack();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
@@ -104,16 +115,18 @@ export function MyRecipeScreen() {
               <Text className="mt-4 text-sm font-semibold text-gray-70">
                 등록된 레시피가 없습니다.
               </Text>
-              <Text className="mt-1 text-xs text-gray-50">
-                나만의 레시피를 추가해보세요!
-              </Text>
+              <Text className="mt-1 text-xs text-gray-50">나만의 레시피를 추가해보세요!</Text>
             </View>
           )
         }
         contentContainerStyle={
           recipes.length === 0
             ? { flexGrow: 1, justifyContent: 'center' }
-            : { gap: 12, paddingTop: 12, paddingBottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 24 }
+            : {
+                gap: 12,
+                paddingTop: 12,
+                paddingBottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 24,
+              }
         }
       />
 
@@ -150,17 +163,11 @@ export function MyRecipeScreen() {
                 paddingVertical: 8,
               }}
             >
-              <Pressable
-                className="flex-row items-center gap-3 px-4 py-2.5"
-                onPress={handleEdit}
-              >
+              <Pressable className="flex-row items-center gap-3 px-4 py-2.5" onPress={handleEdit}>
                 <Ionicons name="pencil-outline" size={16} color="#EF7722" />
                 <Text className="text-sm font-medium text-main-100">수정</Text>
               </Pressable>
-              <Pressable
-                className="flex-row items-center gap-3 px-4 py-2.5"
-                onPress={handleDelete}
-              >
+              <Pressable className="flex-row items-center gap-3 px-4 py-2.5" onPress={handleDelete}>
                 <Ionicons name="trash-outline" size={16} color="#EF7722" />
                 <Text className="text-sm font-medium text-main-100">삭제</Text>
               </Pressable>
@@ -221,7 +228,9 @@ function MyRecipeCard({
                 key={`${tag.label}-${tagIndex}`}
                 className={`px-2 py-0.5 rounded-full ${style.container}`}
               >
-                <Text className={`text-[10px] font-medium ${style.text}`}>{tag.label}</Text>
+                <Text className={`font-medium ${style.text}`} style={{ fontSize: 9 }}>
+                  {tag.label}
+                </Text>
               </View>
             );
           })}

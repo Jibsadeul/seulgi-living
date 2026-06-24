@@ -3,8 +3,10 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRecipeSearchEntry } from '@/features/recipe-search';
+import { useDismissBack } from '@/shared/hooks/useDismissBack';
 
 export function CookSearchScreen() {
+  useDismissBack();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const {
@@ -22,7 +24,7 @@ export function CookSearchScreen() {
     <View className="flex-1 bg-surface-default" style={{ paddingTop: insets.top }}>
       {/* 헤더: 뒤로가기 + 검색 입력창 */}
       <View className="flex-row items-center px-3 py-2" style={{ gap: 8 }}>
-        <Pressable onPress={() => router.back()} hitSlop={8} className="p-2">
+        <Pressable onPress={() => router.dismiss()} hitSlop={8} className="p-2">
           <Ionicons name="arrow-back" size={22} color="#1D1D1D" />
         </Pressable>
         <View

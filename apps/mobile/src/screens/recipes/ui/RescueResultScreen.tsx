@@ -11,8 +11,10 @@ import {
   getRecipeTags,
   type RecipePreview,
 } from '@/entities/recipes';
+import { useDismissBack } from '@/shared/hooks/useDismissBack';
 
 export function RescueResultScreen() {
+  useDismissBack();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { keyword } = useLocalSearchParams<{ keyword: string }>();
@@ -54,7 +56,10 @@ export function RescueResultScreen() {
         scrapMutation.mutate({ recipeId: id, isSaved: true });
       }
     }
-    showAppToast({ type: 'success', text: `${selectedIds.size}개 레시피를 즐겨찾기에 추가했습니다.` });
+    showAppToast({
+      type: 'success',
+      text: `${selectedIds.size}개 레시피를 즐겨찾기에 추가했습니다.`,
+    });
   }
 
   function handleGoHome() {
@@ -100,9 +105,7 @@ export function RescueResultScreen() {
             총 {totalCount}개의 레시피를 만들 수 있어요
           </Text>
         </View>
-        <Text className="text-xs text-gray-50 mt-1">
-          지금 있는 재료로 만들 수 있는 요리예요
-        </Text>
+        <Text className="text-xs text-gray-50 mt-1">지금 있는 재료로 만들 수 있는 요리예요</Text>
       </View>
 
       <View className="flex-row items-center justify-between px-4 pt-3 pb-2">

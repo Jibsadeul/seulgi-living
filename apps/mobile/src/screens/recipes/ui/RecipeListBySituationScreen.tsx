@@ -1,8 +1,20 @@
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Image, PanResponder, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  PanResponder,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import ScrapIcon from '@assets/icons/scrap.svg';
+import ScrappedIcon from '@assets/icons/scrapped.svg';
 import { Header } from '@/shared/ui';
+import { useDismissBack } from '@/shared/hooks/useDismissBack';
 import {
   useRecipeList,
   useRecipeScrap,
@@ -71,6 +83,7 @@ const TAG_STYLES: Record<RecipeTag['variant'], { container: string; text: string
 const PAGE_SIZE = 10;
 
 export function RecipeListBySituationScreen() {
+  useDismissBack();
   const router = useRouter();
   const params = useLocalSearchParams<{ category?: string }>();
   const initialCategory = (params.category as SituationCategory) || 'night';
@@ -149,7 +162,7 @@ export function RecipeListBySituationScreen() {
   ).current;
 
   return (
-    <View className="flex-1 bg-surface-default">
+    <View className="flex-1 bg-surface-card">
       <Header title="상황별 추천 레시피" variant="back" />
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -237,7 +250,14 @@ export function RecipeListBySituationScreen() {
                   key={recipe.id}
                   onPress={() => handleRecipePress(recipe.id)}
                   className="bg-surface-default rounded-2xl overflow-hidden"
-                  style={{ width: '47.5%' }}
+                  style={{
+                    width: '47.5%',
+                    shadowColor: '#000000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 12,
+                    elevation: 2,
+                  }}
                 >
                   {recipe.imageUrl ? (
                     <View className="w-full aspect-square relative">
@@ -248,28 +268,28 @@ export function RecipeListBySituationScreen() {
                       />
                       <Pressable
                         onPress={() => handleToggleScrap(recipe.id, recipe.isSaved)}
-                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 items-center justify-center"
+                        className="absolute top-2 right-2"
                         hitSlop={8}
                       >
-                        <Ionicons
-                          name={recipe.isSaved ? 'bookmark' : 'bookmark-outline'}
-                          size={16}
-                          color={recipe.isSaved ? '#EF7722' : '#8E8E8E'}
-                        />
+                        {recipe.isSaved ? (
+                          <ScrappedIcon width={32} height={32} />
+                        ) : (
+                          <ScrapIcon width={32} height={32} />
+                        )}
                       </Pressable>
                     </View>
                   ) : (
                     <View className="w-full aspect-square bg-gray-10 relative">
                       <Pressable
                         onPress={() => handleToggleScrap(recipe.id, recipe.isSaved)}
-                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 items-center justify-center"
+                        className="absolute top-2 right-2"
                         hitSlop={8}
                       >
-                        <Ionicons
-                          name={recipe.isSaved ? 'bookmark' : 'bookmark-outline'}
-                          size={16}
-                          color={recipe.isSaved ? '#EF7722' : '#8E8E8E'}
-                        />
+                        {recipe.isSaved ? (
+                          <ScrappedIcon width={32} height={32} />
+                        ) : (
+                          <ScrapIcon width={32} height={32} />
+                        )}
                       </Pressable>
                     </View>
                   )}
@@ -286,7 +306,7 @@ export function RecipeListBySituationScreen() {
                             key={`${tag.label}-${tagIndex}`}
                             className={`px-2 py-0.5 rounded-full ${style.container}`}
                           >
-                            <Text className={`text-[10px] font-medium ${style.text}`}>
+                            <Text className={`font-medium ${style.text}`} style={{ fontSize: 9 }}>
                               {tag.label}
                             </Text>
                           </View>

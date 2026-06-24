@@ -59,15 +59,19 @@ export function CookMainScreen() {
               paddingBottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 24,
             }}
           >
-            <View className="mt-5">
+            <View className="mt-5 mb-4">
               <SearchBar
                 placeholder="오늘 뭐 먹지? 재료나 레시피 검색"
                 onPress={handleSearchPress}
               />
             </View>
 
-            <CookRescueBanner onPress={handleRescuePress} />
-            <CookSituationChips onSelect={handleSituationSelect} />
+            <View className="mb-4">
+              <CookRescueBanner onPress={handleRescuePress} />
+            </View>
+            <View className="mb-4">
+              <CookSituationChips onSelect={handleSituationSelect} />
+            </View>
             <CookRecipeSection
               onRecipePress={handleRecipePress}
               onSeeAllPress={handleSeeAllPress}
