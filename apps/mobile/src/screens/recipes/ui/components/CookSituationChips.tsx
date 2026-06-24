@@ -11,7 +11,7 @@ type SituationChip = {
 const SITUATION_CHIPS: SituationChip[] = [
   { id: 'night', label: '야식/안주', icon: 'moon-outline', iconColor: '#EF7722' },
   { id: 'speed', label: '초스피드', icon: 'timer-outline', iconColor: '#555555' },
-  { id: 'diet', label: '디저트', icon: 'ice-cream-outline', iconColor: '#555555' },
+  { id: 'dessert', label: '디저트', icon: 'ice-cream-outline', iconColor: '#555555' },
   { id: 'health', label: '건강식', icon: 'shield-checkmark-outline', iconColor: '#0D9488' },
 ];
 

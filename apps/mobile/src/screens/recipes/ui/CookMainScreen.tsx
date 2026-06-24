@@ -72,7 +72,7 @@ export function CookMainScreen() {
           <Pressable
             onPress={handleRecipeUploadPress}
             className="absolute right-4 flex-row items-center gap-1 bg-main-100 rounded-full px-4 py-3"
-            style={{ bottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 16 }}
+            style={{ bottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 4 }}
           >
             <Text className="text-white font-semibold text-sm">+ 레시피 입력</Text>
           </Pressable>
