@@ -23,5 +23,6 @@ export {
   PERIOD_LABEL,
   type FilterSection,
 } from './model/policies.model';
+export { getCategoryStyle } from './model/policyCategoryStyle';
 export { policyKeys } from './api/keys';
 export type { Policy, PolicyBanner, PolicyListQuery, PolicyDetail } from './api/policies.schema';

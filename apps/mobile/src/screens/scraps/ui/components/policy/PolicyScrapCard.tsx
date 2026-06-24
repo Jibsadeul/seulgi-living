@@ -6,9 +6,9 @@ import {
   getAgeLabel,
   getDeadlineLabel,
   isUrgentDeadline,
+  getCategoryStyle,
 } from '@/entities/policies';
 import ScrappedIcon from '@assets/icons/scrapped.svg';
-import { getCategoryStyle } from './policyCategoryStyle';
 
 type Props = {
   policy: Policy;

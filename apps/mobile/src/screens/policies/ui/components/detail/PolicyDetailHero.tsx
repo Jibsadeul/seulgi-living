@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 import type { PolicyDetail } from '@repo/contract';
-import { isUrgentDeadline } from '@/entities/policies';
+import { getCategoryStyle, isUrgentDeadline } from '@/entities/policies';
 import AlarmTagIcon from '@assets/icons/policy/alarm-tag.svg';
 
 type Props = {
@@ -13,12 +13,26 @@ function firstOf(value: string | null | undefined): string | null {
   return value?.split(',')[0]?.trim() || null;
 }
 
-function Tag({ label }: { label: string }) {
+// 대분류: 카테고리별 색(주거/일자리/금융/복지/교육/문화/참여)으로 채워서 구분한다.
+function LargeCategoryTag({ label, bg, color }: { label: string; bg: string; color: string }) {
+  return (
+    <View
+      style={{ backgroundColor: bg, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 }}
+    >
+      <Text style={{ fontSize: 11, fontWeight: '500', color }}>{label}</Text>
+    </View>
+  );
+}
+
+// 중분류: 대분류와 헷갈리지 않도록 흰 배경 + 메인 컬러 외곽선으로만 구분한다.
+function MediumCategoryTag({ label }: { label: string }) {
   return (
     <View
       style={{
-        backgroundColor: '#FFEBDC',
+        backgroundColor: '#FFFFFF',
         borderRadius: 999,
+        borderWidth: 1,
+        borderColor: '#EF7722',
         paddingHorizontal: 12,
         paddingVertical: 4,
       }}
@@ -51,17 +65,18 @@ export function PolicyDetailHero({ policy }: Props) {
   const largeCategory = firstOf(policy.largeCategory);
   const mediumCategory = firstOf(policy.mediumCategory);
   // 키워드 칩은 일단 제외 — 다른 위치(예: 본문 텍스트)에 노출할지 추후 검토
-  const tags = [largeCategory, mediumCategory].filter((tag): tag is string => !!tag);
+  const categoryStyle = getCategoryStyle(policy.largeCategory);
 
   return (
     <View className="px-5 pt-6 pb-4" style={{ gap: 14 }}>
       <View className="flex-row items-start justify-between">
         <View className="flex-row flex-wrap" style={{ flex: 1, gap: 6 }}>
-          {tags.length > 0 ? (
-            tags.map((tag, index) => <Tag key={`${tag}-${index}`} label={tag} />)
-          ) : (
-            <Tag label="기타" />
-          )}
+          <LargeCategoryTag
+            label={largeCategory ?? '기타'}
+            bg={categoryStyle.bg}
+            color={categoryStyle.accent}
+          />
+          {mediumCategory && <MediumCategoryTag label={mediumCategory} />}
         </View>
 
         <View
