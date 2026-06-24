@@ -120,6 +120,7 @@ export function GroceryBudgetReportSheet({
   dailyGroups,
 }: Props) {
   const sheetRef = useRef<BottomSheet>(null);
+  const didMountRef = useRef(false);
   const snapPoints = useMemo(() => ['85%'], []);
   const spentPercent = budget > 0 ? Math.round((spent / budget) * 100) : 0;
 
@@ -136,6 +137,11 @@ export function GroceryBudgetReportSheet({
   }, [dailyGroups]);
 
   useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      if (!isOpen) return;
+    }
+
     if (isOpen) {
       sheetRef.current?.snapToIndex(0);
     } else {
@@ -159,7 +165,7 @@ export function GroceryBudgetReportSheet({
   return (
     <BottomSheet
       ref={sheetRef}
-      index={isOpen ? 0 : -1}
+      index={-1}
       snapPoints={snapPoints}
       enableDynamicSizing={false}
       enablePanDownToClose
@@ -234,10 +240,7 @@ export function GroceryBudgetReportSheet({
 
             return (
               <View key={cell.key} className="p-0.5" style={{ width: '14.2857%' }}>
-                <View
-                  className="min-h-[54px] rounded-lg px-1.5 py-1.5"
-                  style={{ backgroundColor }}
-                >
+                <View className="min-h-[54px] rounded-lg px-1.5 py-1.5" style={{ backgroundColor }}>
                   <Text className="text-[10px] font-bold" style={{ color: textColor }}>
                     {cell.day}
                   </Text>
@@ -270,10 +273,7 @@ export function GroceryBudgetReportSheet({
               { label: '75%+', color: HEATMAP_COLORS.danger },
             ].map((item) => (
               <View key={item.label} className="mr-3 flex-row items-center">
-                <View
-                  className="mr-1.5 h-3 w-3 rounded"
-                  style={{ backgroundColor: item.color }}
-                />
+                <View className="mr-1.5 h-3 w-3 rounded" style={{ backgroundColor: item.color }} />
                 <Text className="text-[10px] font-medium text-gray-60">{item.label}</Text>
               </View>
             ))}
