@@ -40,6 +40,7 @@ type RecipeListRow = {
   name: string;
   category: RecipeCategory;
   cookingMethod: CookingMethod;
+  level: string;
   imageUrl: string;
   scrapCount: number | bigint | string;
   isSaved: boolean;
@@ -95,6 +96,19 @@ function toNumber(value: number | bigint | string | undefined) {
   return value ?? 0;
 }
 
+const LEVEL_SELECT_EXPR = `(SELECT CASE
+  WHEN sc + ic <= 15 THEN 'LOW'
+  WHEN sc + ic <= 20 THEN 'MEDIUM'
+  ELSE 'HIGH'
+END FROM (
+  SELECT
+    (SELECT COUNT(*) FROM recipe_steps WHERE recipe_id = r.id)::int AS sc,
+    COALESCE((SELECT SUM(jsonb_array_length(s.val -> 'items'))
+      FROM jsonb_array_elements(
+        CASE WHEN jsonb_typeof(r.ingredients) = 'array' THEN r.ingredients ELSE '[]'::jsonb END
+      ) AS s(val)), 0)::int AS ic
+) x) AS level`;
+
 function buildWhereClause(query: RecipeListQuery) {
   const values: unknown[] = [];
   const conditions = [`r.source::text = ANY($${values.push(['PUBLIC', 'USER'])}::text[])`];
@@ -133,27 +147,34 @@ function buildWhereClause(query: RecipeListQuery) {
   }
 
   if (query.keyword) {
-    const keywordParam = `$${values.push(`%${query.keyword}%`)}`;
-    conditions.push(`(
-      r.name ILIKE ${keywordParam}
-      OR EXISTS (
-        SELECT 1
-        FROM jsonb_array_elements(
-          CASE
-            WHEN jsonb_typeof(r.ingredients) = 'array' THEN r.ingredients
-            ELSE '[]'::jsonb
-          END
-        ) AS ingredient_section(section_value)
-        CROSS JOIN jsonb_array_elements_text(
-          CASE
-            WHEN jsonb_typeof(ingredient_section.section_value->'items') = 'array'
-            THEN ingredient_section.section_value->'items'
-            ELSE '[]'::jsonb
-          END
-        ) AS ingredient_item(item_value)
-        WHERE ingredient_item.item_value ILIKE ${keywordParam}
-      )
-    )`);
+    const words = query.keyword.split(/\s+/).filter(Boolean);
+    const wordConditions = words.map((word) => {
+      const param = `$${values.push(`%${word}%`)}`;
+      return `(
+        r.name ILIKE ${param}
+        OR EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements(
+            CASE
+              WHEN jsonb_typeof(r.ingredients) = 'array' THEN r.ingredients
+              ELSE '[]'::jsonb
+            END
+          ) AS ingredient_section(section_value)
+          CROSS JOIN jsonb_array_elements_text(
+            CASE
+              WHEN jsonb_typeof(ingredient_section.section_value->'items') = 'array'
+              THEN ingredient_section.section_value->'items'
+              ELSE '[]'::jsonb
+            END
+          ) AS ingredient_item(item_value)
+          WHERE ingredient_item.item_value ILIKE ${param}
+        )
+      )`;
+    });
+    if (wordConditions.length > 0) {
+      const joiner = query.keywordMatch === 'all' ? ' AND ' : ' OR ';
+      conditions.push(`(${wordConditions.join(joiner)})`);
+    }
   }
 
   return {
@@ -213,7 +234,8 @@ export async function getRecipeList(queryInput: unknown, context: ListRecipesCon
         r.name AS name,
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
-        r.main_image_url AS "imageUrl",
+        ${LEVEL_SELECT_EXPR},
+        COALESCE(r.main_image_url, r.thumbnail_url) AS "imageUrl",
         COUNT(rs.recipe_id)::int AS "scrapCount",
         ${isSavedExpression} AS "isSaved"
       FROM recipes r
@@ -261,7 +283,8 @@ export async function getScrappedRecipeList(queryInput: unknown, memberId: strin
         r.name AS name,
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
-        r.main_image_url AS "imageUrl",
+        ${LEVEL_SELECT_EXPR},
+        COALESCE(r.main_image_url, r.thumbnail_url) AS "imageUrl",
         COUNT(all_scraps.recipe_id)::int AS "scrapCount",
         TRUE AS "isSaved"
       FROM recipe_scraps user_scrap
@@ -312,7 +335,8 @@ export async function getMyRecipeList(queryInput: unknown, memberId: string) {
         r.name AS name,
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
-        r.main_image_url AS "imageUrl",
+        ${LEVEL_SELECT_EXPR},
+        COALESCE(r.main_image_url, r.thumbnail_url) AS "imageUrl",
         COUNT(all_scraps.recipe_id)::int AS "scrapCount",
         EXISTS (
           SELECT 1
@@ -400,6 +424,15 @@ export async function getRecipeDetail(
     throw errors.notFound('레시피를 찾을 수 없습니다.');
   }
 
+  const stepCount = recipe.recipeSteps.length;
+  const ingredientArray = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
+  const ingredientCount = ingredientArray.reduce((sum: number, section: Record<string, unknown>) => {
+    const items = Array.isArray(section.items) ? section.items : [];
+    return sum + items.length;
+  }, 0);
+  const score = stepCount + ingredientCount;
+  const level = score <= 15 ? 'LOW' : score <= 20 ? 'MEDIUM' : 'HIGH';
+
   return recipeDetailResponseSchema.parse({
     scrap: {
       scrapCount: recipe._count.recipeScraps,
@@ -411,6 +444,7 @@ export async function getRecipeDetail(
       name: recipe.name,
       category: recipe.category,
       cookingMethod: recipe.cookingMethod,
+      level,
       mainImageUrl: recipe.mainImageUrl,
       ingredients: recipe.ingredients,
       steps: recipe.recipeSteps.map((step) => ({
@@ -733,7 +767,8 @@ async function getSimpleRecommendations(
         r.name AS name,
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
-        r.main_image_url AS "imageUrl",
+        ${LEVEL_SELECT_EXPR},
+        COALESCE(r.main_image_url, r.thumbnail_url) AS "imageUrl",
         COUNT(rs.recipe_id)::int AS "scrapCount",
         EXISTS (
           SELECT 1 FROM recipe_scraps saved
@@ -824,7 +859,8 @@ async function getFridgeRecommendations(userId: string, page: number, size: numb
         r.name AS name,
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
-        r.main_image_url AS "imageUrl",
+        ${LEVEL_SELECT_EXPR},
+        COALESCE(r.main_image_url, r.thumbnail_url) AS "imageUrl",
         COUNT(rs.recipe_id)::int AS "scrapCount",
         EXISTS (
           SELECT 1 FROM recipe_scraps saved

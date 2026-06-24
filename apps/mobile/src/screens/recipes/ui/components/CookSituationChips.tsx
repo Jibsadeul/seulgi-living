@@ -5,13 +5,14 @@ type SituationChip = {
   id: string;
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
+  iconColor: string;
 };
 
 const SITUATION_CHIPS: SituationChip[] = [
-  { id: 'night', label: '야식/안주', icon: 'flame-outline' },
-  { id: 'speed', label: '초스피드', icon: 'flash-outline' },
-  { id: 'diet', label: '다이어트', icon: 'leaf-outline' },
-  { id: 'health', label: '건강식', icon: 'shield-checkmark-outline' },
+  { id: 'night', label: '야식/안주', icon: 'moon-outline', iconColor: '#EF7722' },
+  { id: 'speed', label: '초스피드', icon: 'timer-outline', iconColor: '#555555' },
+  { id: 'diet', label: '디저트', icon: 'ice-cream-outline', iconColor: '#555555' },
+  { id: 'health', label: '건강식', icon: 'shield-checkmark-outline', iconColor: '#0D9488' },
 ];
 
 type Props = {
@@ -20,19 +21,22 @@ type Props = {
 
 export function CookSituationChips({ onSelect }: Props) {
   return (
-    <View className="px-4 mt-5">
-      <Text className="text-sm font-semibold text-gray-90 mb-3">상황별 추천 레시피</Text>
-      <View className="flex-row justify-between">
+    <View className="mt-10 px-4">
+      <View className="mb-3 flex-row items-center gap-1">
+        <Text className="text-sm font-semibold text-gray-90">상황별 추천 레시피</Text>
+        <Text>✨</Text>
+      </View>
+      <View className="flex-row justify-between gap-2">
         {SITUATION_CHIPS.map((chip) => (
           <Pressable
             key={chip.id}
             onPress={() => onSelect?.(chip.id)}
-            className="items-center gap-2 w-16"
+            className="flex-1 items-center"
           >
-            <View className="w-12 h-12 rounded-full bg-main-10 items-center justify-center">
-              <Ionicons name={chip.icon} size={20} color="#EF7722" />
+            <View className="aspect-square w-full items-center justify-center rounded-2xl border border-gray-20">
+              <Ionicons name={chip.icon} size={28} color={chip.iconColor} />
             </View>
-            <Text className="text-xs text-gray-70" numberOfLines={1}>
+            <Text className="mt-2 text-xs text-gray-70" numberOfLines={1}>
               {chip.label}
             </Text>
           </Pressable>

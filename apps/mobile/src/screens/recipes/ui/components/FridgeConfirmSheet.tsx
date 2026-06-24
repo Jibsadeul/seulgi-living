@@ -2,13 +2,19 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
-import { useAddFridgeIngredient, getFoodIcon, type PresetIngredient } from '@/entities/fridge';
+import {
+  useAddFridgeIngredient,
+  useUpdateFridgeQuantity,
+  useFridgeIngredients,
+  getFoodIcon,
+  type PresetIngredient,
+} from '@/entities/fridge';
 
-type ConfirmItem = PresetIngredient & { quantity: number };
+export type ConfirmItem = PresetIngredient & { quantity: number };
 
 type Props = {
   isOpen: boolean;
-  items: PresetIngredient[];
+  items: ConfirmItem[];
   onClose: () => void;
   onComplete: () => void;
 };
@@ -17,6 +23,8 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['60%'], []);
   const addIngredient = useAddFridgeIngredient();
+  const updateQuantity = useUpdateFridgeQuantity();
+  const { data: fridgeData } = useFridgeIngredients();
 
   const [confirmItems, setConfirmItems] = useState<ConfirmItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,11 +38,11 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
 
   useMemo(() => {
     if (isOpen) {
-      setConfirmItems(items.map((item) => ({ ...item, quantity: 1 })));
+      setConfirmItems(items.map((item) => ({ ...item })));
     }
   }, [isOpen, items]);
 
-  function updateQuantity(id: string, delta: number) {
+  function adjustQuantity(id: string, delta: number) {
     setConfirmItems((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item,
@@ -50,15 +58,28 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
     if (confirmItems.length === 0 || isSubmitting) return;
     setIsSubmitting(true);
 
+    const existingItems = fridgeData?.items ?? [];
+
     try {
       for (const item of confirmItems) {
-        await addIngredient.mutateAsync({
-          name: item.name,
-          imageKey: item.imageKey,
-          category: item.category,
-          quantity: item.quantity,
-          unit: item.unit,
-        });
+        const existing = existingItems.find(
+          (e) => e.name.toLowerCase() === item.name.toLowerCase(),
+        );
+
+        if (existing) {
+          await updateQuantity.mutateAsync({
+            ingredientId: existing.id,
+            quantity: existing.quantity + item.quantity,
+          });
+        } else {
+          await addIngredient.mutateAsync({
+            name: item.name,
+            imageKey: item.imageKey,
+            category: item.category,
+            quantity: item.quantity,
+            unit: item.unit,
+          });
+        }
       }
       onComplete();
     } finally {
@@ -74,6 +95,7 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
       enableDynamicSizing={false}
       enablePanDownToClose
       onChange={handleSheetChange}
+      bottomInset={0}
       backgroundStyle={{
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
@@ -84,7 +106,7 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
       <BottomSheetView style={{ flex: 1 }}>
         <View className="flex-row items-center justify-between px-4 pb-3">
           <Text className="text-base font-bold text-gray-90">추가할 재료 확인</Text>
-          <Pressable onPress={onClose} hitSlop={8}>
+          <Pressable onPress={() => sheetRef.current?.close()} hitSlop={8}>
             <Ionicons name="close" size={22} color="#1D1D1D" />
           </Pressable>
         </View>
@@ -93,7 +115,11 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
           수량을 조절하거나 재료를 제거할 수 있어요
         </Text>
 
-        <ScrollView className="flex-1 px-4" showsVerticalScrollIndicator={false}>
+        <ScrollView
+          className="flex-1 px-4"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 16 }}
+        >
           {confirmItems.map((item) => {
             const Icon = getFoodIcon(item.imageKey);
             return (
@@ -114,7 +140,7 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
                   <Pressable
                     className="w-7 h-7 rounded-full border border-main-100 items-center justify-center"
                     disabled={item.quantity <= 1}
-                    onPress={() => updateQuantity(item.id, -1)}
+                    onPress={() => adjustQuantity(item.id, -1)}
                   >
                     <Ionicons
                       name="remove"
@@ -129,7 +155,7 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
 
                   <Pressable
                     className="w-7 h-7 rounded-full border border-main-100 items-center justify-center"
-                    onPress={() => updateQuantity(item.id, 1)}
+                    onPress={() => adjustQuantity(item.id, 1)}
                   >
                     <Ionicons name="add" size={14} color="#EF7722" />
                   </Pressable>
@@ -145,16 +171,27 @@ export function FridgeConfirmSheet({ isOpen, items, onClose, onComplete }: Props
           })}
         </ScrollView>
 
-        <View className="px-4 pb-6 pt-3">
+        <View
+          className="flex-row px-4 pb-8 pt-3 bg-white"
+          style={{ gap: 10 }}
+        >
           <Pressable
-            className={`items-center py-4 rounded-xl ${
+            onPress={() => setConfirmItems([])}
+            className="items-center justify-center rounded-2xl bg-gray-10"
+            style={{ width: 100, paddingVertical: 16 }}
+          >
+            <Text className="text-sm font-semibold text-gray-70">전체삭제</Text>
+          </Pressable>
+          <Pressable
+            className={`flex-1 items-center justify-center rounded-2xl ${
               confirmItems.length > 0 && !isSubmitting ? 'bg-main-100' : 'bg-gray-30'
             }`}
+            style={{ paddingVertical: 16 }}
             disabled={confirmItems.length === 0 || isSubmitting}
             onPress={handleConfirm}
           >
-            <Text className="text-sm font-bold text-white">
-              {isSubmitting ? '추가 중...' : `${confirmItems.length}개 재료 냉장고에 추가`}
+            <Text className="text-base font-bold text-white">
+              {isSubmitting ? '추가 중...' : `${confirmItems.length}개 재료 추가하기`}
             </Text>
           </Pressable>
         </View>

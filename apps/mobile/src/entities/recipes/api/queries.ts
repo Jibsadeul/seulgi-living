@@ -36,11 +36,25 @@ export function useRecipeListInfinite(params: Omit<Partial<RecipeListQuery>, 'pa
   });
 }
 
-export function useRecipeDetail(recipeId: string) {
+export function useRecipeDetail(recipeId: string, enabled = true) {
   return useQuery<RecipeDetailResponse>({
     queryKey: recipeKeys.detail(recipeId),
     queryFn: () => apiRequest(`/api/recipes/${recipeId}`, recipeDetailResponseSchema),
-    enabled: Boolean(recipeId),
+    enabled: Boolean(recipeId) && enabled,
+  });
+}
+
+export function useMyRecipeList(params: Partial<RecipeScrapListQuery> = {}) {
+  const query = { page: 1, size: 50, ...params };
+
+  return useQuery<RecipeListResponse>({
+    queryKey: recipeKeys.mine(query),
+    queryFn: () => {
+      const searchParams = new URLSearchParams();
+      searchParams.set('page', String(query.page));
+      searchParams.set('size', String(query.size));
+      return apiRequest(`/api/recipes/me?${searchParams}`, recipeListResponseSchema);
+    },
   });
 }
 

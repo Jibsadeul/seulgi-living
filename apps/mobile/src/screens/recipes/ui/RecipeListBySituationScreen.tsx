@@ -178,7 +178,7 @@ export function RecipeListBySituationScreen() {
         ) : (
           <View className="flex-row flex-wrap px-4 gap-3 pb-32">
             {recipes.map((recipe) => {
-              const tags = getRecipeTags(recipe.category, recipe.cookingMethod);
+              const tags = getRecipeTags(recipe.category, recipe.cookingMethod, recipe.level);
               return (
                 <Pressable
                   key={recipe.id}

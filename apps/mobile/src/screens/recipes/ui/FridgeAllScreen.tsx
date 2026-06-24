@@ -4,7 +4,8 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
-import { SkeletonCard } from '@/shared/ui';
+import { SkeletonCard, showAppToast } from '@/shared/ui';
+import { pickImageUri } from '@/shared/lib/image';
 import {
   FridgeCard,
   useFridgeIngredients,
@@ -131,9 +132,14 @@ export function FridgeAllScreen() {
     setMenu(null);
   }
 
-  function handleAiCamera() {
+  async function handleAiCamera() {
     setIsFabOpen(false);
-    // TODO: AI 카메라 화면 라우트 연결
+    const uri = await pickImageUri('camera');
+    if (!uri) return;
+    router.push({
+      pathname: '/(stack)/camera',
+      params: { mode: 'ingredient', imageUri: uri },
+    });
   }
 
   function handleAddIngredient() {

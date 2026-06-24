@@ -17,7 +17,7 @@ export function CookMainScreen() {
   const [activeTab, setActiveTab] = useState<CookMainTab>('recipe');
 
   function handleSearchPress() {
-    console.log('[CookMainScreen] search pressed');
+    router.push('/(stack)/cook-search' as never);
   }
 
   function handleRescuePress() {
@@ -54,7 +54,7 @@ export function CookMainScreen() {
               paddingBottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 24,
             }}
           >
-            <View className="mt-3">
+            <View className="mt-5">
               <SearchBar
                 placeholder="오늘 뭐 먹지? 재료나 레시피 검색"
                 onPress={handleSearchPress}
