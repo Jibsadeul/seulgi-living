@@ -9,7 +9,7 @@ import {
 import { prisma } from '@repo/db';
 import { fetchYouthPolicies, fetchYouthPolicyDetail } from '@/shared/external/youth-policy.client';
 import { errors } from '@/shared/lib/error';
-import { calcAge, calcDaysLeft } from './policies.utils';
+import { calcAge, calcDaysLeft, getTodayDateOnly } from './policies.utils';
 import {
   buildRegionFilter,
   buildScrapsInclude,
@@ -68,8 +68,7 @@ export async function syncPolicies(): Promise<{ synced: number; total: number }>
 
 // 배너 정보 가져오기
 export async function getPolicyBanner(memberId: string | null): Promise<PolicyBanner | null> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getTodayDateOnly();
   const in30Days = new Date(today.getTime() + 30 * 86400000);
 
   if (memberId) {
@@ -164,8 +163,7 @@ export async function getRecommendedPolicies(memberId: string | null): Promise<P
 
   const regionFilter = member?.sigunguId ? buildRegionFilter(member.sigunguId) : null;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getTodayDateOnly();
 
   const rows = await prisma.policy.findMany({
     where: {
@@ -209,8 +207,7 @@ export async function getPolicies(
   const regions = zipCd ? zipCd.split(',').filter(Boolean) : [];
   const supportTypes = supportType ? supportType.split(',').filter(Boolean) : [];
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getTodayDateOnly();
   const in7Days = new Date(today.getTime() + 7 * 86400000);
 
   const andConditions = [
@@ -277,8 +274,7 @@ export async function getScrappedPolicies(
 
   const { sortBy, excludeExpired, page, limit } = policyScrapListQuerySchema.parse(query);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getTodayDateOnly();
 
   const where = {
     userId: memberId,
