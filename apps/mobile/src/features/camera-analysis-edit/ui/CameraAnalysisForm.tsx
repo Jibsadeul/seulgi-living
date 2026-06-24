@@ -5,14 +5,13 @@ import type {
   CameraResultSaveRequest,
 } from '@/entities/camera';
 import { cameraAnalysisItemSchema, saveCameraResult } from '@/entities/camera';
-import { showAppToast } from '@/shared/ui';
+import { CalendarDatePicker, showAppToast } from '@/shared/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { IngredientCategory } from '@repo/contract';
 import { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { FieldLabel, FormInput } from './CameraAnalysisFields';
 import { CategoryDropdown } from './CategoryDropdown';
-import { PurchaseDatePicker } from './PurchaseDatePicker';
 
 type SaveTarget = CameraResultSaveRequest['destinations'][number];
 
@@ -68,11 +67,11 @@ function formatDate(value: string | null) {
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
   const day = `${date.getDate()}`.padStart(2, '0');
 
-  return `${year}.${month}.${day}`;
+  return `${year}-${month}-${day}`;
 }
 
 function toApiDate(value: string) {
-  return value.trim().replace(/\./g, '-');
+  return value.trim();
 }
 
 function parseQuantity(value: string) {
@@ -280,7 +279,7 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
           }`}
         >
           <FieldLabel>구매일</FieldLabel>
-          <PurchaseDatePicker
+          <CalendarDatePicker
             disabled={isGroceryFieldsDisabled}
             onChange={updatePurchaseDate}
             value={purchaseDate}

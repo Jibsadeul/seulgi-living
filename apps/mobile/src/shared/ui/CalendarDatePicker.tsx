@@ -9,11 +9,11 @@ function formatCalendarDate(date: Date) {
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
   const day = `${date.getDate()}`.padStart(2, '0');
 
-  return `${year}.${month}.${day}`;
+  return `${year}-${month}-${day}`;
 }
 
 function parseCalendarDate(value: string) {
-  const matchedDate = /^(\d{4})\.(\d{2})\.(\d{2})$/.exec(value);
+  const matchedDate = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
 
   if (!matchedDate) {
     return null;
@@ -58,12 +58,12 @@ function isAfterToday(date: Date) {
   return targetStart.getTime() > todayStart.getTime();
 }
 
-export function PurchaseDatePicker({
-  disabled,
+export function CalendarDatePicker({
+  disabled = false,
   value,
   onChange,
 }: {
-  disabled: boolean;
+  disabled?: boolean;
   value: string;
   onChange: (value: string) => void;
 }) {
@@ -94,7 +94,7 @@ export function PurchaseDatePicker({
         onPress={openCalendar}
       >
         <Text className={`text-base font-medium ${disabled ? 'text-gray-50' : 'text-gray-90'}`}>
-          {value || 'YYYY.MM.DD'}
+          {value ? value.replace(/-/g, '.') : 'YYYY.MM.DD'}
         </Text>
         <Ionicons color={disabled ? '#B8B8B8' : '#717171'} name="calendar-outline" size={20} />
       </Pressable>
