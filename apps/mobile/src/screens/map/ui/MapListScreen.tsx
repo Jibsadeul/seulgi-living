@@ -20,6 +20,7 @@ export function MapListScreen() {
     webViewRef,
     onWebViewMessage,
     moveToCurrentLocation,
+    isLocating,
     selectCategory,
     searchKeyword,
     focusMarker,
@@ -56,7 +57,11 @@ export function MapListScreen() {
 
         <MapCategoryFilter selected={selectedCategory} onSelect={selectCategory} />
 
-        <MapLocationButton onPress={moveToCurrentLocation} bottomOffset={locationButtonOffset} />
+        <MapLocationButton
+          onPress={moveToCurrentLocation}
+          bottomOffset={locationButtonOffset}
+          isLoading={isLocating}
+        />
       </View>
 
       <MapResultBottomSheet
