@@ -54,7 +54,7 @@ export default function KakaoCallbackRoute() {
     <View className="flex-1 items-center justify-center bg-white px-6">
       {message ? (
         <>
-          <Text className="text-center text-base font-bold text-gray-90">로그인 처리 실패</Text>
+          <Text className="text-center text-base font-bold text-gray-90">로그인 실패</Text>
           <Text className="mt-3 text-center text-sm font-medium text-gray-70">{message}</Text>
           <Pressable
             className="mt-6 h-12 w-full items-center justify-center rounded-lg bg-main-100"
@@ -66,7 +66,7 @@ export default function KakaoCallbackRoute() {
       ) : (
         <>
           <ActivityIndicator color="#EF7722" />
-          <Text className="mt-4 text-sm font-medium text-gray-70">로그인 처리 중</Text>
+          <Text className="mt-4 text-sm font-medium text-gray-70">로그인 중</Text>
         </>
       )}
     </View>
