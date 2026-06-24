@@ -1,7 +1,6 @@
 import { Pressable, ScrollView, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { PolicyFilterValues } from '@/entities/policies';
-import { PERIOD_LABEL, type FilterSection } from '@/features/policy-search';
+import { PERIOD_LABEL, type FilterSection, type PolicyFilterValues } from '@/entities/policies';
 import FilterIcon from '@assets/icons/filter.svg';
 
 type Props = {

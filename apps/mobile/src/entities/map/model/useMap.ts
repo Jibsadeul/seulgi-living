@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import Toast from 'react-native-toast-message';
 import type WebView from 'react-native-webview';
 import type { WebViewMessageEvent } from 'react-native-webview';
@@ -9,6 +9,7 @@ import { useMapStore } from './map.store';
 
 export function useMap() {
   const webViewRef = useRef<WebView>(null);
+  const [isLocating, setIsLocating] = useState(false);
   const {
     setSelectedCategory,
     setSelectedPlace,
@@ -37,6 +38,9 @@ export function useMap() {
       return;
     }
 
+    // GPS 조회(getCurrentPositionAsync)가 수 초씩 걸릴 수 있어, 버튼에 로딩 상태를 노출해
+    // "눌렀는데 반응이 없다"는 오인을 막는다.
+    setIsLocating(true);
     try {
       // 현재 위치 우선. 실패 시 마지막 알려진 위치로 fallback
       const location = await Location.getCurrentPositionAsync({
@@ -60,6 +64,8 @@ export function useMap() {
           text2: '잠시 후 다시 시도해주세요.',
         });
       }
+    } finally {
+      setIsLocating(false);
     }
   }, [sendToMap]);
 
@@ -146,6 +152,7 @@ export function useMap() {
     webViewRef,
     onWebViewMessage,
     moveToCurrentLocation,
+    isLocating,
     selectCategory,
     searchKeyword,
     focusMarker,

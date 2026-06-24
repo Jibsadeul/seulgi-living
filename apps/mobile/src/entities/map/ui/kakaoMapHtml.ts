@@ -205,8 +205,11 @@ export const getKakaoMapHtml = (apiKey: string): string => `
     }
 
     // 지도 중심 이동 + 내 위치 마커 표시
+    // 줌을 멀리 축소/패닝한 상태에서 누르면 setCenter만으로는 이동량이 화면에 거의 안 보여
+    // "아무 반응 없다"처럼 느껴진다 → 항상 기본 줌(레벨 3)으로 같이 리셋한다.
     function moveToLocation(lat, lng) {
       var latLng = new kakao.maps.LatLng(lat, lng);
+      map.setLevel(3);
       map.setCenter(latLng);
 
       if (locationMarker) locationMarker.setMap(null);

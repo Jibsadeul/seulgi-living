@@ -17,11 +17,12 @@
 
 ### 핵심 결정: 상세 데이터는 DB가 아니라 온통청년 API를 매 요청마다 실시간 호출
 
-- `Policy` 테이블은 목록/배치 동기화(요약 필드)용으로만 유지하고, 상세 화면은 조회하지 않는다.
+- `Policy` 테이블은 목록/배치 동기화(요약 필드)용으로만 유지하고, 상세 콘텐츠는 조회하지 않는다.
 - `fetchYouthPolicies()`가 `plcyNo` 쿼리 파라미터로 단건 필터링됨을 실제 호출로 확인했다.
 - 신규: `fetchYouthPolicyDetail(plcyNo)` — `youth-policy.client.ts`에 추가, 기존 호출 로직을 재사용해 `plcyNo` 단건 조회 + `pageSize: 1`
 - 신규 raw 타입: `YouthPolicyDetailRaw` (목록 동기화용 `YouthPolicyRaw`보다 필드가 많다 — 아래 매핑 표 참고)
 - `isScrapped`/스크랩 카운트만 DB(`PolicyScrap`)에서 조회해 합성한다. 지역명(`zipCd` → 시군구명)도 기존 패턴대로 DB `Sigungu` 조회로 보강한다 (정책 콘텐츠 자체가 아니므로 실시간 원칙과 무관).
+- **예외**: `largeCategory`/`mediumCategory`(대/중분류), `keywords`(키워드)는 `plcyNo` 단건 필터 조회 시 외부 API가 항상 `null`을 반환하는 결함이 확인되어, DB `Policy` 테이블 값으로 보완한다(`POLICY-031`, `POLICY-033`). 이 메타데이터들은 실시간성이 필요 없어 예외로 허용.
 
 ### BFF 캐시 정책
 
@@ -39,24 +40,26 @@
 
 ### 필드 매핑
 
-| 응답 필드                                                | 원본 API 필드                                                                                    | 비고                                         |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------- |
-| `name`, `largeCategory`, `mediumCategory`, `description` | `plcyNm`, `lclsfNm`, `mclsfNm`, `plcyExplnCn`                                                    |                                              |
-| `ageMin/Max`, `noAgeLimit`                               | `sprtTrgtMinAge/Max`, `sprtTrgtAgeLmtYn`                                                         |                                              |
-| `applyStartDate/EndDate`, `applyPeriodType`              | `bizPrdBgngYmd/EndYmd`, `aplyPrdSeCd`                                                            | `daysLeft` 계산에 기존 `calcDaysLeft` 재사용 |
-| `applicationUrl`                                         | `aplyUrlAddr`                                                                                    | 하단 고정 CTA                                |
-| `region`                                                 | `zipCd` → DB `Sigungu` 조회                                                                      | 기존 `buildRegionLabel` 재사용               |
-| `supervisingAgency`, `operatingAgency`                   | `sprvsnInstCdNm`, `operInstCdNm`                                                                 |                                              |
-| `referenceUrls`                                          | `refUrlAddr1`, `refUrlAddr2`                                                                     | null 가능                                    |
-| 지원내용 탭 `content`                                    | `plcySprtCn`                                                                                     |                                              |
-| 지원내용 탭 `notice`                                     | `etcMttrCn`                                                                                      | 빨간 테두리 경고 카드로 표시                 |
-| 지원자격 탭 `basicQualification`                         | 연령(`sprtTrgtMinAge/Max`) + 소득조건(`earnCndSeCd/earnMinAmt/earnMaxAmt/earnEtcCn`) 조합 텍스트 |                                              |
-| 지원자격 탭 `detailQualification`                        | `addAplyQlfcCndCn`                                                                               |                                              |
-| 지원자격 탭 `exclusionTarget`                            | `ptcpPrpTrgtCn`                                                                                  | 빨간 테두리 경고 카드로 표시                 |
-| 신청방법 탭 `applyMethod`                                | `plcyAplyMthdCn`                                                                                 |                                              |
-| 신청방법 탭 `screeningMethod`                            | `srngMthdCn`                                                                                     |                                              |
-| 신청방법 탭 `requiredDocuments`                          | `sbmsnDcmntCn` 파싱                                                                              | 아래 "제출서류 파싱 + 링크 매핑" 참고        |
-| `isScrapped`                                             | DB `PolicyScrap`                                                                                 |                                              |
+| 응답 필드                                     | 원본 API 필드                                                                                    | 비고                                                                                                         |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `name`, `description`                         | `plcyNm`, `plcyExplnCn`                                                                          |                                                                                                              |
+| `largeCategory`, `mediumCategory`, `keywords` | DB `Policy` 테이블 우선, 없으면 `lclsfNm`/`mclsfNm`/`plcyKywdNm`(`POLICY-031`, `POLICY-033`)     | `plcyNo` 단건 필터 조회 시 외부 API가 항상 `null` 반환하는 결함 보완, 각 필드 콤마 구분 시 첫 값만 칩에 사용 |
+| `ageMin/Max`, `noAgeLimit`                    | `sprtTrgtMinAge/Max`, `sprtTrgtAgeLmtYn`                                                         |                                                                                                              |
+| `applyStartDate/EndDate`, `applyPeriodType`   | `bizPrdBgngYmd/EndYmd`, `aplyPrdSeCd`                                                            | `daysLeft` 계산에 기존 `calcDaysLeft` 재사용                                                                 |
+| `applicationUrl`                              | `aplyUrlAddr`                                                                                    | 하단 고정 CTA                                                                                                |
+| `region`                                      | `zipCd` → DB `Sigungu` 조회                                                                      | 기존 `buildRegionLabel` 재사용                                                                               |
+| `supervisingAgency`, `operatingAgency`        | `sprvsnInstCdNm`, `operInstCdNm`                                                                 |                                                                                                              |
+| `referenceUrls`                               | `refUrlAddr1`, `refUrlAddr2`                                                                     | null 가능                                                                                                    |
+| Quick Info `amountLabel`                      | `plcySprtCn`에서 정규식 best-effort 추출(`POLICY-029`)                                           | 못 찾으면 `null`, 화면에서 "지원내용 탭에서 확인" 폴백                                                       |
+| 지원내용 탭 `content`                         | `plcySprtCn`                                                                                     |                                                                                                              |
+| 지원내용 탭 `notice`                          | `etcMttrCn`                                                                                      | 빨간 테두리 경고 카드로 표시                                                                                 |
+| 지원자격 탭 `basicQualification`              | 연령(`sprtTrgtMinAge/Max`) + 소득조건(`earnCndSeCd/earnMinAmt/earnMaxAmt/earnEtcCn`) 조합 텍스트 |                                                                                                              |
+| 지원자격 탭 `detailQualification`             | `addAplyQlfcCndCn`                                                                               |                                                                                                              |
+| 지원자격 탭 `exclusionTarget`                 | `ptcpPrpTrgtCn`                                                                                  | 빨간 테두리 경고 카드로 표시                                                                                 |
+| 신청방법 탭 `applyMethod`                     | `plcyAplyMthdCn`                                                                                 |                                                                                                              |
+| 신청방법 탭 `screeningMethod`                 | `srngMthdCn`                                                                                     |                                                                                                              |
+| 신청방법 탭 `requiredDocuments`               | `sbmsnDcmntCn` 파싱                                                                              | 아래 "제출서류 파싱 + 링크 매핑" 참고                                                                        |
+| `isScrapped`                                  | DB `PolicyScrap`                                                                                 |                                                                                                              |
 
 ### 제출서류 파싱 + 링크 매핑
 
@@ -77,17 +80,18 @@
 
 ### 모바일
 
-- `entities/policies`에 `usePolicyDetail(id)` 신규 쿼리 훅 추가 (`policyKeys.detail(id)`)
-- 스크랩 토글은 기존 `usePolicyScrap` mutation을 재사용하고, 캐시 갱신 대상에 `detail` 쿼리를 추가한다
+- `entities/policies`에 `usePolicyDetail(id)` 신규 쿼리 훅 추가 (`policyKeys.detail(id)`, `enabled: id.length > 0`)
+- 스크랩 토글은 기존 `usePolicyScrap` mutation을 재사용하고, 캐시 갱신 대상에 `detail` 쿼리를 추가한다(즉시 재요청 없이 `refetchType: 'none'`으로 stale 표시만, `POLICY-028`)
+- 공통 `shared/ui/Header.tsx`(`detail` variant)에 선택적 props `isScrapped?`/`onBookmarkPress?`를 추가해 북마크 아이콘을 실제 스크랩 토글에 연동한다. 안 넘기면 기존처럼 비활성 껍데기로 동작해 레시피 상세 화면 등 다른 호출부엔 영향 없다
 
 ---
 
 ## 화면 구성 (Figma 기준)
 
 1. **헤더**: 공통 `Header` `detail` variant, blur 배경
-2. **Hero**: 카테고리 칩 + D-day/마감 뱃지, 정책명, 요약 설명
-3. **Quick Info 2x2**: 지원금액 / 지원대상 / 신청기간 / 주관기관
-4. **스티키 탭 3개**: 지원자격 / 지원내용 / 신청방법
+2. **Hero**: 카테고리 칩 2개(대분류/중분류, 각각 콤마 구분 시 첫 값만 — 키워드 칩은 제외, `keywords` 데이터는 보유) + D-day 뱃지(마감/마감임박/그 외 3단계 배색), 정책명, 요약 설명
+3. **Quick Info 2x2**: 지원금액 / 지원대상 / 신청기간(`applyEndDate` 있으면 "캘린더 등록" 버튼, `expo-calendar`로 기기 캘린더에 종일 일정 등록) / 주관기관
+4. **탭 3개**: 지원자격 / 지원내용 / 신청방법 (Figma의 "스티키" 동작은 구현하지 않음 — `useState`로 단순 탭 전환만 적용, 스크롤 중 상단 고정은 범위 제외)
    - 지원자격: 기본 자격요건 → 상세조건 → 지원 제외대상 (경고 카드, 빨간 테두리)
    - 지원내용: 상세 내용 → 유의사항 (경고 카드, 빨간 테두리)
    - 신청방법: 신청 방법 → 필수 제출서류 (카드 리스트, 일부 기관 이동 버튼)
@@ -96,25 +100,25 @@
 ### 스코프 제외 (별도 작업으로 기록)
 
 - 관련 정책 추천 섹션 — 추천 로직 설계가 추가로 필요
-- 신청기간 카드의 "캘린더 등록" 버튼
+- 딥링크 기반 공유/비설치 사용자 유입 플로우 — `local/WORK.md` 참고 (배포/웹 인프라 필요)
 
 ---
 
 ## 에러 처리
 
-| 상황                        | 처리                                              |
-| --------------------------- | ------------------------------------------------- |
-| 외부 API 호출 실패/타임아웃 | 전체 화면 에러 상태 + 재시도 버튼                 |
-| 정책 없음(빈 결과)          | 404 → Empty State + 뒤로가기                      |
-| 비로그인 스크랩 시도        | 로그인 안내 토스트 (기존 패턴)                    |
-| 스크랩 토글 실패            | 낙관적 업데이트 롤백 + 토스트                     |
-| 마감된 정책                 | 차단하지 않고 마감 뱃지만 표시, CTA는 그대로 노출 |
+| 상황                        | 처리                                                                                                                                                                     |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 외부 API 호출 실패/타임아웃 | 전체 화면 에러 상태 + 재시도 버튼                                                                                                                                        |
+| 정책 없음(404)              | 별도 Empty State 없이 일반 에러 화면과 동일 처리(`POLICY-030`) — `client.ts`가 상태코드를 보존하지 않아 구분 불가, `ApiError` 도입은 별도 작업(`local/WORK.md`)으로 분리 |
+| 비로그인 스크랩 시도        | 로그인 안내 토스트 (기존 패턴)                                                                                                                                           |
+| 스크랩 토글 실패            | 낙관적 업데이트 롤백 + 토스트                                                                                                                                            |
+| 마감된 정책                 | 차단하지 않고 마감 뱃지만 표시, CTA는 그대로 노출                                                                                                                        |
 
 ---
 
 ## 검증 기준
 
-- 상세 화면은 `Policy` 테이블을 조회하지 않는다 (스크랩 여부/지역명 제외).
+- 상세 화면은 `Policy` 테이블을 조회하지 않는다 (스크랩 여부/지역명/대·중분류 제외, `POLICY-031`).
 - API 타입은 신규 `policyDetailSchema`로 검증하며, 기존 `policySchema`와 혼용하지 않는다.
 - BFF `fetch()` 호출에 `revalidate: 1800`이 적용되어 있다.
 - `screens → features → entities → shared` 의존 방향을 지킨다.

@@ -1,4 +1,5 @@
-import type { Policy } from '@repo/contract';
+import type { Policy, PolicyDetail } from '@repo/contract';
+import { addAllDayEventToCalendar, parseLocalDate } from '@/shared/lib/calendar';
 
 export function formatPeriod(
   policy: Pick<Policy, 'applyStartDate' | 'applyEndDate' | 'applyPeriodType'>,
@@ -42,4 +43,24 @@ export function getDeadlineLabel(daysLeft: number | null): string {
 
 export function isUrgentDeadline(daysLeft: number | null): boolean {
   return daysLeft !== null && daysLeft >= 0 && daysLeft <= 3;
+}
+
+export const PERIOD_LABEL: Record<'0057001' | '0057002', string> = {
+  '0057001': '마감기한순',
+  '0057002': '상시',
+};
+
+export type FilterSection = 'category' | 'region' | 'supportType' | 'period';
+
+// 정책 신청 마감일을 기기 캘린더에 종일 일정으로 등록한다. "상시" 정책(applyEndDate 없음)은 호출하지 않는다.
+export async function registerPolicyDeadline(
+  policy: Pick<PolicyDetail, 'name' | 'applyEndDate' | 'applicationUrl'>,
+): Promise<void> {
+  if (!policy.applyEndDate) return;
+
+  await addAllDayEventToCalendar({
+    title: `${policy.name} 신청 마감`,
+    date: parseLocalDate(policy.applyEndDate),
+    notes: policy.applicationUrl || undefined,
+  });
 }
