@@ -1,5 +1,6 @@
 import {
   useCreateGroceryMutation,
+  useDeleteGroceryMutation,
   useGroceryListQuery,
   type CreateGroceryBody,
   type GroceryListGroup,
@@ -225,10 +226,12 @@ function GroceryItemDropdown({
   item,
   position,
   onClose,
+  onDelete,
 }: {
   item: GroceryListItem | null;
   position: DropdownPosition | null;
   onClose: () => void;
+  onDelete: (id: string) => void;
 }) {
   if (!item || !position) return null;
 
@@ -252,7 +255,7 @@ function GroceryItemDropdown({
           <Text className="text-sm font-medium text-gray-90">수정</Text>
         </Pressable>
         <View className="border-b border-gray-10" />
-        <Pressable className="px-5 py-3" onPress={onClose}>
+        <Pressable className="px-5 py-3" onPress={() => onDelete(item.id)}>
           <Text className="text-sm font-medium text-point-100">삭제</Text>
         </Pressable>
       </View>
@@ -442,6 +445,12 @@ export function GroceriesListScreen() {
     item: GroceryListItem;
     position: DropdownPosition;
   } | null>(null);
+  const deleteGrocery = useDeleteGroceryMutation();
+
+  const handleDelete = (id: string) => {
+    setActionMenu(null);
+    deleteGrocery.mutate(id);
+  };
   const query = useMemo(
     () => ({ year: selectedMonth.year, month: selectedMonth.month }),
     [selectedMonth.month, selectedMonth.year],
@@ -634,6 +643,7 @@ export function GroceriesListScreen() {
         item={actionMenu?.item ?? null}
         position={actionMenu?.position ?? null}
         onClose={() => setActionMenu(null)}
+        onDelete={handleDelete}
       />
     </View>
   );

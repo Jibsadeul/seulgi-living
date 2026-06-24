@@ -9,6 +9,7 @@ export {
 export { GroceryCard } from './ui/GroceryCard';
 export {
   useCreateGroceryMutation,
+  useDeleteGroceryMutation,
   useGroceryListQuery,
   useGrocerySummaryQuery,
 } from './model/useGrocery';
