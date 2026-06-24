@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetScrollView,
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 export type GroceryDailyGroup = {
@@ -120,7 +120,6 @@ export function GroceryBudgetReportSheet({
   dailyGroups,
 }: Props) {
   const sheetRef = useRef<BottomSheet>(null);
-  const didMountRef = useRef(false);
   const snapPoints = useMemo(() => ['85%'], []);
   const spentPercent = budget > 0 ? Math.round((spent / budget) * 100) : 0;
 
@@ -137,11 +136,6 @@ export function GroceryBudgetReportSheet({
   }, [dailyGroups]);
 
   useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true;
-      if (!isOpen) return;
-    }
-
     if (isOpen) {
       sheetRef.current?.snapToIndex(0);
     } else {
@@ -165,8 +159,9 @@ export function GroceryBudgetReportSheet({
   return (
     <BottomSheet
       ref={sheetRef}
-      index={-1}
+      index={isOpen ? 0 : -1}
       snapPoints={snapPoints}
+      animateOnMount={false}
       enableDynamicSizing={false}
       enablePanDownToClose
       onClose={onClose}
