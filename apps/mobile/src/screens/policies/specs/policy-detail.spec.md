@@ -100,7 +100,12 @@
 ### 스코프 제외 (별도 작업으로 기록)
 
 - 관련 정책 추천 섹션 — 추천 로직 설계가 추가로 필요
-- 딥링크 기반 공유/비설치 사용자 유입 플로우 — `local/WORK.md` 참고 (배포/웹 인프라 필요)
+
+### 공유 (딥링크)
+
+- `handleSharePress`의 기존 텍스트(정책명/설명/신청 URL)는 그대로 유지하고, 마지막 줄에 `shared/lib/share.ts`의 `buildShareLandingUrl('policies', policy.id)` 결과를 추가한다.
+- 상세 명세는 `shared/lib/specs/share-deeplink.spec.md`(모바일 헬퍼), `web/share/specs/share-landing.spec.md`(랜딩 페이지) 참고.
+- 앱이 콜드스타트 상태에서 `seulgi-living://policies/{id}` 딥링크를 받았을 때 `(stack)/policies/[id].tsx`로 정상 진입하는지는 expo-router 기본 동작에 의존하며, 별도 핸들러 코드를 추가하지 않는다(실기기 검증 필요).
 
 ---
 

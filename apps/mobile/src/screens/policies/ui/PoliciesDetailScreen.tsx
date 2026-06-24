@@ -2,6 +2,7 @@ import { ActivityIndicator, Pressable, ScrollView, Share, Text, View } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Header } from '@/shared/ui';
+import { buildShareLandingUrl } from '@/shared/lib/share';
 import { usePolicyDetail, usePolicyScrap } from '@/entities/policies';
 import { PolicyDetailHero } from './components/detail/PolicyDetailHero';
 import { PolicyDetailQuickInfoGrid } from './components/detail/PolicyDetailQuickInfoGrid';
@@ -25,6 +26,7 @@ export function PoliciesDetailScreen() {
     const lines = [policy.name];
     if (policy.description) lines.push(policy.description);
     if (policy.applicationUrl) lines.push(policy.applicationUrl);
+    lines.push(buildShareLandingUrl('policies', policy.id));
     Share.share({ message: lines.join('\n') });
   }
 
