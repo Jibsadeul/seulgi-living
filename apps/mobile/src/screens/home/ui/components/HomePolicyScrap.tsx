@@ -1,8 +1,9 @@
 import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { PolicySearchResultCard, useScrappedPolicies } from '@/entities/policies';
+import { useScrappedPolicies } from '@/entities/policies';
 import { useMemberStore } from '@/entities/members';
 import { SkeletonCard } from '@/shared/ui';
+import { PolicyScrapCard } from '@/screens/scraps/ui/components/policy/PolicyScrapCard';
 import { HomeSectionHeader } from './HomeSectionHeader';
 
 const SCRAP_PREVIEW_SIZE = 3;
@@ -27,7 +28,7 @@ export function HomePolicyScrap() {
       {isLoading ? (
         <View className="gap-3">
           {Array.from({ length: SCRAP_PREVIEW_SIZE }).map((_, index) => (
-            <SkeletonCard key={index} height={112} />
+            <SkeletonCard key={index} height={80} />
           ))}
         </View>
       ) : isError ? (
@@ -43,7 +44,7 @@ export function HomePolicyScrap() {
       ) : (
         <View className="gap-3">
           {policies.map((policy) => (
-            <PolicySearchResultCard key={policy.id} policy={policy} />
+            <PolicyScrapCard key={policy.id} policy={policy} />
           ))}
         </View>
       )}
