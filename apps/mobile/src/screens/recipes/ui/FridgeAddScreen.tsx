@@ -12,8 +12,8 @@ import {
   type PresetIngredient,
 } from '@/entities/fridge';
 import { FridgeCategoryFilter } from './components/FridgeCategoryFilter';
-import { FridgeDirectAddSheet } from './components/FridgeDirectAddSheet';
-import { FridgeConfirmSheet } from './components/FridgeConfirmSheet';
+import { FridgeDirectAddSheet, type DirectAddItem } from './components/FridgeDirectAddSheet';
+import { FridgeConfirmSheet, type ConfirmItem } from './components/FridgeConfirmSheet';
 
 const TAB_BAR_CONTAINER_HEIGHT = 87;
 const NUM_COLUMNS = 3;
@@ -37,6 +37,7 @@ export function FridgeAddScreen() {
   const [searchText, setSearchText] = useState('');
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [customItems, setCustomItems] = useState<DirectAddItem[]>([]);
   const [isDirectAddOpen, setIsDirectAddOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
@@ -73,14 +74,24 @@ export function FridgeAddScreen() {
     });
   }
 
+  function handleDirectAdd(item: DirectAddItem) {
+    setCustomItems((prev) => [...prev, item]);
+  }
+
+  const confirmItems = useMemo<ConfirmItem[]>(() => {
+    const presetItems = selectedPresets.map((p) => ({ ...p, quantity: 1 }));
+    return [...presetItems, ...customItems];
+  }, [selectedPresets, customItems]);
+
   function handleSubmitPress() {
-    if (selectedIds.size === 0) return;
+    if (confirmItems.length === 0) return;
     setIsConfirmOpen(true);
   }
 
   function handleConfirmComplete() {
     setIsConfirmOpen(false);
     setSelectedIds(new Set());
+    setCustomItems([]);
     router.back();
   }
 
@@ -111,7 +122,7 @@ export function FridgeAddScreen() {
   }
 
   const categoryLabels = CATEGORY_FILTERS.map((f) => f.label);
-  const selectedCount = selectedIds.size;
+  const selectedCount = selectedIds.size + customItems.length;
 
   return (
     <View className="flex-1 bg-surface-card">
@@ -176,11 +187,15 @@ export function FridgeAddScreen() {
         </Pressable>
       </View>
 
-      <FridgeDirectAddSheet isOpen={isDirectAddOpen} onClose={() => setIsDirectAddOpen(false)} />
+      <FridgeDirectAddSheet
+        isOpen={isDirectAddOpen}
+        onClose={() => setIsDirectAddOpen(false)}
+        onAdd={handleDirectAdd}
+      />
 
       <FridgeConfirmSheet
         isOpen={isConfirmOpen}
-        items={selectedPresets}
+        items={confirmItems}
         onClose={() => setIsConfirmOpen(false)}
         onComplete={handleConfirmComplete}
       />

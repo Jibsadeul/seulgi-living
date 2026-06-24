@@ -3,4 +3,5 @@ export const recipeKeys = {
   list: (params: Record<string, unknown>) => [...recipeKeys.all, 'list', params] as const,
   detail: (id: string) => [...recipeKeys.all, 'detail', id] as const,
   scraps: (params: Record<string, unknown>) => [...recipeKeys.all, 'scraps', params] as const,
+  mine: (params: Record<string, unknown>) => [...recipeKeys.all, 'mine', params] as const,
 };

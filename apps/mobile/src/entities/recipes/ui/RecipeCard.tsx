@@ -1,3 +1,4 @@
+import React from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -16,6 +17,7 @@ export type RecipeCardProps = {
   isScraped?: boolean;
   onPress?: () => void;
   onToggleScrap?: () => void;
+  actionIcon?: React.ReactNode;
 };
 
 const TAG_STYLES: Record<RecipeTagVariant, { container: string; text: string }> = {
@@ -35,6 +37,7 @@ export function RecipeCard({
   isScraped = false,
   onPress,
   onToggleScrap,
+  actionIcon,
 }: RecipeCardProps) {
   return (
     <Pressable
@@ -42,9 +45,9 @@ export function RecipeCard({
       className="flex-row gap-3 bg-surface-default rounded-2xl p-3 border border-gray-10"
     >
       {imageUrl ? (
-        <Image source={{ uri: imageUrl }} className="w-20 h-20 rounded-xl bg-gray-10" />
+        <Image source={{ uri: imageUrl }} className="w-24 rounded-xl bg-gray-10" style={{ alignSelf: 'stretch' }} resizeMode="cover" />
       ) : (
-        <View className="w-20 h-20 rounded-xl bg-gray-10" />
+        <View className="w-24 rounded-xl bg-gray-10" style={{ alignSelf: 'stretch' }} />
       )}
 
       <View className="flex-1 gap-1">
@@ -53,11 +56,13 @@ export function RecipeCard({
             {title}
           </Text>
           <Pressable onPress={onToggleScrap} hitSlop={8}>
-            <Ionicons
-              name={isScraped ? 'bookmark' : 'bookmark-outline'}
-              size={18}
-              color={isScraped ? '#EF7722' : '#C6C6C6'}
-            />
+            {actionIcon ?? (
+              <Ionicons
+                name={isScraped ? 'bookmark' : 'bookmark-outline'}
+                size={18}
+                color={isScraped ? '#EF7722' : '#C6C6C6'}
+              />
+            )}
           </Pressable>
         </View>
 

@@ -13,5 +13,13 @@ export function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.redirect(callbackUrl);
+  const redirectHref = callbackUrl.toString();
+
+  return new NextResponse(
+    `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${redirectHref}"/></head><body><script>window.location.href="${redirectHref}";</script></body></html>`,
+    {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    },
+  );
 }

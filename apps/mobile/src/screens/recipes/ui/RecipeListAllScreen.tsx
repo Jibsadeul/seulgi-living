@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Header, SearchBar } from '@/shared/ui';
@@ -20,6 +20,7 @@ import {
   type RecipeTag,
   type RecipeCategory,
   type CookingMethod,
+  type RecipeLevel,
 } from '@/entities/recipes';
 import {
   RecipeFilterModal,
@@ -55,13 +56,21 @@ const FILTER_METHOD_MAP: Record<string, CookingMethod> = {
   기타: 'OTHER',
 };
 
+const FILTER_LEVEL_MAP: Record<string, RecipeLevel> = {
+  초급: 'LOW',
+  중급: 'MEDIUM',
+  상급: 'HIGH',
+};
+
 const TAB_BAR_CONTAINER_HEIGHT = 87;
 
 export function RecipeListAllScreen() {
   const router = useRouter();
+  const { keyword: initialKeyword } = useLocalSearchParams<{ keyword?: string }>();
   const insets = useSafeAreaInsets();
   const [filters, setFilters] = useState<RecipeFilters>(EMPTY_FILTERS);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [searchText, setSearchText] = useState(initialKeyword ?? '');
   const scrapMutation = useRecipeScrap();
 
   const queryParams = useMemo(() => {
@@ -72,8 +81,15 @@ export function RecipeListAllScreen() {
     if (filters.cookMethod !== '전체') {
       params.cookingMethod = FILTER_METHOD_MAP[filters.cookMethod];
     }
+    if (filters.difficulty !== '전체') {
+      params.level = FILTER_LEVEL_MAP[filters.difficulty];
+    }
+    const keyword = searchText.trim();
+    if (keyword) {
+      params.keyword = keyword;
+    }
     return params;
-  }, [filters]);
+  }, [filters, searchText]);
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useRecipeListInfinite(queryParams);
@@ -98,10 +114,6 @@ export function RecipeListAllScreen() {
     router.push({ pathname: '/(stack)/recipes/[id]', params: { id } } as never);
   }
 
-  function handleSearchPress() {
-    console.log('[RecipeListAll] search pressed');
-  }
-
   function handleRecipeUploadPress() {
     router.push('/(stack)/recipe-upload' as never);
   }
@@ -113,7 +125,7 @@ export function RecipeListAllScreen() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   function renderRecipeItem({ item, index }: { item: RecipePreview; index: number }) {
-    const tags = getRecipeTags(item.category, item.cookingMethod);
+    const tags = getRecipeTags(item.category, item.cookingMethod, item.level);
     const isLeft = index % 2 === 0;
 
     return (
@@ -195,7 +207,8 @@ export function RecipeListAllScreen() {
             <View className="mt-3 mb-2">
               <SearchBar
                 placeholder="오늘 뭐 먹지? 재료나 레시피 검색"
-                onPress={handleSearchPress}
+                value={searchText}
+                onChangeText={setSearchText}
               />
             </View>
 

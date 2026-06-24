@@ -1,13 +1,8 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, Text, TextInput, View, FlatList } from 'react-native';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
-import {
-  useAddFridgeIngredient,
-  CATEGORY_FILTERS,
-  type IngredientCategory,
-  type AddFridgeIngredientBody,
-} from '@/entities/fridge';
+import { type IngredientCategory } from '@/entities/fridge';
 
 const CATEGORY_OPTIONS: { label: string; value: IngredientCategory }[] = [
   { label: '채소', value: 'VEGETABLE' },
@@ -23,9 +18,19 @@ const CATEGORY_OPTIONS: { label: string; value: IngredientCategory }[] = [
 
 const UNIT_OPTIONS = ['개', 'g', 'kg', 'ml', 'L', '봉', '팩', '줄', '병', '캔'];
 
+export type DirectAddItem = {
+  id: string;
+  name: string;
+  imageKey: string;
+  category: IngredientCategory;
+  quantity: number;
+  unit: string;
+};
+
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  onAdd: (item: DirectAddItem) => void;
 };
 
 function SelectDropdown({
@@ -87,10 +92,11 @@ function SelectDropdown({
   );
 }
 
-export function FridgeDirectAddSheet({ isOpen, onClose }: Props) {
+let directAddCounter = 0;
+
+export function FridgeDirectAddSheet({ isOpen, onClose, onAdd }: Props) {
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['65%'], []);
-  const addIngredient = useAddFridgeIngredient();
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState<IngredientCategory>('OTHER');
@@ -112,20 +118,18 @@ export function FridgeDirectAddSheet({ isOpen, onClose }: Props) {
   function handleSave() {
     if (!name.trim()) return;
 
-    const body: AddFridgeIngredientBody = {
+    directAddCounter += 1;
+    onAdd({
+      id: `custom-${Date.now()}-${directAddCounter}`,
       name: name.trim(),
       imageKey: 'DEFAULT',
       category,
       quantity,
       unit,
-    };
-
-    addIngredient.mutate(body, {
-      onSuccess: () => {
-        resetForm();
-        onClose();
-      },
     });
+
+    resetForm();
+    onClose();
   }
 
   const categorySelectOptions = CATEGORY_OPTIONS.map((c) => ({

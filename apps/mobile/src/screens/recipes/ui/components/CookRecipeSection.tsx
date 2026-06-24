@@ -15,7 +15,7 @@ export function CookRecipeSection({ onRecipePress, onSeeAllPress }: Props) {
   }
 
   return (
-    <View className="px-4 mt-6">
+    <View className="px-4 mt-10">
       <View className="flex-row items-center justify-between mb-3">
         <Text className="text-sm font-semibold text-gray-90">모든 레시피</Text>
         <Pressable onPress={onSeeAllPress}>
@@ -38,7 +38,7 @@ export function CookRecipeSection({ onRecipePress, onSeeAllPress }: Props) {
               key={recipe.id}
               title={recipe.name}
               description=""
-              tags={getRecipeTags(recipe.category, recipe.cookingMethod)}
+              tags={getRecipeTags(recipe.category, recipe.cookingMethod, recipe.level)}
               imageUrl={recipe.imageUrl}
               isScraped={recipe.isSaved}
               onPress={() => onRecipePress?.(recipe.id)}
