@@ -15,6 +15,7 @@ import {
   type CookingMethod,
   type RecipeLevel,
 } from '@/entities/recipes';
+import { useDismissBack } from '@/shared/hooks/useDismissBack';
 
 const TAG_STYLES: Record<RecipeTag['variant'], { container: string; text: string }> = {
   pink: { container: 'bg-tag-pink', text: 'text-tagText-pink' },
@@ -71,7 +72,12 @@ function RecipeDetailContent({
 
   return (
     <View className="flex-1 bg-surface-default">
-      <Header title="레시피 상세" variant="detail" />
+      <Header
+        title="레시피 상세"
+        variant="detail"
+        isScrapped={scrap.isSaved}
+        onBookmarkPress={onToggleScrap}
+      />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -89,9 +95,7 @@ function RecipeDetailContent({
 
         <View className="px-4 pt-4 pb-2">
           <Text className="text-xl font-bold text-gray-90">{recipeName}</Text>
-          {authorNickname && (
-            <Text className="text-xs text-gray-50 mt-1">by {authorNickname}</Text>
-          )}
+          {authorNickname && <Text className="text-xs text-gray-50 mt-1">by {authorNickname}</Text>}
           <View className="flex-row gap-1 mt-2 flex-wrap">
             {tags.map((tag, tagIndex) => {
               const style = TAG_STYLES[tag.variant];
@@ -100,7 +104,9 @@ function RecipeDetailContent({
                   key={`${tag.label}-${tagIndex}`}
                   className={`px-3 py-1 rounded-full ${style.container}`}
                 >
-                  <Text className={`text-xs font-medium ${style.text}`}>{tag.label}</Text>
+                  <Text className={`font-medium ${style.text}`} style={{ fontSize: 10 }}>
+                    {tag.label}
+                  </Text>
                 </View>
               );
             })}
@@ -190,6 +196,7 @@ function RecipeDetailContent({
 }
 
 export function RecipeDetailScreen() {
+  useDismissBack();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const isRemoteId = isUuid(id ?? '');
@@ -234,7 +241,15 @@ export function RecipeDetailScreen() {
       imageUrl: s.imageUri || null,
     }));
     const localIngredients = localRecipe.ingredients
-      ? [{ section: '재료', items: localRecipe.ingredients.split(/[,\n]/).map((s) => s.trim()).filter(Boolean) }]
+      ? [
+          {
+            section: '재료',
+            items: localRecipe.ingredients
+              .split(/[,\n]/)
+              .map((s) => s.trim())
+              .filter(Boolean),
+          },
+        ]
       : [];
 
     return (
@@ -259,10 +274,8 @@ export function RecipeDetailScreen() {
     <View className="flex-1 bg-surface-default">
       <Header title="레시피 상세" variant="detail" />
       <View className="flex-1 items-center justify-center px-4">
-        <Text className="text-base font-semibold text-gray-90 mb-2">
-          레시피를 찾을 수 없습니다
-        </Text>
-        <Pressable onPress={() => router.back()}>
+        <Text className="text-base font-semibold text-gray-90 mb-2">레시피를 찾을 수 없습니다</Text>
+        <Pressable onPress={() => router.dismiss()}>
           <Text className="text-sm text-main-100">뒤로가기</Text>
         </Pressable>
       </View>

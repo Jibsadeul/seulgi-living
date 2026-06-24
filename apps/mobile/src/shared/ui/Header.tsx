@@ -32,7 +32,7 @@ export function Header({
       style={{ paddingTop: insets.top, height: 64 + insets.top }}
     >
       {variant !== 'default' && (
-        <Pressable className="mr-2 p-1" onPress={onBackPress ?? (() => router.back())}>
+        <Pressable className="mr-2 p-1" onPress={onBackPress ?? (() => router.dismiss())}>
           <Ionicons name="arrow-back" size={24} color="#1D1D1D" />
         </Pressable>
       )}

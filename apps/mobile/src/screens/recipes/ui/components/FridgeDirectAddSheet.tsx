@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, Text, TextInput, View, FlatList } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { type IngredientCategory } from '@/entities/fridge';
@@ -95,6 +96,7 @@ function SelectDropdown({
 let directAddCounter = 0;
 
 export function FridgeDirectAddSheet({ isOpen, onClose, onAdd }: Props) {
+  const insets = useSafeAreaInsets();
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['65%'], []);
 
@@ -110,7 +112,7 @@ export function FridgeDirectAddSheet({ isOpen, onClose, onAdd }: Props) {
     setUnit('개');
   }
 
-  function handleClose() {
+  function handleSheetClose() {
     resetForm();
     onClose();
   }
@@ -148,7 +150,7 @@ export function FridgeDirectAddSheet({ isOpen, onClose, onAdd }: Props) {
       snapPoints={snapPoints}
       enableDynamicSizing={false}
       enablePanDownToClose
-      onClose={handleClose}
+      onClose={handleSheetClose}
       backgroundStyle={{
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
@@ -159,7 +161,7 @@ export function FridgeDirectAddSheet({ isOpen, onClose, onAdd }: Props) {
       <BottomSheetView style={{ flex: 1 }}>
         <View className="flex-row items-center justify-between px-4 pb-4">
           <Text className="text-base font-bold text-gray-90">식재료 직접 추가</Text>
-          <Pressable onPress={handleClose} hitSlop={8}>
+          <Pressable onPress={() => sheetRef.current?.close()} hitSlop={8}>
             <Ionicons name="close" size={22} color="#1D1D1D" />
           </Pressable>
         </View>
@@ -217,10 +219,10 @@ export function FridgeDirectAddSheet({ isOpen, onClose, onAdd }: Props) {
           </View>
         </View>
 
-        <View className="flex-row px-4 pb-6 pt-4" style={{ gap: 12 }}>
+        <View className="flex-row px-4 pt-4" style={{ gap: 12, paddingBottom: insets.bottom + 16 }}>
           <Pressable
             className="flex-1 items-center py-4 rounded-xl bg-gray-5"
-            onPress={handleClose}
+            onPress={() => sheetRef.current?.close()}
           >
             <Text className="text-sm font-semibold text-gray-70">취소</Text>
           </Pressable>

@@ -17,7 +17,16 @@ export function FridgeCategoryFilter({
   onSortPress,
 }: Props) {
   return (
-    <View className="flex-row items-center mt-3 mx-4">
+    <View
+      className="flex-row items-center mt-3 mb-2 mx-4 pb-2"
+      style={{
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+        elevation: 2,
+      }}
+    >
       {onSortPress && (
         <>
           <Pressable

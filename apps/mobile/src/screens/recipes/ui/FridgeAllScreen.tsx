@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { FlatList, Modal, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import Svg, { Path } from 'react-native-svg';
-import { SkeletonCard, showAppToast } from '@/shared/ui';
+import { SkeletonCard, SearchBar, showAppToast } from '@/shared/ui';
 import { pickImageUri } from '@/shared/lib/image';
 import {
   FridgeCard,
@@ -32,17 +31,6 @@ type MenuState = {
   ingredientId: string;
   position: MenuPosition;
 } | null;
-
-function SearchIcon() {
-  return (
-    <Svg width={15} height={15} viewBox="0 0 18 18" fill="none">
-      <Path
-        d="M13.5233 12.4628L16.7355 15.6742L15.6742 16.7355L12.4628 13.5233C11.2678 14.4812 9.7815 15.0022 8.25 15C4.524 15 1.5 11.976 1.5 8.25C1.5 4.524 4.524 1.5 8.25 1.5C11.976 1.5 15 4.524 15 8.25C15.0022 9.7815 14.4812 11.2678 13.5233 12.4628ZM12.0187 11.9062C12.9706 10.9274 13.5022 9.61532 13.5 8.25C13.5 5.34975 11.1503 3 8.25 3C5.34975 3 3 5.34975 3 8.25C3 11.1503 5.34975 13.5 8.25 13.5C9.61532 13.5022 10.9274 12.9706 11.9062 12.0187L12.0187 11.9062Z"
-        fill="#EF7722"
-      />
-    </Svg>
-  );
-}
 
 function FabActionButton({
   label,
@@ -140,12 +128,6 @@ export function FridgeAllScreen() {
     setMenu({ ingredientId: id, position });
   }
 
-  function handleEdit() {
-    if (!menu) return;
-    setMenu(null);
-    // TODO: 수정 화면 라우트 연결
-  }
-
   function handleDelete() {
     if (!menu) return;
     deleteIngredient.mutate({ ingredientId: menu.ingredientId });
@@ -185,27 +167,8 @@ export function FridgeAllScreen() {
 
   return (
     <View className="flex-1 bg-surface-card">
-      <View className="mx-4 mt-3">
-        <View
-          className="flex-row items-center bg-surface-default rounded-lg border border-main-100 px-4"
-          style={{
-            height: 48,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.05,
-            shadowRadius: 2,
-            elevation: 1,
-          }}
-        >
-          <SearchIcon />
-          <TextInput
-            className="flex-1 ml-2 text-sm text-gray-90"
-            placeholder="검색창"
-            placeholderTextColor="#C8C4D4"
-            value={searchText}
-            onChangeText={setSearchText}
-          />
-        </View>
+      <View className="mt-3">
+        <SearchBar placeholder="검색창" value={searchText} onChangeText={setSearchText} />
       </View>
 
       <FridgeCategoryFilter
@@ -371,11 +334,6 @@ export function FridgeAllScreen() {
                 paddingVertical: 8,
               }}
             >
-              <Pressable className="flex-row items-center gap-3 px-4 py-2.5" onPress={handleEdit}>
-                <Ionicons name="pencil-outline" size={16} color="#EF7722" />
-                <Text className="text-sm font-medium text-main-100">수정</Text>
-              </Pressable>
-
               <Pressable className="flex-row items-center gap-3 px-4 py-2.5" onPress={handleDelete}>
                 <Ionicons name="trash-outline" size={16} color="#EF7722" />
                 <Text className="text-sm font-medium text-main-100">삭제</Text>

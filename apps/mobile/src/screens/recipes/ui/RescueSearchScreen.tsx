@@ -1,14 +1,30 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Path } from 'react-native-svg';
 import { Header } from '@/shared/ui';
 import { useFridgeIngredients, getFoodIcon, type FridgeIngredient } from '@/entities/fridge';
 import { useRecipeList } from '@/entities/recipes';
 import { useRescueStore } from '../model/rescue.store';
+import { useDismissBack } from '@/shared/hooks/useDismissBack';
+
+function SearchIcon() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
+      <Path
+        d="M13.5233 12.4628L16.7355 15.6742L15.6742 16.7355L12.4628 13.5233C11.2678 14.4812 9.7815 15.0022 8.25 15C4.524 15 1.5 11.976 1.5 8.25C1.5 4.524 4.524 1.5 8.25 1.5C11.976 1.5 15 4.524 15 8.25C15.0022 9.7815 14.4812 11.2678 13.5233 12.4628ZM12.0187 11.9062C12.9706 10.9274 13.5022 9.61532 13.5 8.25C13.5 5.34975 11.1503 3 8.25 3C5.34975 3 3 5.34975 3 8.25C3 11.1503 5.34975 13.5 8.25 13.5C9.61532 13.5022 10.9274 12.9706 11.9062 12.0187L12.0187 11.9062Z"
+        fill="#EF7722"
+      />
+    </Svg>
+  );
+}
 
 export function RescueSearchScreen() {
+  useDismissBack();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
   const [searchText, setSearchText] = useState('');
   const [submittedQuery, setSubmittedQuery] = useState('');
@@ -34,9 +50,7 @@ export function RescueSearchScreen() {
 
   const matchedFridgeItem = useMemo<FridgeIngredient | undefined>(() => {
     if (!submittedQuery) return undefined;
-    return fridgeItems.find(
-      (item) => item.name.toLowerCase() === submittedQuery.toLowerCase(),
-    );
+    return fridgeItems.find((item) => item.name.toLowerCase() === submittedQuery.toLowerCase());
   }, [fridgeItems, submittedQuery]);
 
   const isInFridge = Boolean(matchedFridgeItem);
@@ -84,13 +98,16 @@ export function RescueSearchScreen() {
     <View className="flex-1 bg-surface-card">
       <Header title="재료 검색" variant="back" />
 
-      <View className="mx-4 mt-2 flex-row items-center gap-2 bg-surface-default border border-main-100 rounded-full px-3 py-2">
-        <Ionicons name="search" size={16} color="#EF7722" />
+      <View
+        className="mx-4 mt-2 flex-row items-center gap-2 bg-surface-default border border-gray-30 rounded-full px-4"
+        style={{ height: 44 }}
+      >
+        <SearchIcon />
         <TextInput
           ref={inputRef}
           className="flex-1 text-xs text-gray-90"
           placeholder="재료를 검색해보세요 (예: 감자)"
-          placeholderTextColor="#C6C6C6"
+          placeholderTextColor="#C8C4D4"
           value={searchText}
           onChangeText={setSearchText}
           onSubmitEditing={handleSearch}
@@ -132,7 +149,10 @@ export function RescueSearchScreen() {
         )}
       </ScrollView>
 
-      <View className="absolute bottom-0 left-0 right-0 px-4 pb-8 pt-3 bg-surface-card">
+      <View
+        className="absolute bottom-0 left-0 right-0 px-4 pt-3 bg-surface-card"
+        style={{ paddingBottom: insets.bottom + 16 }}
+      >
         <Pressable
           onPress={handleViewRecipes}
           className="flex-row items-center bg-main-100 rounded-full py-4 px-5"
@@ -214,7 +234,10 @@ function FridgeMatchCard({
 
       {allSelectedNames.length > 0 && (
         <>
-          <View className="mx-4" style={{ borderTopWidth: 1, borderStyle: 'dashed', borderColor: '#D8D8D8' }} />
+          <View
+            className="mx-4"
+            style={{ borderTopWidth: 1, borderStyle: 'dashed', borderColor: '#D8D8D8' }}
+          />
           <View className="px-4 py-3">
             <Text style={{ fontSize: 10 }} className="text-gray-50 mb-2">
               현재 선택된 재료
