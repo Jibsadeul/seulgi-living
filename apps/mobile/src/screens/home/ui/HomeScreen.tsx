@@ -114,9 +114,8 @@ export function HomeScreen() {
       >
         <HomeHeader
           username={member?.nickname ?? undefined}
-          budgetSummary={BUDGET_SUMMARY_MOCK}
           onBudgetReportPress={handleBudgetReportPress}
-          onBudgetMorePress={() => {}}
+          onBudgetMorePress={() => router.push('/(stack)/groceries' as never)}
           onSettingsPress={() => setIsSettingsMenuOpen(true)}
         />
         <HomeFridgePreview />
