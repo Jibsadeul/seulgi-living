@@ -3,12 +3,14 @@ import Svg, { Circle, Line } from 'react-native-svg';
 
 interface MapLocationButtonProps {
   onPress: () => void;
+  bottomOffset: number;
 }
 
-export function MapLocationButton({ onPress }: MapLocationButtonProps) {
+export function MapLocationButton({ onPress, bottomOffset }: MapLocationButtonProps) {
   return (
     <TouchableOpacity
-      className="absolute right-4 bottom-6 w-11 h-11 rounded-full bg-white items-center justify-center shadow z-10"
+      className="absolute right-4 w-11 h-11 rounded-full bg-white items-center justify-center shadow z-10"
+      style={{ bottom: bottomOffset }}
       onPress={onPress}
       activeOpacity={0.8}
     >
