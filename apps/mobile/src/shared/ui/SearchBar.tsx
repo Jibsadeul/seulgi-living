@@ -1,4 +1,4 @@
-import { Pressable, Text } from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 function SearchIcon() {
@@ -14,10 +14,28 @@ function SearchIcon() {
 
 type Props = {
   placeholder?: string;
+  value?: string;
+  onChangeText?: (text: string) => void;
   onPress?: () => void;
 };
 
-export function SearchBar({ placeholder = '검색', onPress }: Props) {
+export function SearchBar({ placeholder = '검색', value, onChangeText, onPress }: Props) {
+  if (onChangeText !== undefined) {
+    return (
+      <View className="flex-row items-center gap-2 bg-surface-default border border-gray-30 rounded-full px-4 mx-4" style={{ height: 44 }}>
+        <SearchIcon />
+        <TextInput
+          className="flex-1 text-xs text-gray-90"
+          placeholder={placeholder}
+          placeholderTextColor="#C8C4D4"
+          value={value}
+          onChangeText={onChangeText}
+          returnKeyType="search"
+        />
+      </View>
+    );
+  }
+
   return (
     <Pressable
       onPress={onPress}

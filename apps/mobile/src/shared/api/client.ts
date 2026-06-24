@@ -8,6 +8,7 @@ import { clearTokens, getStoredTokens, saveTokens } from './authSession';
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   body?: unknown;
+  formData?: FormData;
   headers?: Record<string, string>;
   skipAuth?: boolean;
 };
@@ -143,7 +144,9 @@ async function apiRequestInternal<T>(
 ): Promise<T> {
   const headers = new Headers(options.headers ?? {});
 
-  if (options.body !== undefined) {
+  const isFormData = options.formData instanceof FormData;
+
+  if (!isFormData && options.body !== undefined) {
     headers.set('Content-Type', 'application/json');
   }
 
@@ -159,10 +162,15 @@ async function apiRequestInternal<T>(
   }
 
   const url = toUrl(path);
+  const fetchBody = isFormData
+    ? options.formData
+    : options.body === undefined
+      ? undefined
+      : JSON.stringify(options.body);
   const response = await fetch(url, {
     method: options.method ?? 'GET',
     headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body: fetchBody,
   });
   const json = await readJson(response, url);
 

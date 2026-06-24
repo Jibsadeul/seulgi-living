@@ -35,7 +35,7 @@ export function HomeRecipeScrap() {
     <View className="bg-surface-default pt-5 pb-5 px-4 mt-3">
       <HomeSectionHeader
         title={getSectionTitle(nickname)}
-        onMorePress={() => router.push('/(stack)/scraps' as never)}
+        onMorePress={() => router.push({ pathname: '/(stack)/scraps', params: { tab: 'recipe' } } as never)}
       />
 
       {isLoading ? (
@@ -61,7 +61,7 @@ export function HomeRecipeScrap() {
               key={recipe.id}
               title={recipe.name}
               description={`${recipe.scrapCount}명이 스크랩했어요`}
-              tags={getRecipeTags(recipe.category, recipe.cookingMethod)}
+              tags={getRecipeTags(recipe.category, recipe.cookingMethod, recipe.level)}
               imageUrl={recipe.imageUrl}
               isScraped={recipe.isSaved}
               onPress={() => handleRecipePress(recipe.id)}
