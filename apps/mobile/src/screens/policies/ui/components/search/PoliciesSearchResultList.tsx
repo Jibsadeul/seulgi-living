@@ -98,7 +98,7 @@ export function PoliciesSearchResultList({
       ListFooterComponent={
         isFetchingNextPage ? (
           <View className="px-4">
-            <SkeletonCard width={295} height={120} />
+            <SkeletonCard height={120} />
           </View>
         ) : null
       }
