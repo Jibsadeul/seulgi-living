@@ -52,19 +52,17 @@ export function PolicyDetailApplyTab({ policy }: Props) {
             {policy.requiredDocuments.map((doc) => (
               <View
                 key={doc.name}
-                className="flex-row items-center justify-between"
+                className="flex-row items-start justify-between"
                 style={{
                   backgroundColor: '#FFFFFF',
                   borderWidth: 1,
                   borderColor: 'rgba(195, 198, 215, 0.2)',
                   borderRadius: 16,
                   padding: 16,
+                  gap: 12,
                 }}
               >
-                <Text
-                  style={{ flex: 1, fontSize: 13, fontWeight: '500', color: '#0B1C30' }}
-                  numberOfLines={1}
-                >
+                <Text style={{ flex: 1, fontSize: 13, fontWeight: '500', color: '#0B1C30' }}>
                   {doc.name}
                 </Text>
                 {doc.agencyUrl && doc.agencyName && (
@@ -75,6 +73,7 @@ export function PolicyDetailApplyTab({ policy }: Props) {
                       borderRadius: 12,
                       paddingHorizontal: 12,
                       paddingVertical: 6,
+                      flexShrink: 0,
                     }}
                   >
                     <Text style={{ fontSize: 12, fontWeight: '500', color: '#EF7722' }}>
