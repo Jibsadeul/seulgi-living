@@ -9,7 +9,7 @@ import { CalendarDatePicker, showAppToast } from '@/shared/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { IngredientCategory } from '@repo/contract';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { FieldLabel, FormInput } from './CameraAnalysisFields';
 import { CategoryDropdown } from './CategoryDropdown';
 
@@ -496,9 +496,7 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
             <Text className="text-base font-bold text-white">
               {isSaving ? '저장 중' : '저장하기'}
             </Text>
-            {isSaving ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
+            {!isSaving && (
               <View className="min-w-7 items-center rounded-full bg-white/20 px-2 py-0.5">
                 <Text className="text-xs font-bold text-white">{selectedCount}</Text>
               </View>
