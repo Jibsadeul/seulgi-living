@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Dimensions,
   FlatList,
   Image,
@@ -40,7 +41,6 @@ type MenuState = {
   y: number;
 } | null;
 
-const TAB_BAR_CONTAINER_HEIGHT = 87;
 const HORIZONTAL_PADDING = 16;
 const COLUMN_GAP = 12;
 const CARD_WIDTH = (Dimensions.get('window').width - HORIZONTAL_PADDING * 2 - COLUMN_GAP) / 2;
@@ -125,7 +125,7 @@ export function MyRecipeScreen() {
             : {
                 gap: 12,
                 paddingTop: 12,
-                paddingBottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 24,
+                paddingBottom: insets.bottom + 80,
               }
         }
       />
@@ -133,7 +133,7 @@ export function MyRecipeScreen() {
       <Pressable
         onPress={handleUploadPress}
         className="absolute right-4 flex-row items-center gap-1 rounded-full bg-main-100 px-5 py-3.5"
-        style={{ bottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 16 }}
+        style={{ bottom: insets.bottom + 16 }}
       >
         <Ionicons name="add" size={20} color="#FFFFFF" />
         <Text className="text-sm font-semibold text-white">레시피 등록</Text>
@@ -201,11 +201,7 @@ function MyRecipeCard({
       style={{ width: CARD_WIDTH }}
     >
       {item.imageUrl ? (
-        <Image
-          source={{ uri: item.imageUrl }}
-          className="aspect-[4/3] w-full bg-gray-10"
-          resizeMode="cover"
-        />
+        <MyRecipeImage uri={item.imageUrl} />
       ) : (
         <View className="aspect-[4/3] w-full items-center justify-center bg-gray-10">
           <Ionicons name="image-outline" size={32} color="#C6C6C6" />
@@ -237,5 +233,48 @@ function MyRecipeCard({
         </View>
       </View>
     </Pressable>
+  );
+}
+
+function MyRecipeSkeleton() {
+  const opacity = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+      ]),
+    ).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#E4E4E4',
+        opacity,
+      }}
+    />
+  );
+}
+
+function MyRecipeImage({ uri }: { uri: string }) {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <View className="aspect-[4/3] w-full bg-gray-10 relative">
+      {!loaded && <MyRecipeSkeleton />}
+      <Image
+        source={{ uri }}
+        className="aspect-[4/3] w-full"
+        resizeMode="cover"
+        onLoad={() => setLoaded(true)}
+      />
+    </View>
   );
 }

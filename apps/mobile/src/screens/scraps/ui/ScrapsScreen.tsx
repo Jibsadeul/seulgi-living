@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header, SkeletonCard } from '@/shared/ui';
 import { usePoliciesScrapList } from '@/features/policy-scrap-list';
 import {
@@ -13,7 +14,7 @@ import {
 import { PoliciesScrapList } from './components/policy/PoliciesScrapList';
 import { ScrapsTabToggle, type ScrapTab } from './components/ScrapsTabToggle';
 
-function RecipeScrapList() {
+function RecipeScrapList({ bottomPadding }: { bottomPadding: number }) {
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useScrappedRecipeList({ size: 50 });
   const scrapMutation = useRecipeScrap();
@@ -86,18 +87,24 @@ function RecipeScrapList() {
       renderItem={renderItem}
       keyExtractor={(item) => item.id}
       ListHeaderComponent={
-        <Text className="px-4 text-xs text-gray-50">
-          총 <Text className="text-main-100 font-semibold">{totalCount}</Text>개의 저장된 레시피
-        </Text>
+        <View style={{ marginTop: 12, marginBottom: 16 }}>
+          <View className="px-4">
+            <Text style={{ fontSize: 12, fontWeight: '600', color: '#666666' }}>
+              총 <Text style={{ color: '#EF7722' }}>{totalCount}</Text>개의 저장된 레시피
+            </Text>
+          </View>
+        </View>
       }
-      contentContainerStyle={{ paddingTop: 12, paddingBottom: 40, gap: 12 }}
+      contentContainerStyle={{ paddingTop: 12, paddingBottom: bottomPadding, gap: 12 }}
       showsVerticalScrollIndicator={false}
     />
   );
 }
 
 export function ScrapsScreen() {
+  const insets = useSafeAreaInsets();
   const { tab } = useLocalSearchParams<{ tab?: string }>();
+  const bottomPadding = insets.bottom + 24;
   const [activeTab, setActiveTab] = useState<ScrapTab>(tab === 'recipe' ? 'recipe' : 'policy');
 
   const {
@@ -124,7 +131,7 @@ export function ScrapsScreen() {
       </View>
 
       {activeTab === 'recipe' ? (
-        <RecipeScrapList />
+        <RecipeScrapList bottomPadding={bottomPadding} />
       ) : isInitialError ? (
         <View className="flex-1 items-center justify-center px-5" style={{ gap: 12 }}>
           <Text className="text-sm text-gray-50 text-center">
@@ -157,6 +164,7 @@ export function ScrapsScreen() {
           isNextPageError={isNextPageError}
           onEndReached={() => fetchNextPage()}
           onRetryNextPage={() => fetchNextPage()}
+          bottomPadding={bottomPadding}
         />
       )}
     </View>

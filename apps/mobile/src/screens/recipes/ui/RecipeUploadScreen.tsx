@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -25,6 +26,7 @@ import {
   getCategoryLabel,
   useRecipeDetail,
   useCreateRecipe,
+  useUpdateRecipe,
   type CookingMethod,
   type RecipeCategory,
   type RecipeDetail,
@@ -166,6 +168,7 @@ export function RecipeUploadScreen() {
   const { editId } = useLocalSearchParams<{ editId?: string }>();
   const { data: editData, isLoading: isEditLoading } = useRecipeDetail(editId ?? '', !!editId);
   const createRecipe = useCreateRecipe();
+  const updateRecipe = useUpdateRecipe();
   const isEditMode = !!editId && !!editData;
 
   const { control, handleSubmit, setValue, watch } = useForm<FormValues>({
@@ -207,6 +210,10 @@ export function RecipeUploadScreen() {
       showAppToast({ type: 'warning', text: '요리 종류를 선택해주세요.' });
       return;
     }
+    if (!data.mainImageUri) {
+      showAppToast({ type: 'warning', text: '대표 이미지를 등록해주세요.' });
+      return;
+    }
     if (!data.name.trim()) {
       showAppToast({ type: 'warning', text: '메뉴 명칭을 입력해주세요.' });
       return;
@@ -231,7 +238,7 @@ export function RecipeUploadScreen() {
       imageUri: s.imageUri,
     }));
 
-    createRecipe.mutate({
+    const payload = {
       name: data.name.trim(),
       cookingMethod: data.cookingMethod as CookingMethod,
       category: data.category as RecipeCategory,
@@ -239,9 +246,30 @@ export function RecipeUploadScreen() {
       steps: trimmedSteps,
       sodiumTip: data.sodiumTip.trim(),
       mainImageUri: data.mainImageUri,
-    });
+    };
 
-    router.back();
+    if (isEditMode) {
+      Alert.alert('레시피를 수정하시겠습니까?', undefined, [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '수정',
+          onPress: () => {
+            updateRecipe.mutate(
+              {
+                ...payload,
+                id: editId,
+                existingMainImageUrl: editData.recipe.mainImageUrl ?? undefined,
+                existingStepImageUrls: editData.recipe.steps.map((s) => s.imageUrl),
+              },
+              { onSuccess: () => router.back() },
+            );
+          },
+        },
+      ]);
+      return;
+    }
+
+    createRecipe.mutate(payload, { onSuccess: () => router.back() });
   }
 
   return (
@@ -318,8 +346,7 @@ export function RecipeUploadScreen() {
                     name={`ingredients.${index}.name`}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <TextInput
-                        className="h-10 rounded-lg border border-gray-20 px-2.5 text-gray-90"
-                        style={{ fontSize: 10 }}
+                        className="h-12 rounded-lg border border-gray-20 px-3 text-xs text-gray-90"
                         placeholder="예: 연두부"
                         placeholderTextColor="#8E8E8E"
                         value={value}
@@ -335,8 +362,7 @@ export function RecipeUploadScreen() {
                     name={`ingredients.${index}.amount`}
                     render={({ field: { onChange, onBlur, value } }) => (
                       <TextInput
-                        className="h-10 rounded-lg border border-gray-20 px-2.5 text-gray-90"
-                        style={{ fontSize: 10 }}
+                        className="h-12 rounded-lg border border-gray-20 px-3 text-xs text-gray-90"
                         placeholder="예: 75g"
                         placeholderTextColor="#8E8E8E"
                         value={value}

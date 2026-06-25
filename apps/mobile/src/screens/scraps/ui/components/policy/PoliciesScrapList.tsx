@@ -18,6 +18,7 @@ type Props = {
   isNextPageError: boolean;
   onEndReached: () => void;
   onRetryNextPage: () => void;
+  bottomPadding?: number;
 };
 
 export function PoliciesScrapList({
@@ -32,6 +33,7 @@ export function PoliciesScrapList({
   isNextPageError,
   onEndReached,
   onRetryNextPage,
+  bottomPadding = 24,
 }: Props) {
   const insets = useSafeAreaInsets();
 

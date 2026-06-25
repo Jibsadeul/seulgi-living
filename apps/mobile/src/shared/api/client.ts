@@ -204,7 +204,6 @@ async function apiRequestInternal<T>(
     const errorMessage = formatApiErrorMessage(response.status);
 
     logApiError(response, url, json);
-    showAppToast({ type: 'error', text: errorMessage });
     throw new Error(errorMessage);
   }
 

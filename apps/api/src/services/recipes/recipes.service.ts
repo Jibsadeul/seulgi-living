@@ -426,10 +426,13 @@ export async function getRecipeDetail(
 
   const stepCount = recipe.recipeSteps.length;
   const ingredientArray = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
-  const ingredientCount = ingredientArray.reduce((sum: number, section: Record<string, unknown>) => {
-    const items = Array.isArray(section.items) ? section.items : [];
-    return sum + items.length;
-  }, 0);
+  const ingredientCount = ingredientArray.reduce(
+    (sum: number, section: Record<string, unknown>) => {
+      const items = Array.isArray(section.items) ? section.items : [];
+      return sum + items.length;
+    },
+    0,
+  );
   const score = stepCount + ingredientCount;
   const level = score <= 15 ? 'LOW' : score <= 20 ? 'MEDIUM' : 'HIGH';
 
@@ -715,10 +718,11 @@ export async function scrapRecipe(memberId: string, recipeId: string): Promise<v
   const recipe = await prisma.recipe.findUnique({ where: { id: recipeId }, select: { id: true } });
   if (!recipe) throw errors.notFound('레시피를 찾을 수 없습니다.');
 
-  const existing = await prisma.recipeScrap.findFirst({ where: { recipeId, userId: memberId } });
-  if (!existing) {
-    await prisma.recipeScrap.create({ data: { recipeId, userId: memberId } });
-  }
+  await prisma.recipeScrap.upsert({
+    where: { recipeId_userId: { recipeId, userId: memberId } },
+    update: {},
+    create: { recipeId, userId: memberId },
+  });
 }
 
 export async function unscrapRecipe(memberId: string, recipeId: string): Promise<void> {
