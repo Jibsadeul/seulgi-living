@@ -1,6 +1,6 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Alert, Modal, Platform, Pressable, Text, View } from 'react-native';
+import { Alert, Keyboard, Modal, Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMemberStore, type MemberMe } from '@/entities/members';
 import {
@@ -33,6 +33,7 @@ export function MemberInfoBottomSheet({
   const insets = useSafeAreaInsets();
   const formRef = useRef<MemberInfoFormHandle>(null);
   const setMemberProfileFromMe = useMemberStore((state) => state.setMemberProfileFromMe);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [closeState, setCloseState] = useState<MemberInfoCloseState>({
     hasBlankRequiredField: true,
     isDirtyFromStoredProfile: false,
@@ -61,6 +62,26 @@ export function MemberInfoBottomSheet({
       handleSubmitSuccess(member);
     }
   }, [handleSubmitSuccess]);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', (event) => {
+      setKeyboardHeight(Math.max(event.endCoordinates.height - insets.bottom, 0));
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, [insets.bottom]);
+
+  useEffect(() => {
+    if (!visible) {
+      setKeyboardHeight(0);
+    }
+  }, [visible]);
 
   const requestClose = useCallback(() => {
     if (mode === 'onboarding') {
@@ -96,13 +117,19 @@ export function MemberInfoBottomSheet({
     submitFromConfirm,
   ]);
 
+  const keyboardBottomMargin = keyboardHeight > 0 ? keyboardHeight + 12 : 0;
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={requestClose}>
       <View className="flex-1 justify-end bg-black/35">
         <Pressable className="flex-1" onPress={requestClose} />
         <View
           className="rounded-t-2xl bg-surface-default px-5 pt-5"
-          style={{ paddingBottom: Math.max(insets.bottom, 16) + 24 }}
+          style={{
+            paddingBottom: Math.max(insets.bottom, 16) + 24,
+            marginBottom: keyboardBottomMargin,
+            maxHeight: '90%',
+          }}
         >
           <View className="mb-5 flex-row items-start justify-between">
             <View className="flex-1 pr-4">

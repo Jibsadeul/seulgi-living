@@ -1,1 +1,1 @@
-export { GroceriesListScreen } from './ui/GroceriesListScreen';
+export { GroceryListScreen } from './ui/GroceryListScreen';

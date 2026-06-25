@@ -14,6 +14,7 @@ export function CookRescueBanner({ onPress }: Props) {
       <ImageBackground
         source={bannerImage}
         resizeMode="cover"
+        fadeDuration={0}
         className="w-full"
         style={{ minHeight: 240 }}
       >

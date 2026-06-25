@@ -1,7 +1,8 @@
 import { FlatList, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { Policy, PolicyScrapSortBy } from '@/entities/policies';
-import { SkeletonCard } from '@/shared/ui';
+import { SkeletonCard, TAB_BAR_BASE_HEIGHT } from '@/shared/ui';
 import { PolicyScrapCard } from './PolicyScrapCard';
 import { PoliciesScrapSortToggle } from './PoliciesScrapSortToggle';
 
@@ -34,6 +35,8 @@ export function PoliciesScrapList({
   onRetryNextPage,
   bottomPadding = 24,
 }: Props) {
+  const insets = useSafeAreaInsets();
+
   return (
     <FlatList
       data={policies}
@@ -43,24 +46,15 @@ export function PoliciesScrapList({
           <PolicyScrapCard policy={item} />
         </View>
       )}
-      contentContainerStyle={{ paddingTop: 16, paddingBottom: bottomPadding }}
+      contentContainerStyle={{ paddingTop: 5, paddingBottom: insets.bottom }}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       ListHeaderComponent={
-        <View style={{ marginTop: 12, marginBottom: 16 }}>
-          <View className="flex-row items-center justify-between px-4">
-            {totalCount !== undefined && (
-              <Text style={{ fontSize: 12, fontWeight: '600', color: '#666666' }}>
-                총 <Text style={{ color: '#EF7722' }}>{totalCount}</Text>개의 저장된 청년정책
-              </Text>
-            )}
-            <PoliciesScrapSortToggle value={sortBy} onChange={onChangeSortBy} />
-          </View>
+        <View style={{ marginTop: 6, marginBottom: 16 }}>
           <Pressable
             onPress={onToggleExcludeExpired}
             className="flex-row items-center self-end rounded-full"
             style={{
-              marginTop: 8,
               marginRight: 16,
               paddingHorizontal: 9,
               paddingVertical: 6,
@@ -83,6 +77,14 @@ export function PoliciesScrapList({
               마감 제외
             </Text>
           </Pressable>
+          <View className="flex-row items-center justify-between px-4" style={{ marginTop: 8 }}>
+            {totalCount !== undefined && (
+              <Text style={{ fontSize: 12, fontWeight: '600', color: '#666666' }}>
+                총 <Text style={{ color: '#EF7722' }}>{totalCount}</Text>개의 저장된 청년정책
+              </Text>
+            )}
+            <PoliciesScrapSortToggle value={sortBy} onChange={onChangeSortBy} />
+          </View>
         </View>
       }
       ListFooterComponent={
@@ -103,11 +105,17 @@ export function PoliciesScrapList({
         ) : null
       }
       ListEmptyComponent={
-        !isLoading ? (
+        isLoading ? (
+          <View className="px-4 gap-3">
+            {[0, 1, 2, 3].map((i) => (
+              <SkeletonCard key={i} width={295} height={80} />
+            ))}
+          </View>
+        ) : (
           <View className="items-center px-5 py-12">
             <Text className="text-sm text-gray-50 text-center">스크랩된 정책이 없습니다</Text>
           </View>
-        ) : null
+        )
       }
     />
   );

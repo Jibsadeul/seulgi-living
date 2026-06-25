@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TextInput } from 'react-native';
 import {
   useInfinitePolicies,
@@ -26,6 +26,16 @@ export function usePolicySearchResults(params: PolicySearchResultParams) {
   const [filterSheetSection, setFilterSheetSection] = useState<FilterSection | null>(null);
   const [hasOpenedFilterSheet, setHasOpenedFilterSheet] = useState(false);
   const [excludeExpired, setExcludeExpired] = useState(true);
+
+  // (tabs)/policies-results는 탭 라우트라 재진입 시 컴포넌트가 리마운트되지 않는다.
+  // 빠른 탐색에서 다른 카테고리/키워드로 재진입했을 때 이전 값이 남지 않도록 params 변경 시 동기화한다.
+  useEffect(() => {
+    setKeyword(params.keyword ?? '');
+    setSubmittedKeyword(params.keyword ?? '');
+    setFilterValues({
+      largeCategory: params.largeCategory ? [params.largeCategory] : undefined,
+    });
+  }, [params.largeCategory, params.keyword]);
 
   const { data: sidoList } = useSidoList();
   const regionLabels = filterValues.zipCd

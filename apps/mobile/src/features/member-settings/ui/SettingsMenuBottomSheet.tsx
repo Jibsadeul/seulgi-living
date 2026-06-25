@@ -1,7 +1,9 @@
 import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Alert, Modal, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { chatKeys } from '@/entities/chat';
 import { logout, withdraw, useMemberStore } from '@/entities/members';
 import { clearTokens } from '@/shared/api/authSession';
 
@@ -14,12 +16,18 @@ type Props = {
 export function SettingsMenuBottomSheet({ visible, onClose, onEditProfilePress }: Props) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const clearMemberProfile = useMemberStore((state) => state.clearMemberProfile);
 
   const handleEditProfile = useCallback(() => {
     onClose();
     onEditProfilePress();
   }, [onClose, onEditProfilePress]);
+
+  const handleMyRecipePress = useCallback(() => {
+    onClose();
+    router.push('/(stack)/my-recipe' as never);
+  }, [onClose, router]);
 
   const handleLogout = useCallback(() => {
     Alert.alert('로그아웃 하시겠습니까?', undefined, [
@@ -33,12 +41,13 @@ export function SettingsMenuBottomSheet({ visible, onClose, onEditProfilePress }
             await logout();
           } catch {}
           await clearTokens();
+          queryClient.removeQueries({ queryKey: chatKeys.all });
           clearMemberProfile();
           router.replace('/(auth)/login');
         },
       },
     ]);
-  }, [clearMemberProfile, onClose, router]);
+  }, [clearMemberProfile, onClose, queryClient, router]);
 
   const handleWithdraw = useCallback(() => {
     Alert.alert('탈퇴하시겠습니까?', '모든 데이터가 삭제됩니다.', [
@@ -51,6 +60,7 @@ export function SettingsMenuBottomSheet({ visible, onClose, onEditProfilePress }
           try {
             await withdraw();
             await clearTokens();
+            queryClient.removeQueries({ queryKey: chatKeys.all });
             clearMemberProfile();
             router.replace('/(auth)/login');
           } catch {
@@ -59,7 +69,7 @@ export function SettingsMenuBottomSheet({ visible, onClose, onEditProfilePress }
         },
       },
     ]);
-  }, [clearMemberProfile, onClose, router]);
+  }, [clearMemberProfile, onClose, queryClient, router]);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -74,13 +84,7 @@ export function SettingsMenuBottomSheet({ visible, onClose, onEditProfilePress }
               <Text className="text-base font-medium text-gray-90">개인정보 수정</Text>
             </Pressable>
             <View className="h-px bg-gray-20" />
-            <Pressable
-              className="py-4"
-              onPress={() => {
-                onClose();
-                router.push('/(stack)/my-recipe' as never);
-              }}
-            >
+            <Pressable className="py-4" onPress={handleMyRecipePress}>
               <Text className="text-base font-medium text-gray-90">My 레시피</Text>
             </Pressable>
             <View className="h-px bg-gray-20" />
