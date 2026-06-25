@@ -134,7 +134,21 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
   };
 
   const updateItem = (id: string, nextItem: Partial<CameraAnalysisItem>) => {
-    clearErrors();
+    setErrors((prev) => {
+      const prevItemErrors = prev.items[id];
+      if (!prevItemErrors) return prev;
+      const nextItemErrors = { ...prevItemErrors };
+      (Object.keys(nextItem) as (keyof CameraAnalysisItem)[]).forEach((field) => {
+        delete nextItemErrors[field];
+      });
+      const nextItems = { ...prev.items };
+      if (Object.keys(nextItemErrors).length === 0) {
+        delete nextItems[id];
+      } else {
+        nextItems[id] = nextItemErrors;
+      }
+      return { ...prev, items: nextItems };
+    });
     setItems((currentItems) =>
       currentItems.map((item) => (item.id === id ? { ...item, ...nextItem } : item)),
     );
@@ -149,7 +163,10 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
   };
 
   const removeItem = (id: string) => {
-    clearErrors();
+    setErrors((prev) => {
+      const { [id]: _, ...nextItems } = prev.items;
+      return { ...prev, items: nextItems };
+    });
     setItems((currentItems) => currentItems.filter((item) => item.id !== id));
   };
 
@@ -165,7 +182,7 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
   };
 
   const updatePurchaseDate = (value: string) => {
-    clearErrors();
+    setErrors((prev) => ({ ...prev, purchaseDate: undefined }));
     setPurchaseDate(value);
   };
 
