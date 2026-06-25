@@ -31,9 +31,15 @@ export const grocerySummaryQuerySchema = z.object({
   month: requiredNumberQuerySchema.pipe(z.number().min(1).max(12)),
 });
 
+const groceryDailyGroupReportSchema = z.object({
+  date: dateStringSchema,
+  dailyTotal: z.number().int().nonnegative(),
+});
+
 export const grocerySummaryResponseSchema = z.object({
   budget: z.number().int().nullable(),
   spent: z.number().int(),
+  dailyGroups: z.array(groceryDailyGroupReportSchema),
 });
 
 export const groceryListQuerySchema = z.object({
@@ -74,6 +80,7 @@ export type GroceryBudgetQuery = z.infer<typeof groceryBudgetQuerySchema>;
 export type PutGroceryBudgetBody = z.infer<typeof putGroceryBudgetBodySchema>;
 export type GrocerySummaryQuery = z.infer<typeof grocerySummaryQuerySchema>;
 export type GrocerySummaryResponse = z.infer<typeof grocerySummaryResponseSchema>;
+export type GroceryDailyGroupReport = z.infer<typeof groceryDailyGroupReportSchema>;
 export type GroceryListQuery = z.infer<typeof groceryListQuerySchema>;
 export type GroceryListItem = z.infer<typeof groceryListItemSchema>;
 export type GroceryListGroup = z.infer<typeof groceryListGroupSchema>;

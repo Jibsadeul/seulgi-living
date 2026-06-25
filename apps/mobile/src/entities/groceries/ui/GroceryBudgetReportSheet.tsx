@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, {
   BottomSheetBackdrop,
   BottomSheetScrollView,
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 export type GroceryDailyGroup = {
@@ -31,7 +31,7 @@ type Props = {
   onClose: () => void;
   year: number;
   month: number;
-  budget: number;
+  budget: number | null;
   spent: number;
   dailyGroups: GroceryDailyGroup[];
 };
@@ -120,12 +120,12 @@ export function GroceryBudgetReportSheet({
   dailyGroups,
 }: Props) {
   const sheetRef = useRef<BottomSheet>(null);
-  const didMountRef = useRef(false);
-  const snapPoints = useMemo(() => ['85%'], []);
-  const spentPercent = budget > 0 ? Math.round((spent / budget) * 100) : 0;
+  const initialIndex = useRef(isOpen ? 0 : -1);
+  const snapPoints = useMemo(() => ['80%', '95%'], []);
+  const spentPercent = budget !== null && budget > 0 ? Math.round((spent / budget) * 100) : 0;
 
   const calendarCells = useMemo(
-    () => buildCalendarCells(year, month, budget, dailyGroups),
+    () => buildCalendarCells(year, month, budget ?? 0, dailyGroups),
     [budget, dailyGroups, month, year],
   );
 
@@ -137,11 +137,6 @@ export function GroceryBudgetReportSheet({
   }, [dailyGroups]);
 
   useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true;
-      if (!isOpen) return;
-    }
-
     if (isOpen) {
       sheetRef.current?.snapToIndex(0);
     } else {
@@ -165,8 +160,9 @@ export function GroceryBudgetReportSheet({
   return (
     <BottomSheet
       ref={sheetRef}
-      index={-1}
+      index={initialIndex.current}
       snapPoints={snapPoints}
+      animateOnMount={false}
       enableDynamicSizing={false}
       enablePanDownToClose
       onClose={onClose}
@@ -196,13 +192,15 @@ export function GroceryBudgetReportSheet({
       >
         <View className="mb-5 flex-row gap-2">
           <View className="flex-1 rounded-xl bg-main-10 p-3">
-            <Text className="text-[11px] font-medium text-gray-60">이번 달 사용</Text>
+            <Text className="text-[11px] font-medium text-gray-60">이번 달 사용 금액</Text>
             <Text className="mt-1 text-base font-bold text-gray-90">{formatCurrency(spent)}</Text>
           </View>
-          <View className="flex-1 rounded-xl bg-gray-10 p-3">
-            <Text className="text-[11px] font-medium text-gray-60">예산 대비</Text>
-            <Text className="mt-1 text-base font-bold text-main-100">{spentPercent}%</Text>
-          </View>
+          {budget !== null && (
+            <View className="flex-1 rounded-xl bg-gray-10 p-3">
+              <Text className="text-[11px] font-medium text-gray-60">예산 대비</Text>
+              <Text className="mt-1 text-base font-bold text-main-100">{spentPercent}%</Text>
+            </View>
+          )}
           <View className="flex-1 rounded-xl bg-gray-10 p-3">
             <Text className="text-[11px] font-medium text-gray-60">가장 많이 쓴 날</Text>
             <Text className="mt-1 text-sm font-bold text-gray-90" numberOfLines={1}>
@@ -212,8 +210,10 @@ export function GroceryBudgetReportSheet({
         </View>
 
         <View className="mb-3 flex-row items-center justify-between">
-          <Text className="text-sm font-bold text-gray-90">일별 소비 히트맵</Text>
-          <Text className="text-xs text-gray-50">월 예산 {formatWon(budget)}</Text>
+          <Text className="text-sm font-bold text-gray-90">일별 소비</Text>
+          {budget !== null && (
+            <Text className="text-xs text-gray-50">월 예산 {formatWon(budget)}</Text>
+          )}
         </View>
 
         <View className="mb-2 flex-row">
@@ -260,25 +260,30 @@ export function GroceryBudgetReportSheet({
           })}
         </View>
 
-        <View className="mt-5 rounded-xl bg-gray-5 p-3">
-          <View className="mb-2 flex-row items-center justify-between">
-            <Text className="text-xs font-semibold text-gray-70">예산 대비 일별 소비</Text>
+        {budget !== null && (
+          <View className="mt-5 rounded-xl bg-gray-5 p-3">
+            <View className="mb-2 flex-row items-center justify-between">
+              <Text className="text-xs font-semibold text-gray-70">예산 대비 일별 소비</Text>
+            </View>
+            <View className="flex-row items-center">
+              {[
+                { label: '0%', color: HEATMAP_COLORS.empty },
+                { label: '10%', color: HEATMAP_COLORS.light },
+                { label: '25%', color: HEATMAP_COLORS.medium },
+                { label: '50%+', color: HEATMAP_COLORS.strong },
+                { label: '75%+', color: HEATMAP_COLORS.danger },
+              ].map((item) => (
+                <View key={item.label} className="mr-3 flex-row items-center">
+                  <View
+                    className="mr-1.5 h-3 w-3 rounded"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <Text className="text-[10px] font-medium text-gray-60">{item.label}</Text>
+                </View>
+              ))}
+            </View>
           </View>
-          <View className="flex-row items-center">
-            {[
-              { label: '0%', color: HEATMAP_COLORS.empty },
-              { label: '10%', color: HEATMAP_COLORS.light },
-              { label: '25%', color: HEATMAP_COLORS.medium },
-              { label: '50%+', color: HEATMAP_COLORS.strong },
-              { label: '75%+', color: HEATMAP_COLORS.danger },
-            ].map((item) => (
-              <View key={item.label} className="mr-3 flex-row items-center">
-                <View className="mr-1.5 h-3 w-3 rounded" style={{ backgroundColor: item.color }} />
-                <Text className="text-[10px] font-medium text-gray-60">{item.label}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
+        )}
       </BottomSheetScrollView>
     </BottomSheet>
   );

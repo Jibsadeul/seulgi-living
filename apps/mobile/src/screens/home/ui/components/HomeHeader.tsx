@@ -1,11 +1,14 @@
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SettingsIcon from '@assets/icons/settings.svg';
-import { GroceryBudgetSummaryCard, type GroceryBudgetSummary } from '@/entities/groceries';
+import { GroceryBudgetSummaryCard, useGrocerySummaryQuery } from '@/entities/groceries';
+
+const now = new Date();
+const CURRENT_YEAR = now.getFullYear();
+const CURRENT_MONTH = now.getMonth() + 1;
 
 type Props = {
   username?: string;
-  budgetSummary: GroceryBudgetSummary;
   onBudgetReportPress: () => void;
   onBudgetMorePress: () => void;
   onSettingsPress: () => void;
@@ -13,11 +16,15 @@ type Props = {
 
 export function HomeHeader({
   username = '슬기로운 자취러',
-  budgetSummary,
   onBudgetReportPress,
   onBudgetMorePress,
   onSettingsPress,
 }: Props) {
+  const { data, isLoading } = useGrocerySummaryQuery({ year: CURRENT_YEAR, month: CURRENT_MONTH });
+  const budgetSummary = {
+    budget: data?.budget ?? null,
+    spent: data?.spent ?? 0,
+  };
   const insets = useSafeAreaInsets();
 
   return (
@@ -42,6 +49,7 @@ export function HomeHeader({
             onPress: onBudgetReportPress,
           }}
           onMorePress={onBudgetMorePress}
+          isLoading={isLoading}
         />
       </View>
     </View>

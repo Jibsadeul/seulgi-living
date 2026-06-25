@@ -2,10 +2,24 @@ import { apiRequest } from '@/shared/api/client';
 import { showAppToast } from '@/shared/ui/Toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
-import type { CreateGroceryBody, UpdateGroceryBody } from './groceries.schema';
+import type {
+  CreateGroceryBody,
+  GrocerySummaryQuery,
+  PutGroceryBudgetBody,
+  UpdateGroceryBody,
+} from './groceries.schema';
 import { groceryKeys } from './keys';
 
 const noContentSchema = z.null();
+
+function buildGrocerySearchParams(query: GrocerySummaryQuery) {
+  const params = new URLSearchParams();
+
+  params.set('year', String(query.year));
+  params.set('month', String(query.month));
+
+  return params.toString();
+}
 
 export function useDeleteGroceryMutation() {
   const queryClient = useQueryClient();
@@ -63,6 +77,27 @@ export function useCreateGroceryMutation() {
 
     onError: () => {
       showAppToast({ type: 'error', text: '장보기 내역 추가에 실패했어요.' });
+    },
+  });
+}
+
+export function usePutGroceryBudgetMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ query, body }: { query: GrocerySummaryQuery; body: PutGroceryBudgetBody }) =>
+      apiRequest(`/api/groceries/budget?${buildGrocerySearchParams(query)}`, noContentSchema, {
+        method: 'PUT',
+        body,
+      }),
+
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: groceryKeys.summary(variables.query) });
+      showAppToast({ type: 'success', text: '예산을 저장했어요.' });
+    },
+
+    onError: () => {
+      showAppToast({ type: 'error', text: '예산 저장에 실패했어요. 잠시 후 다시 시도해주세요.' });
     },
   });
 }
