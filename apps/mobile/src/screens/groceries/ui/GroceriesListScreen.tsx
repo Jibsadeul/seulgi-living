@@ -1,7 +1,10 @@
 import {
+  GroceryBudgetEditSheet,
+  GroceryBudgetSummaryCard,
   useCreateGroceryMutation,
   useDeleteGroceryMutation,
   useGroceryListQuery,
+  useGrocerySummaryQuery,
   useUpdateGroceryMutation,
   type CreateGroceryBody,
   type GroceryListGroup,
@@ -11,16 +14,24 @@ import {
 import { pickImageUri, type ImagePickSource } from '@/shared/lib/image';
 import { CalendarDatePicker, Header, SkeletonCard } from '@/shared/ui';
 import { Ionicons } from '@expo/vector-icons';
-import BottomSheet, { BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet, {
+  BottomSheetFooter,
+  BottomSheetScrollView,
+  BottomSheetTextInput,
+  BottomSheetView,
+  type BottomSheetFooterProps,
+} from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Dimensions, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Dimensions, Keyboard, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'] as const;
 const FAB_SIZE = 64;
 const FAB_BOTTOM = 24;
 const FAB_CLEARANCE = 16;
+const DIRECT_INPUT_SHEET_HEADER_HEIGHT = 56;
+const DIRECT_INPUT_SHEET_HEADER_GAP = 8;
 
 type MonthState = {
   year: number;
@@ -279,14 +290,24 @@ function GroceryDirectInputSheet({
   onClose: () => void;
 }) {
   const sheetRef = useRef<BottomSheet>(null);
+  const scrollRef = useRef<ScrollView>(null);
+  const isQuantityFocusedRef = useRef(false);
   const insets = useSafeAreaInsets();
-  const snapPoints = useMemo(() => ['76%'], []);
+  const snapPoints = useMemo(() => ['75%', '100%'], []);
   const createGrocery = useCreateGroceryMutation();
   const updateGrocery = useUpdateGroceryMutation();
   const [name, setName] = useState('');
   const [priceText, setPriceText] = useState('');
   const [purchaseDate, setPurchaseDate] = useState(() => getDefaultPurchaseDate(selectedMonth));
   const [quantityText, setQuantityText] = useState('');
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  const resetKeyboardAdjustment = () => {
+    setIsKeyboardVisible(false);
+    setKeyboardHeight(0);
+    isQuantityFocusedRef.current = false;
+  };
 
   const resetForm = () => {
     setName('');
@@ -297,6 +318,12 @@ function GroceryDirectInputSheet({
 
   useEffect(() => {
     if (!isOpen) return;
+
+    resetKeyboardAdjustment();
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+    });
+
     if (editItem) {
       setName(editItem.name);
       setPriceText(String(editItem.price));
@@ -308,7 +335,32 @@ function GroceryDirectInputSheet({
     sheetRef.current?.snapToIndex(0);
   }, [isOpen, selectedMonth.month, selectedMonth.year, editItem?.id]);
 
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', (event) => {
+      setIsKeyboardVisible(true);
+      setKeyboardHeight(event.endCoordinates.height);
+
+      if (isQuantityFocusedRef.current) {
+        requestAnimationFrame(() => {
+          scrollRef.current?.scrollToEnd({ animated: true });
+        });
+      }
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setIsKeyboardVisible(false);
+      setKeyboardHeight(0);
+      isQuantityFocusedRef.current = false;
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
   const handleClose = () => {
+    Keyboard.dismiss();
+    resetKeyboardAdjustment();
     sheetRef.current?.close();
   };
 
@@ -341,97 +393,42 @@ function GroceryDirectInputSheet({
     }
   };
 
-  return (
-    <BottomSheet
-      ref={sheetRef}
-      index={-1}
-      snapPoints={snapPoints}
-      enableDynamicSizing={false}
-      enablePanDownToClose
-      onClose={() => {
-        resetForm();
-        onClose();
-      }}
-      backgroundStyle={{
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        backgroundColor: '#FFFFFF',
-      }}
-      handleIndicatorStyle={{ backgroundColor: '#D8D8D8', width: 36 }}
-    >
-      <BottomSheetView style={{ flex: 1 }}>
-        <View className="flex-row items-center justify-between px-4 pb-4">
-          <Text className="text-base font-bold text-gray-90">
-            {editItem ? '장보기 내역 수정' : '장보기 내역 입력'}
-          </Text>
-          <Pressable onPress={handleClose} hitSlop={8}>
-            <Ionicons name="close" size={22} color="#1D1D1D" />
-          </Pressable>
-        </View>
+  const handleInputFocus = () => {
+    sheetRef.current?.snapToIndex(1);
+  };
 
-        <BottomSheetScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={{
-            gap: 18,
-            paddingHorizontal: 16,
-            paddingBottom: 24,
-          }}
-          showsVerticalScrollIndicator={false}
-        >
-          <View>
-            <Text className="mb-2 text-sm font-medium text-gray-90">품목명</Text>
-            <TextInput
-              className="rounded-xl bg-gray-5 px-4 text-sm text-gray-90"
-              style={{ height: 52 }}
-              placeholder="예: 삼겹살"
-              placeholderTextColor="#C8C4D4"
-              maxLength={50}
-              value={name}
-              onChangeText={setName}
-            />
-          </View>
+  const handleQuantityFocus = () => {
+    isQuantityFocusedRef.current = true;
+    handleInputFocus();
 
-          <View>
-            <Text className="mb-2 text-sm font-medium text-gray-90">가격</Text>
-            <TextInput
-              className="rounded-xl bg-gray-5 px-4 text-sm text-gray-90"
-              style={{ height: 52 }}
-              placeholder="예: 14800"
-              placeholderTextColor="#C8C4D4"
-              keyboardType="number-pad"
-              value={priceText}
-              onChangeText={(value) => setPriceText(value.replace(/[^0-9]/g, ''))}
-            />
-          </View>
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    });
 
-          <View>
-            <Text className="mb-2 text-sm font-medium text-gray-90">구매일</Text>
-            <CalendarDatePicker value={purchaseDate} onChange={setPurchaseDate} />
-          </View>
+    setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 250);
 
-          <View>
-            <Text className="mb-2 text-sm font-medium text-gray-90">수량</Text>
-            <TextInput
-              className="rounded-xl bg-gray-5 px-4 text-sm text-gray-90"
-              style={{ height: 52 }}
-              placeholder="예: 400g"
-              placeholderTextColor="#C8C4D4"
-              maxLength={20}
-              value={quantityText}
-              onChangeText={setQuantityText}
-            />
-          </View>
-        </BottomSheetScrollView>
+    setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 500);
+  };
 
+  const handleQuantityBlur = () => {
+    isQuantityFocusedRef.current = false;
+  };
+
+  const renderFooter = useCallback(
+    (props: BottomSheetFooterProps) => (
+      <BottomSheetFooter {...props} bottomInset={0}>
         <View
-          className="flex-row px-4 pt-3"
+          className="bg-white px-4 pt-3"
           style={{
-            gap: 12,
             paddingBottom: Math.max(insets.bottom, 24) + 16,
           }}
         >
           <Pressable
-            className={`h-12 flex-[2] items-center justify-center rounded-xl ${
+            className={`h-12 items-center justify-center rounded-xl ${
               canSave && !isPending ? 'bg-main-100' : 'bg-gray-30'
             }`}
             disabled={!canSave || isPending}
@@ -442,7 +439,110 @@ function GroceryDirectInputSheet({
             </Text>
           </Pressable>
         </View>
+      </BottomSheetFooter>
+    ),
+    [canSave, editItem, handleSave, insets.bottom, isPending],
+  );
+
+  return (
+    <BottomSheet
+      ref={sheetRef}
+      index={-1}
+      snapPoints={snapPoints}
+      enableDynamicSizing={false}
+      enablePanDownToClose
+      keyboardBehavior="extend"
+      keyboardBlurBehavior="restore"
+      android_keyboardInputMode="adjustResize"
+      footerComponent={renderFooter}
+      onClose={() => {
+        Keyboard.dismiss();
+        resetKeyboardAdjustment();
+        resetForm();
+        onClose();
+      }}
+      backgroundStyle={{
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        backgroundColor: '#FFFFFF',
+      }}
+      handleIndicatorStyle={{ backgroundColor: '#D8D8D8', width: 36 }}
+    >
+      <BottomSheetView style={{ zIndex: 1, elevation: 1 }}>
+        <View
+          className="flex-row items-center justify-between bg-white px-4"
+          style={{ height: DIRECT_INPUT_SHEET_HEADER_HEIGHT }}
+        >
+          <Text className="text-base font-bold text-gray-90">
+            {editItem ? '장보기 내역 수정' : '장보기 내역 입력'}
+          </Text>
+          <Pressable onPress={handleClose} hitSlop={8}>
+            <Ionicons name="close" size={22} color="#1D1D1D" />
+          </Pressable>
+        </View>
       </BottomSheetView>
+
+      <BottomSheetScrollView
+        ref={scrollRef}
+        enableFooterMarginAdjustment
+        contentContainerStyle={{
+          gap: 18,
+          paddingHorizontal: 16,
+          paddingTop: DIRECT_INPUT_SHEET_HEADER_HEIGHT + DIRECT_INPUT_SHEET_HEADER_GAP,
+          paddingBottom: isKeyboardVisible ? keyboardHeight : 16,
+        }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        nestedScrollEnabled
+      >
+        <View>
+          <Text className="mb-2 text-sm font-medium text-gray-90">품목명</Text>
+          <BottomSheetTextInput
+            className="rounded-xl bg-gray-5 px-4 text-sm text-gray-90"
+            style={{ height: 52 }}
+            placeholder="예: 삼겹살"
+            placeholderTextColor="#C8C4D4"
+            maxLength={50}
+            value={name}
+            onChangeText={setName}
+            onFocus={handleInputFocus}
+          />
+        </View>
+
+        <View>
+          <Text className="mb-2 text-sm font-medium text-gray-90">가격</Text>
+          <BottomSheetTextInput
+            className="rounded-xl bg-gray-5 px-4 text-sm text-gray-90"
+            style={{ height: 52 }}
+            placeholder="예: 14800"
+            placeholderTextColor="#C8C4D4"
+            keyboardType="number-pad"
+            value={priceText}
+            onChangeText={(value) => setPriceText(value.replace(/[^0-9]/g, ''))}
+            onFocus={handleInputFocus}
+          />
+        </View>
+
+        <View>
+          <Text className="mb-2 text-sm font-medium text-gray-90">구매일</Text>
+          <CalendarDatePicker value={purchaseDate} onChange={setPurchaseDate} />
+        </View>
+
+        <View>
+          <Text className="mb-2 text-sm font-medium text-gray-90">수량</Text>
+          <BottomSheetTextInput
+            className="rounded-xl bg-gray-5 px-4 text-sm text-gray-90"
+            style={{ height: 52 }}
+            placeholder="예: 400g"
+            placeholderTextColor="#C8C4D4"
+            maxLength={20}
+            value={quantityText}
+            onChangeText={setQuantityText}
+            onFocus={handleQuantityFocus}
+            onBlur={handleQuantityBlur}
+          />
+        </View>
+      </BottomSheetScrollView>
     </BottomSheet>
   );
 }
@@ -456,6 +556,7 @@ export function GroceriesListScreen() {
   const [isFabOpen, setIsFabOpen] = useState(false);
   const [fabMenuStep, setFabMenuStep] = useState<FabMenuStep>('mode');
   const [isDirectInputOpen, setIsDirectInputOpen] = useState(false);
+  const [isBudgetEditOpen, setIsBudgetEditOpen] = useState(false);
   const [editItem, setEditItem] = useState<GroceryListItem | null>(null);
   const [actionMenu, setActionMenu] = useState<{
     item: GroceryListItem;
@@ -478,6 +579,7 @@ export function GroceriesListScreen() {
     [selectedMonth.month, selectedMonth.year],
   );
   const listQuery = useGroceryListQuery(query);
+  const summaryQuery = useGrocerySummaryQuery(query);
 
   const handleRetry = () => {
     void listQuery.refetch();
@@ -548,15 +650,27 @@ export function GroceriesListScreen() {
           </Pressable>
         </View>
 
+        <GroceryBudgetSummaryCard
+          summary={summaryQuery.data ?? { budget: null, spent: 0 }}
+          primaryAction={{
+            label: '예산 수정',
+            iconName: 'create-outline',
+            onPress: () => setIsBudgetEditOpen(true),
+          }}
+          isLoading={summaryQuery.isLoading}
+        />
+
         {listQuery.isLoading ? (
-          <View className="gap-4">
+          <View className="mt-4 gap-4">
             <SkeletonCard height={180} />
             <SkeletonCard height={132} />
           </View>
         ) : listQuery.isError ? (
-          <ErrorState onRetry={handleRetry} />
+          <View className="mt-4">
+            <ErrorState onRetry={handleRetry} />
+          </View>
         ) : (
-          <View className="gap-4">
+          <View className="mt-4 gap-4">
             {listQuery.data && listQuery.data.length > 0 ? (
               <View className="gap-3">
                 {listQuery.data.map((group) => (
@@ -663,6 +777,13 @@ export function GroceriesListScreen() {
           setIsDirectInputOpen(false);
           setEditItem(null);
         }}
+      />
+
+      <GroceryBudgetEditSheet
+        isOpen={isBudgetEditOpen}
+        query={query}
+        currentBudget={summaryQuery.data?.budget ?? null}
+        onClose={() => setIsBudgetEditOpen(false)}
       />
 
       <GroceryItemDropdown

@@ -1,3 +1,10 @@
+import { GroceryBudgetReportSheet, useGrocerySummaryQuery } from '@/entities/groceries';
+import { getCurrentMember, useMemberStore, type MemberMe } from '@/entities/members';
+import { SettingsMenuBottomSheet } from '@/features/member-settings';
+import { MemberInfoBottomSheet } from '@/screens/members';
+import { TAB_BAR_BASE_HEIGHT } from '@/shared/ui';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -7,44 +14,14 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { GroceryBudgetReportSheet } from '@/entities/groceries';
-import { getCurrentMember, type MemberMe, useMemberStore } from '@/entities/members';
-import { SettingsMenuBottomSheet } from '@/features/member-settings';
-import { MemberInfoBottomSheet } from '@/screens/members';
-import { TAB_BAR_BASE_HEIGHT } from '@/shared/ui';
 import { HomeFridgePreview } from './components/HomeFridgePreview';
 import { HomeHeader } from './components/HomeHeader';
 import { HomePolicyScrap } from './components/HomePolicyScrap';
 import { HomeRecipeScrap } from './components/HomeRecipeScrap';
 
-const currentBudgetDate = new Date();
-const CURRENT_BUDGET_YEAR = currentBudgetDate.getFullYear();
-const CURRENT_BUDGET_MONTH = currentBudgetDate.getMonth() + 1;
-
-function formatMockGroceryDate(day: number) {
-  return `${CURRENT_BUDGET_YEAR}-${String(CURRENT_BUDGET_MONTH).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-}
-
-const BUDGET_SUMMARY_MOCK = {
-  year: CURRENT_BUDGET_YEAR,
-  month: CURRENT_BUDGET_MONTH,
-  budget: 600000,
-  spent: 85300,
-};
-
-const GROCERY_DAILY_GROUPS_MOCK = [
-  { date: formatMockGroceryDate(1), dailyTotal: 12000 },
-  { date: formatMockGroceryDate(2), dailyTotal: 0 },
-  { date: formatMockGroceryDate(3), dailyTotal: 27500 },
-  { date: formatMockGroceryDate(4), dailyTotal: 8300 },
-  { date: formatMockGroceryDate(5), dailyTotal: 37500 },
-  { date: formatMockGroceryDate(8), dailyTotal: 90000 },
-  { date: formatMockGroceryDate(14), dailyTotal: 300000 },
-  { date: formatMockGroceryDate(21), dailyTotal: 450000 },
-];
+const now = new Date();
+const REPORT_QUERY = { year: now.getFullYear(), month: now.getMonth() + 1 };
 
 export function HomeScreen() {
   const router = useRouter();
@@ -58,6 +35,7 @@ export function HomeScreen() {
   const lastScrollYRef = useRef(0);
   const chatButtonOpacity = useRef(new Animated.Value(1)).current;
   const setMemberProfileFromMe = useMemberStore((state) => state.setMemberProfileFromMe);
+  const { data: summaryData } = useGrocerySummaryQuery(REPORT_QUERY);
 
   const handleBudgetReportPress = () => {
     setHasOpenedBudgetReport(true);
@@ -114,9 +92,8 @@ export function HomeScreen() {
       >
         <HomeHeader
           username={member?.nickname ?? undefined}
-          budgetSummary={BUDGET_SUMMARY_MOCK}
           onBudgetReportPress={handleBudgetReportPress}
-          onBudgetMorePress={() => {}}
+          onBudgetMorePress={() => router.push('/(stack)/groceries' as never)}
           onSettingsPress={() => setIsSettingsMenuOpen(true)}
         />
         <HomeFridgePreview />
@@ -162,11 +139,11 @@ export function HomeScreen() {
         <GroceryBudgetReportSheet
           isOpen={isBudgetReportOpen}
           onClose={() => setIsBudgetReportOpen(false)}
-          year={BUDGET_SUMMARY_MOCK.year}
-          month={BUDGET_SUMMARY_MOCK.month}
-          budget={BUDGET_SUMMARY_MOCK.budget}
-          spent={BUDGET_SUMMARY_MOCK.spent}
-          dailyGroups={GROCERY_DAILY_GROUPS_MOCK}
+          year={REPORT_QUERY.year}
+          month={REPORT_QUERY.month}
+          budget={summaryData?.budget ?? null}
+          spent={summaryData?.spent ?? 0}
+          dailyGroups={summaryData?.dailyGroups ?? []}
         />
       )}
     </View>
