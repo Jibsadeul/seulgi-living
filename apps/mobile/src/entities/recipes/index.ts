@@ -9,6 +9,7 @@ export {
   useMyRecipeList,
   useRecipeScrap,
   useCreateRecipe,
+  useUpdateRecipe,
 } from './model/useRecipe';
 
 export {
@@ -18,6 +19,7 @@ export {
   getCategoryLabel,
   getCookingMethodLabel,
   getRecipeTags,
+  getRecipeSummary,
 } from './model/recipes.model';
 
 export { recipeKeys } from './api/keys';

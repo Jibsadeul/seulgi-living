@@ -73,7 +73,7 @@ export function RecipeCard({
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row gap-3 bg-surface-default rounded-2xl p-3"
+      className="flex-row gap-3 bg-surface-default rounded-2xl p-3 pb-4"
       style={{
         shadowColor: '#000000',
         shadowOffset: { width: 0, height: 4 },
@@ -110,7 +110,6 @@ export function RecipeCard({
               ))}
           </Pressable>
         </View>
-
         <Text className="text-xs text-gray-60" numberOfLines={1}>
           {description}
         </Text>
