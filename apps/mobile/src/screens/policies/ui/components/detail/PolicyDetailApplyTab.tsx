@@ -6,32 +6,18 @@ type Props = {
   policy: PolicyDetail;
 };
 
-type BulletListCardProps = {
+type BulletLinesProps = {
   text: string;
-  borderColor?: string;
   dotColor?: string;
 };
 
 // 자유 형식 텍스트를 줄 단위로 나눠 각 줄을 별도 행으로 보여준다 — 글머리표/줄바꿈이 뭉쳐서
 // 한 문단처럼 보이던 것을 항목별로 구분해서 읽기 쉽게 한다.
-function BulletListCard({
-  text,
-  borderColor = '#E3E3E3',
-  dotColor = '#C3C6D7',
-}: BulletListCardProps) {
+function BulletLines({ text, dotColor = '#C3C6D7' }: BulletLinesProps) {
   const lines = splitToBulletLines(text);
 
   return (
-    <View
-      style={{
-        backgroundColor: '#FFFFFF',
-        borderWidth: 1,
-        borderColor,
-        borderRadius: 12,
-        padding: 16,
-        gap: 10,
-      }}
-    >
+    <>
       {lines.map(({ text: line, depth }, index) => {
         // depth 2(* ※ 비고)는 글머리 점 없이 작은 보조 텍스트로 보여준다.
         if (depth === 2) {
@@ -66,6 +52,33 @@ function BulletListCard({
           </View>
         );
       })}
+    </>
+  );
+}
+
+type BulletListCardProps = {
+  text: string;
+  borderColor?: string;
+  dotColor?: string;
+};
+
+function BulletListCard({
+  text,
+  borderColor = '#E3E3E3',
+  dotColor = '#C3C6D7',
+}: BulletListCardProps) {
+  return (
+    <View
+      style={{
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor,
+        borderRadius: 12,
+        padding: 16,
+        gap: 10,
+      }}
+    >
+      <BulletLines text={text} dotColor={dotColor} />
     </View>
   );
 }
@@ -101,37 +114,43 @@ export function PolicyDetailApplyTab({ policy }: Props) {
           </View>
 
           <View style={{ gap: 8 }}>
-            {policy.requiredDocuments.map((doc) => (
+            {policy.requiredDocuments.map((doc, index) => (
               <View
-                key={doc.name}
-                className="flex-row items-start justify-between"
+                key={`${index}-${doc.name}`}
                 style={{
                   backgroundColor: '#FFFFFF',
                   borderWidth: 1,
                   borderColor: 'rgba(195, 198, 215, 0.2)',
                   borderRadius: 16,
                   padding: 16,
-                  gap: 12,
+                  gap: 10,
                 }}
               >
-                <Text style={{ flex: 1, fontSize: 13, fontWeight: '500', color: '#0B1C30' }}>
-                  {doc.name}
-                </Text>
-                {doc.agencyUrl && doc.agencyName && (
-                  <Pressable
-                    onPress={() => Linking.openURL(doc.agencyUrl!)}
-                    style={{
-                      backgroundColor: '#FFEBDC',
-                      borderRadius: 12,
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, fontWeight: '500', color: '#EF7722' }}>
-                      {doc.agencyName} 이동
-                    </Text>
-                  </Pressable>
+                <View className="flex-row items-start justify-between" style={{ gap: 12 }}>
+                  <Text style={{ flex: 1, fontSize: 13, fontWeight: '500', color: '#0B1C30' }}>
+                    {doc.name}
+                  </Text>
+                  {doc.agencyUrl && doc.agencyName && (
+                    <Pressable
+                      onPress={() => Linking.openURL(doc.agencyUrl!)}
+                      style={{
+                        backgroundColor: '#FFEBDC',
+                        borderRadius: 12,
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: '500', color: '#EF7722' }}>
+                        {doc.agencyName} 이동
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
+                {doc.details && (
+                  <View style={{ gap: 8, paddingTop: 2 }}>
+                    <BulletLines text={doc.details} />
+                  </View>
                 )}
               </View>
             ))}

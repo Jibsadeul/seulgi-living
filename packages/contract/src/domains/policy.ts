@@ -73,9 +73,10 @@ export const policyListResponseSchema = z.object({
 });
 export type PolicyListResponse = z.infer<typeof policyListResponseSchema>;
 
-// 제출서류 항목 (정책 상세 응답에 포함)
+// 제출서류 항목 (정책 상세 응답에 포함) — name은 □ 섹션 제목, details는 그 아래 가/나/다 등 세부 조건(줄바꿈으로 구분)
 export const policyRequiredDocumentSchema = z.object({
   name: z.string(),
+  details: z.string().optional(),
   agencyName: z.string().optional(),
   agencyUrl: z.string().optional(),
 });
