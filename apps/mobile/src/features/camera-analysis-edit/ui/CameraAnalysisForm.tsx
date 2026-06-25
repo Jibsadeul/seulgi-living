@@ -122,6 +122,7 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
   const selectedCount = items.length;
   const isMissingSaveTarget = isReceipt && saveTargets.length === 0;
   const isSaveDisabled = isSaving || isMissingSaveTarget;
+  const hasFormError = Boolean(errors.purchaseDate) || Object.keys(errors.items).length > 0;
   const isFridgeOnlySelected =
     isReceipt && saveTargets.length === 1 && saveTargets.includes('FRIDGE');
   const isCategoryRequired = !isReceipt || saveTargets.includes('FRIDGE');
@@ -451,6 +452,12 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
           <View className="rounded-xl bg-main-10 px-4 py-3">
             <Text className="text-sm font-bold text-main-100">My 냉장고에 저장됩니다</Text>
           </View>
+        )}
+
+        {hasFormError && (
+          <Text className="text-center text-sm font-medium text-point-100">
+            입력하지 않은 항목이 있습니다.
+          </Text>
         )}
 
         <View className="flex-row gap-3">
