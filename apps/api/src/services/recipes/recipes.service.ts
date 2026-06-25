@@ -426,13 +426,13 @@ export async function getRecipeDetail(
 
   const stepCount = recipe.recipeSteps.length;
   const ingredientArray = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
-  const ingredientCount = ingredientArray.reduce(
-    (sum: number, section: Record<string, unknown>) => {
+  const ingredientCount = ingredientArray.reduce((sum: number, section) => {
+    if (typeof section === 'object' && section !== null && !Array.isArray(section)) {
       const items = Array.isArray(section.items) ? section.items : [];
       return sum + items.length;
-    },
-    0,
-  );
+    }
+    return sum;
+  }, 0);
   const score = stepCount + ingredientCount;
   const level = score <= 15 ? 'LOW' : score <= 20 ? 'MEDIUM' : 'HIGH';
 
