@@ -249,10 +249,10 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
 
     try {
       await saveCameraResult(buildSaveRequest());
-      showAppToast({ type: 'success', text: 'AI 분석 결과를 저장했어요.' });
+      showAppToast({ type: 'success', text: 'AI 분석 결과를 저장했습니다.' });
       onSaveSuccess();
     } catch {
-      showAppToast({ type: 'error', text: '저장하지 못했어요. 잠시 후 다시 시도해주세요.' });
+      showAppToast({ type: 'error', text: '저장에 실패했습니다.' });
     } finally {
       setIsSaving(false);
     }
