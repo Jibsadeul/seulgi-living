@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, Share, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '@/shared/ui';
+import { buildShareLandingUrl } from '@/shared/lib/share';
 import {
   useRecipeDetail,
   useRecipeScrap,
@@ -48,6 +49,7 @@ type DetailContentProps = {
   isLocal: boolean;
   scrap: { isSaved: boolean; scrapCount: number };
   onToggleScrap: () => void;
+  onSharePress: () => void;
 };
 
 function RecipeDetailContent({
@@ -63,6 +65,7 @@ function RecipeDetailContent({
   isLocal,
   scrap,
   onToggleScrap,
+  onSharePress,
 }: DetailContentProps) {
   const [showAllSteps, setShowAllSteps] = useState(false);
 
@@ -77,11 +80,12 @@ function RecipeDetailContent({
         variant="detail"
         isScrapped={scrap.isSaved}
         onBookmarkPress={onToggleScrap}
+        onSharePress={onSharePress}
       />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
       >
         {mainImageUrl ? (
           <Image
@@ -124,7 +128,7 @@ function RecipeDetailContent({
               <View className="bg-gray-5 rounded-xl p-3">
                 {section.items.map((item, idx) => (
                   <View
-                    key={item}
+                    key={`${item}-${idx}`}
                     className={`py-2 ${
                       idx < section.items.length - 1 ? 'border-b border-gray-10' : ''
                     }`}
@@ -231,6 +235,11 @@ export function RecipeDetailScreen() {
         scrap={scrap}
         isLocal={false}
         onToggleScrap={() => scrapMutation.mutate({ recipeId: recipe.id, isSaved: !scrap.isSaved })}
+        onSharePress={() => {
+          const lines = [recipe.name];
+          lines.push(buildShareLandingUrl('recipes', recipe.id));
+          Share.share({ message: lines.join('\n') });
+        }}
       />
     );
   }
@@ -266,6 +275,9 @@ export function RecipeDetailScreen() {
         scrap={{ isSaved: false, scrapCount: 0 }}
         isLocal
         onToggleScrap={() => {}}
+        onSharePress={() => {
+          Share.share({ message: localRecipe.name });
+        }}
       />
     );
   }

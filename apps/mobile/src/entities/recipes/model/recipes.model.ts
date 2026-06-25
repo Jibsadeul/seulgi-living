@@ -65,8 +65,18 @@ export function getLevelTag(level: RecipeLevel): RecipeTag {
   return LEVEL_TAG_MAP[level];
 }
 
-export function getRecipeTags(category: RecipeCategory, method: CookingMethod, level?: RecipeLevel): RecipeTag[] {
+export function getRecipeTags(
+  category: RecipeCategory,
+  method: CookingMethod,
+  level?: RecipeLevel,
+): RecipeTag[] {
   const tags = [getCategoryTag(category), getCookingMethodTag(method)];
   if (level) tags.push(getLevelTag(level));
   return tags;
+}
+
+export function getRecipeSummary(category: RecipeCategory, method: CookingMethod): string {
+  const methodLabel = COOKING_METHOD_LABEL_MAP[method];
+  const categoryLabel = CATEGORY_LABEL_MAP[category];
+  return `${methodLabel}로 만드는 ${categoryLabel} 레시피`;
 }

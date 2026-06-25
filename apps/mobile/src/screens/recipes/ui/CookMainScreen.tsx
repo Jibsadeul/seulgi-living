@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Header, SearchBar } from '@/shared/ui';
 import { CookTabToggle, type CookMainTab } from './components/CookTabToggle';
@@ -13,6 +15,7 @@ const TAB_BAR_CONTAINER_HEIGHT = 87;
 
 export function CookMainScreen() {
   const router = useRouter();
+  const navigation = useNavigation<BottomTabNavigationProp<Record<string, object | undefined>>>();
   const { tab } = useLocalSearchParams<{ tab?: string }>();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<CookMainTab>('recipe');
@@ -20,6 +23,12 @@ export function CookMainScreen() {
   useEffect(() => {
     setActiveTab(tab === 'fridge' ? 'fridge' : 'recipe');
   }, [tab]);
+
+  useEffect(() => {
+    return navigation.addListener('tabPress', () => {
+      setActiveTab('recipe');
+    });
+  }, [navigation]);
 
   function handleSearchPress() {
     router.push('/(stack)/cook-search' as never);
