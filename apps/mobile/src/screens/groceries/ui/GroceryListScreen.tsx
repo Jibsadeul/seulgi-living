@@ -23,7 +23,7 @@ const FAB_SIZE = 64;
 const FAB_BOTTOM = 24;
 const FAB_CLEARANCE = 16;
 
-export function GroceriesListScreen() {
+export function GroceryListScreen() {
   const insets = useSafeAreaInsets();
   const fabBottomOffset = insets.bottom + FAB_BOTTOM;
   const contentBottomPadding = fabBottomOffset + FAB_SIZE + FAB_CLEARANCE;
