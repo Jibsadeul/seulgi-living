@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -224,6 +225,7 @@ export function ChatPanel() {
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [typingMessageId, setTypingMessageId] = useState<string | null>(null);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   const sessionsQuery = useChatSessions();
   const messagesQuery = useChatSessionMessages(activeSessionId);
@@ -273,6 +275,20 @@ export function ChatPanel() {
       if (typingTimerRef.current) {
         clearTimeout(typingTimerRef.current);
       }
+    };
+  }, []);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      setIsKeyboardVisible(true);
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
     };
   }, []);
 
@@ -436,11 +452,14 @@ export function ChatPanel() {
   const hasInput = input.trim().length > 0;
   const isCreatingSession = createSessionMutation.isPending;
   const isMessageLoading = messagesQuery.isLoading && Boolean(activeSessionId) && !displayMessages;
+  const keyboardAvoidingEnabled = Platform.OS === 'ios' || isKeyboardVisible;
+  const inputBottomPadding = isKeyboardVisible ? 8 : insets.bottom + 12;
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      enabled={keyboardAvoidingEnabled}
     >
       <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <View>
@@ -580,7 +599,7 @@ export function ChatPanel() {
         )}
       </ScrollView>
 
-      <View style={[styles.inputWrap, { paddingBottom: insets.bottom + 12 }]}>
+      <View style={[styles.inputWrap, { paddingBottom: inputBottomPadding }]}>
         <TextInput
           value={input}
           onChangeText={setInput}
@@ -607,7 +626,7 @@ export function ChatPanel() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F7F4',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     minHeight: 86,
@@ -728,6 +747,7 @@ const styles = StyleSheet.create({
   },
   messages: {
     flex: 1,
+    backgroundColor: '#F8F7F4',
   },
   messagesContent: {
     paddingHorizontal: 16,

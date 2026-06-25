@@ -1,54 +1,25 @@
 import { useEffect, useState } from 'react';
+import * as WebBrowser from 'expo-web-browser';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemberStore } from '@/entities/members';
-import { submitKakaoLogin } from '@/features/member-login/api/useLoginSubmit';
-import { API_BASE_URL, KAKAO_REDIRECT_URI } from '@/shared/config/constants';
+
+WebBrowser.maybeCompleteAuthSession();
 
 function getParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function getKakaoRedirectUri() {
-  return KAKAO_REDIRECT_URI ?? `${API_BASE_URL.replace(/\/$/, '')}/auth/kakao/callback`;
-}
-
 export default function KakaoCallbackRoute() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const setMemberProfileFromMe = useMemberStore((state) => state.setMemberProfileFromMe);
-  const code = getParam(params.code);
   const error = getParam(params.error);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
-
-    if (error || !code) {
-      setMessage(error ? `카카오 로그인 오류: ${error}` : '카카오 인가 코드가 없습니다.');
-      return;
+    if (error) {
+      setMessage(`카카오 로그인 오류: ${error}`);
     }
-
-    submitKakaoLogin({ code, redirectUri: getKakaoRedirectUri() })
-      .then((member) => {
-        if (!isMounted) return;
-        setMemberProfileFromMe(member);
-        router.replace(member.isBasicInfoComplete ? '/(tabs)/' : '/(auth)/onboarding');
-      })
-      .catch((submitError: unknown) => {
-        if (isMounted) {
-          setMessage(
-            submitError instanceof Error
-              ? submitError.message
-              : '로그인 처리에 실패했습니다. 다시 시도해주세요.',
-          );
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [code, error, router, setMemberProfileFromMe]);
+  }, [error]);
 
   return (
     <View className="flex-1 items-center justify-center bg-white px-6">
