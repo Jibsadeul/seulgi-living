@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -75,6 +76,7 @@ export function RecipeListAllScreen() {
   const insets = useSafeAreaInsets();
   const [filters, setFilters] = useState<RecipeFilters>(EMPTY_FILTERS);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
   const [searchText, setSearchText] = useState(initialKeyword ?? '');
   const [sort, setSort] = useState<RecipeSort>('latest');
   const scrapMutation = useRecipeScrap();
@@ -123,10 +125,8 @@ export function RecipeListAllScreen() {
     setFilters((prev) => ({ ...prev, [key]: '전체' }));
   }
 
-  function handleSortToggle() {
-    const currentIndex = SORT_OPTIONS.findIndex((o) => o.value === sort);
-    const nextIndex = (currentIndex + 1) % SORT_OPTIONS.length;
-    setSort(SORT_OPTIONS[nextIndex].value);
+  function handleSortPress() {
+    setIsSortOpen(true);
   }
 
   function handleRecipePress(id: string) {
@@ -288,11 +288,18 @@ export function RecipeListAllScreen() {
             <View className="flex-row items-center justify-between px-4 mt-3 mb-4">
               <Text className="text-xs text-gray-60">검색 결과 {totalCount}건</Text>
               <Pressable
-                onPress={handleSortToggle}
-                className="flex-row items-center gap-1 px-2 py-1 rounded-full border border-gray-30"
+                onPress={handleSortPress}
+                className="flex-row items-center gap-1 px-3 py-1.5 bg-surface-default rounded-full border border-gray-20"
+                style={{
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 2,
+                  elevation: 1,
+                }}
               >
-                <Ionicons name="swap-vertical" size={12} color="#717171" />
-                <Text className="text-xs text-gray-70">
+                <Ionicons name="filter" size={12} color="#474553" />
+                <Text className="text-xs font-semibold text-gray-70">
                   {SORT_OPTIONS.find((o) => o.value === sort)?.label}
                 </Text>
               </Pressable>
@@ -336,6 +343,54 @@ export function RecipeListAllScreen() {
         onApply={setFilters}
         onClose={() => setIsFilterOpen(false)}
       />
+
+      {/* 정렬 드롭다운 */}
+      <Modal
+        visible={isSortOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsSortOpen(false)}
+      >
+        <Pressable className="flex-1" onPress={() => setIsSortOpen(false)}>
+          <View
+            style={{
+              position: 'absolute',
+              top: 160,
+              right: 16,
+              width: 140,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 12,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.12,
+              shadowRadius: 12,
+              elevation: 8,
+              paddingVertical: 8,
+            }}
+          >
+            {SORT_OPTIONS.map((option) => {
+              const isActive = sort === option.value;
+              return (
+                <Pressable
+                  key={option.value}
+                  className="flex-row items-center justify-between px-4 py-3"
+                  onPress={() => {
+                    setSort(option.value);
+                    setIsSortOpen(false);
+                  }}
+                >
+                  <Text
+                    className={`text-sm font-medium ${isActive ? 'text-main-100' : 'text-gray-70'}`}
+                  >
+                    {option.label}
+                  </Text>
+                  {isActive && <Ionicons name="checkmark" size={16} color="#EF7722" />}
+                </Pressable>
+              );
+            })}
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
