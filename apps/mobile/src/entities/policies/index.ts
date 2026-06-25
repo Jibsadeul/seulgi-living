@@ -20,8 +20,10 @@ export {
   getDeadlineLabel,
   isUrgentDeadline,
   registerPolicyDeadline,
+  splitToBulletLines,
   PERIOD_LABEL,
   type FilterSection,
+  type BulletLine,
 } from './model/policies.model';
 export { policyKeys } from './api/keys';
 export type { Policy, PolicyBanner, PolicyListQuery, PolicyDetail } from './api/policies.schema';
