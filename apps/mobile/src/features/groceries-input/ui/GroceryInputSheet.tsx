@@ -228,6 +228,7 @@ export function GroceryInputSheet({
             placeholder="예: 14800"
             placeholderTextColor="#C8C4D4"
             keyboardType="number-pad"
+            maxLength={8}
             value={priceText}
             onChangeText={(value) => setPriceText(value.replace(/[^0-9]/g, ''))}
           />

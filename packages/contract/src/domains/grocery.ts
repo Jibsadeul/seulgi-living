@@ -65,7 +65,7 @@ export const groceryListResponseSchema = z.array(groceryListGroupSchema);
 
 export const createGroceryBodySchema = z.object({
   name: z.string().min(1).max(50),
-  price: z.number().int().min(0),
+  price: z.number().int().min(0).max(99_999_999),
   purchaseDate: dateStringSchema,
   quantityText: z.string().min(1).max(20).optional(),
 });
