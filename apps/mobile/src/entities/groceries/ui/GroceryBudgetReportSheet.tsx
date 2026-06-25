@@ -204,7 +204,7 @@ export function GroceryBudgetReportSheet({
           <View className="flex-1 rounded-xl bg-gray-10 p-3">
             <Text className="text-[11px] font-medium text-gray-60">가장 많이 쓴 날</Text>
             <Text className="mt-1 text-sm font-bold text-gray-90" numberOfLines={1}>
-              {highestSpendingDay ? highestSpendingDay.date.slice(8) : '-'}일
+              {highestSpendingDay ? `${highestSpendingDay.date.slice(8)}일` : '-'}
             </Text>
           </View>
         </View>

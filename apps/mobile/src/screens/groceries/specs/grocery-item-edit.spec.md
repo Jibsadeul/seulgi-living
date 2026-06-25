@@ -13,7 +13,7 @@
 
 ## UI
 
-- `GroceryDirectInputSheet`를 수정 모드로 재사용
+- `GroceryInputSheet`를 수정 모드로 재사용
 - 헤더 타이틀: "추가" → "수정"
 - 저장 버튼 레이블: "추가" → "수정"
 - 폼 초기값: 선택된 항목의 기존 데이터로 채움
