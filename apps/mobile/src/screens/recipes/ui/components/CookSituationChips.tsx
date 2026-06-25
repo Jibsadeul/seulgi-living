@@ -23,7 +23,7 @@ export function CookSituationChips({ onSelect }: Props) {
   return (
     <View className="mt-10 px-4">
       <View className="mb-3 flex-row items-center gap-1">
-        <Text className="text-sm font-semibold text-gray-90">상황별 추천 레시피</Text>
+        <Text className="text-base font-bold text-gray-90">상황별 추천 레시피</Text>
         <Text>✨</Text>
       </View>
       <View className="flex-row justify-between gap-2">
@@ -33,7 +33,7 @@ export function CookSituationChips({ onSelect }: Props) {
             onPress={() => onSelect?.(chip.id)}
             className="flex-1 items-center"
           >
-            <View className="aspect-square w-full items-center justify-center rounded-2xl border border-gray-20">
+            <View className="aspect-square w-full items-center justify-center rounded-2xl border border-gray-20 bg-surface-default">
               <Ionicons name={chip.icon} size={28} color={chip.iconColor} />
             </View>
             <Text className="mt-2 text-xs text-gray-70" numberOfLines={1}>

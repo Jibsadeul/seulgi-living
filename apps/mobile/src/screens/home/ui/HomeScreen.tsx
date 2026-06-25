@@ -53,10 +53,16 @@ export function HomeScreen() {
   const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
   const [isMemberInfoOpen, setIsMemberInfoOpen] = useState(false);
   const [isBudgetReportOpen, setIsBudgetReportOpen] = useState(false);
+  const [hasOpenedBudgetReport, setHasOpenedBudgetReport] = useState(false);
   const [isNearBottom, setIsNearBottom] = useState(false);
   const lastScrollYRef = useRef(0);
   const chatButtonOpacity = useRef(new Animated.Value(1)).current;
   const setMemberProfileFromMe = useMemberStore((state) => state.setMemberProfileFromMe);
+
+  const handleBudgetReportPress = () => {
+    setHasOpenedBudgetReport(true);
+    setIsBudgetReportOpen(true);
+  };
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
@@ -109,7 +115,7 @@ export function HomeScreen() {
         <HomeHeader
           username={member?.nickname ?? undefined}
           budgetSummary={BUDGET_SUMMARY_MOCK}
-          onBudgetReportPress={() => setIsBudgetReportOpen(true)}
+          onBudgetReportPress={handleBudgetReportPress}
           onBudgetMorePress={() => {}}
           onSettingsPress={() => setIsSettingsMenuOpen(true)}
         />
@@ -152,15 +158,17 @@ export function HomeScreen() {
         onClose={() => setIsMemberInfoOpen(false)}
         onSubmitSuccess={setMember}
       />
-      <GroceryBudgetReportSheet
-        isOpen={isBudgetReportOpen}
-        onClose={() => setIsBudgetReportOpen(false)}
-        year={BUDGET_SUMMARY_MOCK.year}
-        month={BUDGET_SUMMARY_MOCK.month}
-        budget={BUDGET_SUMMARY_MOCK.budget}
-        spent={BUDGET_SUMMARY_MOCK.spent}
-        dailyGroups={GROCERY_DAILY_GROUPS_MOCK}
-      />
+      {hasOpenedBudgetReport && (
+        <GroceryBudgetReportSheet
+          isOpen={isBudgetReportOpen}
+          onClose={() => setIsBudgetReportOpen(false)}
+          year={BUDGET_SUMMARY_MOCK.year}
+          month={BUDGET_SUMMARY_MOCK.month}
+          budget={BUDGET_SUMMARY_MOCK.budget}
+          spent={BUDGET_SUMMARY_MOCK.spent}
+          dailyGroups={GROCERY_DAILY_GROUPS_MOCK}
+        />
+      )}
     </View>
   );
 }

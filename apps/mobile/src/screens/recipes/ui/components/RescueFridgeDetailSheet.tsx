@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
-import {
-  useFridgeIngredients,
-  getFoodIcon,
-  type FridgeIngredient,
-} from '@/entities/fridge';
+import { useFridgeIngredients, getFoodIcon, type FridgeIngredient } from '@/entities/fridge';
 import { RescueIngredientChip } from './RescueIngredientChip';
 
 type Props = {
@@ -26,6 +23,7 @@ export function RescueFridgeDetailSheet({
   onReset,
   onConfirm,
 }: Props) {
+  const insets = useSafeAreaInsets();
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['85%'], []);
 
@@ -69,7 +67,9 @@ export function RescueFridgeDetailSheet({
 
       <View style={{ height: 1, backgroundColor: '#E5E5EA' }} />
 
-      <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 }}>
+      <BottomSheetScrollView
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 }}
+      >
         {fridgeItems.length === 0 ? (
           <View className="items-center py-12">
             <Ionicons name="leaf-outline" size={40} color="#C6C6C6" />
@@ -78,7 +78,10 @@ export function RescueFridgeDetailSheet({
         ) : (
           <View className="flex-row flex-wrap">
             {fridgeItems.map((item: FridgeIngredient) => (
-              <View key={item.id} style={{ width: `${100 / 3}%`, alignItems: 'center', paddingVertical: 10 }}>
+              <View
+                key={item.id}
+                style={{ width: `${100 / 3}%`, alignItems: 'center', paddingVertical: 10 }}
+              >
                 <RescueIngredientChip
                   label={item.name}
                   Icon={getFoodIcon(item.imageKey)}
@@ -93,9 +96,10 @@ export function RescueFridgeDetailSheet({
       </BottomSheetScrollView>
 
       <View
-        className="flex-row px-4 pb-8 pt-3 bg-white"
+        className="flex-row px-4 pt-3 bg-white"
         style={{
           gap: 10,
+          paddingBottom: insets.bottom + 16,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 0.08,

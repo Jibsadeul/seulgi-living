@@ -14,7 +14,7 @@ const TABS: { value: CookMainTab; label: string }[] = [
 
 export function CookTabToggle({ value, onChange }: Props) {
   return (
-    <View className="flex-row mx-4 mt-3 p-1 bg-gray-5 rounded-full">
+    <View className="flex-row mx-4 mt-3 mb-4 p-1 bg-gray-5 rounded-full">
       {TABS.map((tab) => {
         const isActive = tab.value === value;
         return (
