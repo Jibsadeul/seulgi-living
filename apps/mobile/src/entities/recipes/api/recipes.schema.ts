@@ -22,4 +22,6 @@ export {
   type RecipeDetail,
   type RecipeDetailResponse,
   type RecipeCreateResponse,
+  recipeUpdateResponseSchema,
+  type RecipeUpdateResponse,
 } from '@repo/contract';

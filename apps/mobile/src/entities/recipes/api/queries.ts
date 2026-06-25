@@ -1,4 +1,4 @@
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 import { apiRequest } from '@/shared/api/client';
 import {
   recipeListResponseSchema,
@@ -19,6 +19,7 @@ export function useRecipeList(params: Partial<RecipeListQuery> = {}) {
       const searchParams = buildSearchParams(query);
       return apiRequest(`/api/recipes?${searchParams}`, recipeListResponseSchema);
     },
+    placeholderData: keepPreviousData,
   });
 }
 

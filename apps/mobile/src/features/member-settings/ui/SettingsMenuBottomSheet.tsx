@@ -74,7 +74,13 @@ export function SettingsMenuBottomSheet({ visible, onClose, onEditProfilePress }
               <Text className="text-base font-medium text-gray-90">개인정보 수정</Text>
             </Pressable>
             <View className="h-px bg-gray-20" />
-            <Pressable className="py-4" onPress={() => {}}>
+            <Pressable
+              className="py-4"
+              onPress={() => {
+                onClose();
+                router.push('/(stack)/my-recipe' as never);
+              }}
+            >
               <Text className="text-base font-medium text-gray-90">My 레시피</Text>
             </Pressable>
             <View className="h-px bg-gray-20" />

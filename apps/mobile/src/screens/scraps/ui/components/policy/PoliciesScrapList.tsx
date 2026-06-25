@@ -17,6 +17,7 @@ type Props = {
   isNextPageError: boolean;
   onEndReached: () => void;
   onRetryNextPage: () => void;
+  bottomPadding?: number;
 };
 
 export function PoliciesScrapList({
@@ -31,6 +32,7 @@ export function PoliciesScrapList({
   isNextPageError,
   onEndReached,
   onRetryNextPage,
+  bottomPadding = 24,
 }: Props) {
   return (
     <FlatList
@@ -41,7 +43,7 @@ export function PoliciesScrapList({
           <PolicyScrapCard policy={item} />
         </View>
       )}
-      contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
+      contentContainerStyle={{ paddingTop: 16, paddingBottom: bottomPadding }}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       ListHeaderComponent={

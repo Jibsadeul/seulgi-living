@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { ActivityIndicator, Image, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
   RecipeCard,
@@ -16,6 +17,12 @@ type Props = {
 export function CookRecipeSection({ onRecipePress, onSeeAllPress }: Props) {
   const { data, isLoading } = useRecipeList({ page: 1, size: 3 });
   const scrapMutation = useRecipeScrap();
+
+  useEffect(() => {
+    data?.items.forEach((r) => {
+      if (r.imageUrl) Image.prefetch(r.imageUrl);
+    });
+  }, [data]);
 
   function handleToggleScrap(recipeId: string, currentlySaved: boolean) {
     scrapMutation.mutate({ recipeId, isSaved: !currentlySaved });

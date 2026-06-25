@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
   Image,
   Modal,
@@ -117,9 +118,12 @@ export function RecipeListAllScreen() {
     string,
   ][];
 
-  function handleToggleScrap(recipeId: string, currentlySaved: boolean) {
-    scrapMutation.mutate({ recipeId, isSaved: !currentlySaved });
-  }
+  const handleToggleScrap = useCallback(
+    (recipeId: string, currentlySaved: boolean) => {
+      scrapMutation.mutate({ recipeId, isSaved: !currentlySaved });
+    },
+    [scrapMutation],
+  );
 
   function removeFilter(key: keyof RecipeFilters) {
     setFilters((prev) => ({ ...prev, [key]: '전체' }));
@@ -129,9 +133,12 @@ export function RecipeListAllScreen() {
     setIsSortOpen(true);
   }
 
-  function handleRecipePress(id: string) {
-    router.push({ pathname: '/(stack)/recipes/[id]', params: { id } } as never);
-  }
+  const handleRecipePress = useCallback(
+    (id: string) => {
+      router.push({ pathname: '/(stack)/recipes/[id]', params: { id } } as never);
+    },
+    [router],
+  );
 
   function handleRecipeUploadPress() {
     router.push('/(stack)/recipe-upload' as never);
@@ -143,78 +150,17 @@ export function RecipeListAllScreen() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  function renderRecipeItem({ item, index }: { item: RecipePreview; index: number }) {
-    const tags = getRecipeTags(item.category, item.cookingMethod, item.level);
-    const isLeft = index % 2 === 0;
-
-    return (
-      <Pressable
-        onPress={() => handleRecipePress(item.id)}
-        className="bg-surface-default rounded-2xl overflow-hidden"
-        style={{
-          width: '47.5%',
-          marginRight: isLeft ? '5%' : 0,
-          shadowColor: '#000000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.05,
-          shadowRadius: 12,
-          elevation: 2,
-        }}
-      >
-        {item.imageUrl ? (
-          <View className="w-full aspect-square relative">
-            <Image source={{ uri: item.imageUrl }} className="w-full h-full" resizeMode="cover" />
-            <Pressable
-              onPress={() => handleToggleScrap(item.id, item.isSaved)}
-              className="absolute top-2 right-2"
-              hitSlop={8}
-            >
-              {item.isSaved ? (
-                <ScrappedIcon width={32} height={32} />
-              ) : (
-                <ScrapIcon width={32} height={32} />
-              )}
-            </Pressable>
-          </View>
-        ) : (
-          <View className="w-full aspect-square bg-gray-10 relative">
-            <Pressable
-              onPress={() => handleToggleScrap(item.id, item.isSaved)}
-              className="absolute top-2 right-2"
-              hitSlop={8}
-            >
-              {item.isSaved ? (
-                <ScrappedIcon width={32} height={32} />
-              ) : (
-                <ScrapIcon width={32} height={32} />
-              )}
-            </Pressable>
-          </View>
-        )}
-
-        <View className="p-3 gap-1.5">
-          <Text className="text-sm font-semibold text-gray-90" numberOfLines={1}>
-            {item.name}
-          </Text>
-          <View className="flex-row gap-1 flex-wrap">
-            {tags.map((tag, tagIndex) => {
-              const style = TAG_STYLES[tag.variant];
-              return (
-                <View
-                  key={`${tag.label}-${tagIndex}`}
-                  className={`px-2 py-0.5 rounded-full ${style.container}`}
-                >
-                  <Text className={`font-medium ${style.text}`} style={{ fontSize: 9 }}>
-                    {tag.label}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-        </View>
-      </Pressable>
-    );
-  }
+  const renderRecipeItem = useCallback(
+    ({ item, index }: { item: RecipePreview; index: number }) => (
+      <RecipeGridItem
+        item={item}
+        isLeft={index % 2 === 0}
+        onPress={handleRecipePress}
+        onToggleScrap={handleToggleScrap}
+      />
+    ),
+    [handleToggleScrap],
+  );
 
   return (
     <View className="flex-1 bg-surface-card">
@@ -230,6 +176,10 @@ export function RecipeListAllScreen() {
         showsVerticalScrollIndicator={false}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
+        initialNumToRender={8}
+        maxToRenderPerBatch={6}
+        windowSize={5}
+        removeClippedSubviews
         ListHeaderComponent={
           <>
             {/* 검색바 */}
@@ -394,3 +344,112 @@ export function RecipeListAllScreen() {
     </View>
   );
 }
+
+function ImageSkeleton() {
+  const opacity = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+      ]),
+    ).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#E4E4E4',
+        opacity,
+      }}
+    />
+  );
+}
+
+type RecipeGridItemProps = {
+  item: RecipePreview;
+  isLeft: boolean;
+  onPress: (id: string) => void;
+  onToggleScrap: (id: string, isSaved: boolean) => void;
+};
+
+const RecipeGridItem = React.memo(function RecipeGridItem({
+  item,
+  isLeft,
+  onPress,
+  onToggleScrap,
+}: RecipeGridItemProps) {
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const tags = getRecipeTags(item.category, item.cookingMethod, item.level);
+
+  return (
+    <Pressable
+      onPress={() => onPress(item.id)}
+      className="bg-surface-default rounded-2xl overflow-hidden"
+      style={{
+        width: '47.5%',
+        marginRight: isLeft ? '5%' : 0,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
+        elevation: 2,
+      }}
+    >
+      <View className="w-full aspect-square overflow-hidden relative">
+        {item.imageUrl ? (
+          <>
+            {!isImageLoaded && <ImageSkeleton />}
+            <Image
+              source={{ uri: item.imageUrl }}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+              onLoad={() => setIsImageLoaded(true)}
+            />
+          </>
+        ) : (
+          <View className="w-full h-full bg-gray-10" />
+        )}
+        <Pressable
+          onPress={() => onToggleScrap(item.id, item.isSaved)}
+          className="absolute top-2 right-2 w-8 h-8 rounded-full items-center justify-center"
+          style={{ backgroundColor: 'rgba(255,255,255,0.7)' }}
+          hitSlop={8}
+        >
+          {item.isSaved ? (
+            <ScrappedIcon width={24} height={24} />
+          ) : (
+            <ScrapIcon width={24} height={24} />
+          )}
+        </Pressable>
+      </View>
+
+      <View className="p-3 gap-1.5">
+        <Text className="text-sm font-semibold text-gray-90" numberOfLines={1}>
+          {item.name}
+        </Text>
+        <View className="flex-row gap-1 flex-wrap">
+          {tags.map((tag, tagIndex) => {
+            const style = TAG_STYLES[tag.variant];
+            return (
+              <View
+                key={`${tag.label}-${tagIndex}`}
+                className={`px-2 py-0.5 rounded-full ${style.container}`}
+              >
+                <Text className={`font-medium ${style.text}`} style={{ fontSize: 9 }}>
+                  {tag.label}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    </Pressable>
+  );
+});

@@ -1,5 +1,14 @@
-import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, Share, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  Image,
+  Pressable,
+  ScrollView,
+  Share,
+  Text,
+  View,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '@/shared/ui';
@@ -88,11 +97,7 @@ function RecipeDetailContent({
         contentContainerStyle={{ paddingBottom: 120 }}
       >
         {mainImageUrl ? (
-          <Image
-            source={{ uri: mainImageUrl }}
-            className="w-full aspect-[4/3]"
-            resizeMode="cover"
-          />
+          <DetailMainImage uri={mainImageUrl} />
         ) : (
           <View className="w-full aspect-[4/3] bg-gray-10" />
         )}
@@ -291,6 +296,49 @@ export function RecipeDetailScreen() {
           <Text className="text-sm text-main-100">뒤로가기</Text>
         </Pressable>
       </View>
+    </View>
+  );
+}
+
+function DetailPulseSkeleton() {
+  const opacity = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+      ]),
+    ).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#E4E4E4',
+        opacity,
+      }}
+    />
+  );
+}
+
+function DetailMainImage({ uri }: { uri: string }) {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <View className="w-full aspect-[4/3] relative">
+      {!loaded && <DetailPulseSkeleton />}
+      <Image
+        source={{ uri }}
+        className="w-full aspect-[4/3]"
+        resizeMode="cover"
+        onLoad={() => setLoaded(true)}
+      />
     </View>
   );
 }

@@ -4,9 +4,11 @@ import { apiRequest } from '@/shared/api/client';
 import { showAppToast } from '@/shared/ui/Toast';
 import {
   recipeCreateResponseSchema,
+  recipeUpdateResponseSchema,
   type RecipeListResponse,
   type RecipeDetailResponse,
   type RecipeCreateResponse,
+  type RecipeUpdateResponse,
   type CookingMethod,
   type RecipeCategory,
 } from './recipes.schema';
@@ -67,6 +69,90 @@ function buildRecipeFormData(input: CreateRecipeInput): FormData {
   });
 
   return formData;
+}
+
+type UpdateRecipeInput = CreateRecipeInput & {
+  id: string;
+  existingMainImageUrl?: string;
+  existingStepImageUrls?: (string | null)[];
+};
+
+function isRemoteUrl(uri: string): boolean {
+  return uri.startsWith('http://') || uri.startsWith('https://');
+}
+
+function buildUpdateFormData(input: UpdateRecipeInput): FormData {
+  const formData = new FormData();
+  formData.append('name', input.name);
+  formData.append('cookingMethod', input.cookingMethod);
+  formData.append('category', input.category);
+
+  const ingredientItems = input.ingredients
+    .split(/[,\n]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  formData.append('ingredients', JSON.stringify([{ section: '재료', items: ingredientItems }]));
+
+  const isNewMainImage = input.mainImageUri && !isRemoteUrl(input.mainImageUri);
+  if (isNewMainImage) {
+    formData.append('mainImage', {
+      uri: input.mainImageUri,
+      type: 'image/jpeg',
+      name: 'main.jpg',
+    } as unknown as Blob);
+  } else if (input.existingMainImageUrl) {
+    formData.append('mainImageUrl', input.existingMainImageUrl);
+  }
+
+  const steps = input.steps.map((s, index) => {
+    const hasNewFile = s.imageUri && !isRemoteUrl(s.imageUri);
+    const existingUrl = input.existingStepImageUrls?.[index] ?? null;
+    return {
+      description: s.description,
+      imageUrl: hasNewFile ? null : isRemoteUrl(s.imageUri) ? s.imageUri : existingUrl,
+    };
+  });
+  formData.append('steps', JSON.stringify(steps));
+
+  if (input.sodiumTip) {
+    formData.append('sodiumTip', input.sodiumTip);
+  }
+
+  input.steps.forEach((step, index) => {
+    if (step.imageUri && !isRemoteUrl(step.imageUri)) {
+      formData.append(`stepImages[${index}]`, {
+        uri: step.imageUri,
+        type: 'image/jpeg',
+        name: `step-${index}.jpg`,
+      } as unknown as Blob);
+    }
+  });
+
+  return formData;
+}
+
+export function useUpdateRecipe() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpdateRecipeInput) => {
+      const formData = buildUpdateFormData(input);
+      return apiRequest<RecipeUpdateResponse>(
+        `/api/recipes/${input.id}`,
+        recipeUpdateResponseSchema,
+        { method: 'PUT', formData },
+      );
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: recipeKeys.all });
+      showAppToast({ type: 'success', text: '레시피가 수정되었습니다.' });
+    },
+
+    onError: () => {
+      showAppToast({ type: 'error', text: '레시피 수정에 실패했습니다.' });
+    },
+  });
 }
 
 export function useCreateRecipe() {

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { TAB_BAR_BASE_HEIGHT } from '@/shared/ui';
 
 export type RecipeFilters = {
   foodType: string;
@@ -18,6 +20,9 @@ const FOOD_TYPES = ['전체', '국/찌개', '반찬', '밥/죽', '후식', '기�
 const COOK_METHODS = ['전체', '구이', '끓이기', '볶음', '찜', '튀김', '조림', '부침', '기타'];
 const DIFFICULTIES = ['전체', '초급', '중급', '상급'];
 
+type ExpandedState = SectionKey | 'all' | null;
+type SectionKey = 'foodType' | 'cookMethod' | 'difficulty';
+
 type Props = {
   visible: boolean;
   filters: RecipeFilters;
@@ -26,11 +31,14 @@ type Props = {
 };
 
 export function RecipeFilterModal({ visible, filters, onApply, onClose }: Props) {
+  const insets = useSafeAreaInsets();
   const [draft, setDraft] = useState<RecipeFilters>(filters);
+  const [expandedSection, setExpandedSection] = useState<ExpandedState>('all');
   const [showDifficultyTip, setShowDifficultyTip] = useState(false);
 
   function handleOpen() {
     setDraft(filters);
+    setExpandedSection('all');
   }
 
   function handleReset() {
@@ -44,6 +52,21 @@ export function RecipeFilterModal({ visible, filters, onApply, onClose }: Props)
 
   function select(key: keyof RecipeFilters, value: string) {
     setDraft((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function isSectionExpanded(key: SectionKey): boolean {
+    return expandedSection === 'all' || expandedSection === key;
+  }
+
+  function toggleSection(key: SectionKey) {
+    setExpandedSection((prev) => {
+      if (prev === 'all') return key;
+      return prev === key ? null : key;
+    });
+  }
+
+  function getBadgeCount(key: keyof RecipeFilters): number {
+    return draft[key] !== '전체' ? 1 : 0;
   }
 
   return (
@@ -74,27 +97,65 @@ export function RecipeFilterModal({ visible, filters, onApply, onClose }: Props)
 
           <ScrollView className="px-4" showsVerticalScrollIndicator={false}>
             {/* 음식 종류 */}
-            <FilterSection
+            <FilterRow
               title="음식 종류"
-              options={FOOD_TYPES}
-              selected={draft.foodType}
-              onSelect={(v) => select('foodType', v)}
-            />
+              isExpanded={isSectionExpanded('foodType')}
+              badgeCount={getBadgeCount('foodType')}
+              onPress={() => toggleSection('foodType')}
+            >
+              <View className="flex-row flex-wrap gap-2">
+                {FOOD_TYPES.map((opt) => {
+                  const isSelected = draft.foodType === opt;
+                  return (
+                    <Pressable
+                      key={opt}
+                      onPress={() => select('foodType', isSelected ? '전체' : opt)}
+                      className={`px-5 py-2 rounded-full ${isSelected ? 'bg-main-100' : 'bg-gray-5'}`}
+                    >
+                      <Text
+                        className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-70'}`}
+                      >
+                        {opt}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </FilterRow>
 
             {/* 요리 방법 */}
-            <FilterSection
+            <FilterRow
               title="요리 방법"
-              options={COOK_METHODS}
-              selected={draft.cookMethod}
-              onSelect={(v) => select('cookMethod', v)}
-            />
+              isExpanded={isSectionExpanded('cookMethod')}
+              badgeCount={getBadgeCount('cookMethod')}
+              onPress={() => toggleSection('cookMethod')}
+            >
+              <View className="flex-row flex-wrap gap-2">
+                {COOK_METHODS.map((opt) => {
+                  const isSelected = draft.cookMethod === opt;
+                  return (
+                    <Pressable
+                      key={opt}
+                      onPress={() => select('cookMethod', isSelected ? '전체' : opt)}
+                      className={`px-5 py-2 rounded-full ${isSelected ? 'bg-main-100' : 'bg-gray-5'}`}
+                    >
+                      <Text
+                        className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-70'}`}
+                      >
+                        {opt}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </FilterRow>
 
             {/* 난이도 */}
-            <FilterSection
+            <FilterRow
               title="난이도"
-              options={DIFFICULTIES}
-              selected={draft.difficulty}
-              onSelect={(v) => select('difficulty', v)}
+              isExpanded={isSectionExpanded('difficulty')}
+              badgeCount={getBadgeCount('difficulty')}
+              onPress={() => toggleSection('difficulty')}
               titleExtra={
                 <>
                   <Pressable onPress={() => setShowDifficultyTip((prev) => !prev)} hitSlop={8}>
@@ -107,11 +168,33 @@ export function RecipeFilterModal({ visible, filters, onApply, onClose }: Props)
                   )}
                 </>
               }
-            />
+            >
+              <View className="flex-row flex-wrap gap-2">
+                {DIFFICULTIES.map((opt) => {
+                  const isSelected = draft.difficulty === opt;
+                  return (
+                    <Pressable
+                      key={opt}
+                      onPress={() => select('difficulty', isSelected ? '전체' : opt)}
+                      className={`px-5 py-2 rounded-full ${isSelected ? 'bg-main-100' : 'bg-gray-5'}`}
+                    >
+                      <Text
+                        className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-70'}`}
+                      >
+                        {opt}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </FilterRow>
           </ScrollView>
 
           {/* 하단 버튼 */}
-          <View className="flex-row gap-3 px-4 pt-3 pb-8 border-t border-gray-10">
+          <View
+            className="flex-row gap-3 px-4 pt-3 border-t border-gray-10"
+            style={{ paddingBottom: TAB_BAR_BASE_HEIGHT + insets.bottom + 8 }}
+          >
             <Pressable
               onPress={handleReset}
               className="flex-1 items-center py-3 rounded-full border border-gray-30"
@@ -131,41 +214,55 @@ export function RecipeFilterModal({ visible, filters, onApply, onClose }: Props)
   );
 }
 
-function FilterSection({
+function FilterRow({
   title,
-  options,
-  selected,
-  onSelect,
+  isExpanded,
+  badgeCount,
+  onPress,
+  children,
   titleExtra,
 }: {
   title: string;
-  options: string[];
-  selected: string;
-  onSelect: (value: string) => void;
+  isExpanded: boolean;
+  badgeCount: number;
+  onPress: () => void;
+  children: React.ReactNode;
   titleExtra?: React.ReactNode;
 }) {
   return (
-    <View className="mt-5">
-      <View className="flex-row items-center gap-2 mb-3">
-        <Text className="text-base font-semibold text-gray-90">{title}</Text>
-        {titleExtra}
-      </View>
-      <View className="flex-row flex-wrap gap-2">
-        {options.map((opt) => {
-          const isSelected = selected === opt;
-          return (
-            <Pressable
-              key={opt}
-              onPress={() => onSelect(isSelected ? '전체' : opt)}
-              className={`px-5 py-2 rounded-full ${isSelected ? 'bg-main-100' : 'bg-gray-5'}`}
+    <View>
+      <Pressable
+        onPress={onPress}
+        className="flex-row items-center justify-between"
+        style={{ paddingVertical: 16 }}
+      >
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          <Text className="text-base font-semibold text-gray-90">{title}</Text>
+          {titleExtra}
+        </View>
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          {badgeCount > 0 && (
+            <View
+              style={{
+                backgroundColor: '#EF7722',
+                borderRadius: 20,
+                minWidth: 20,
+                height: 20,
+                paddingHorizontal: 4,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <Text className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-70'}`}>
-                {opt}
+              <Text style={{ fontSize: 10, fontWeight: '700', color: '#FFFFFF' }}>
+                {badgeCount}
               </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+            </View>
+          )}
+          <Ionicons name={isExpanded ? 'chevron-up' : 'chevron-down'} size={14} color="#8F9098" />
+        </View>
+      </Pressable>
+      {isExpanded && <View style={{ paddingBottom: 16 }}>{children}</View>}
+      <View style={{ height: 1, backgroundColor: 'rgba(195,198,215,0.2)' }} />
     </View>
   );
 }
