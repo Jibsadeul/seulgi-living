@@ -187,15 +187,18 @@ export function PolicyFilterBottomSheet({
   }
 
   const tabBarHeight = TAB_BAR_BASE_HEIGHT + insets.bottom;
-  const bottomInset = tabBarHeight + insets.bottom;
 
   const renderFooter = useCallback(
     (props: BottomSheetFooterProps) => (
-      <BottomSheetFooter {...props} bottomInset={bottomInset}>
+      <BottomSheetFooter {...props} bottomInset={0}>
         <View
           className="bg-surface-default"
           style={{
-            padding: 16,
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            // bottomInset을 쓰는 대신 패딩으로 띄워서, 버튼 아래 빈 공간이 투명해져
+            // 뒤의 스크롤 콘텐츠(지원유형/정렬 등)가 비쳐 보이는 문제를 막는다.
+            paddingBottom: 16 + tabBarHeight,
             shadowColor: '#000',
             shadowOpacity: 0.1,
             shadowOffset: { width: 0, height: -2 },
@@ -216,7 +219,7 @@ export function PolicyFilterBottomSheet({
         </View>
       </BottomSheetFooter>
     ),
-    [largeCategory, zipCd, supportType, applyPeriodType, bottomInset],
+    [largeCategory, zipCd, supportType, applyPeriodType, tabBarHeight],
   );
 
   return (

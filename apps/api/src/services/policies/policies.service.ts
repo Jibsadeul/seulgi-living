@@ -1,20 +1,22 @@
 import {
   type Policy,
   type PolicyBanner,
+  type PolicyDetail,
   policyListQuerySchema,
   policyBannerSchema,
   policyScrapListQuerySchema,
 } from '@repo/contract';
 import { prisma } from '@repo/db';
-import { fetchYouthPolicies } from '@/shared/external/youth-policy.client';
+import { fetchYouthPolicies, fetchYouthPolicyDetail } from '@/shared/external/youth-policy.client';
 import { errors } from '@/shared/lib/error';
-import { calcAge, calcDaysLeft } from './policies.utils';
+import { calcAge, calcDaysLeft, getTodayDateOnly } from './policies.utils';
 import {
   buildRegionFilter,
   buildScrapsInclude,
   collectZipCodes,
   rawToUpsertData,
   toPolicy,
+  toPolicyDetail,
   type PolicyRow,
 } from './policies.mapper';
 
@@ -66,8 +68,7 @@ export async function syncPolicies(): Promise<{ synced: number; total: number }>
 
 // 배너 정보 가져오기
 export async function getPolicyBanner(memberId: string | null): Promise<PolicyBanner | null> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getTodayDateOnly();
   const in30Days = new Date(today.getTime() + 30 * 86400000);
 
   if (memberId) {
@@ -77,7 +78,13 @@ export async function getPolicyBanner(memberId: string | null): Promise<PolicyBa
         applyEndDate: { gte: today, lte: in30Days },
       },
       orderBy: { applyEndDate: 'asc' },
-      select: { id: true, name: true, applyEndDate: true, applicationUrl: true },
+      select: {
+        id: true,
+        name: true,
+        largeCategory: true,
+        applyEndDate: true,
+        applicationUrl: true,
+      },
     });
 
     if (scrappedPolicy) {
@@ -85,6 +92,7 @@ export async function getPolicyBanner(memberId: string | null): Promise<PolicyBa
         id: scrappedPolicy.id,
         conditionType: 'scrap',
         name: scrappedPolicy.name,
+        largeCategory: scrappedPolicy.largeCategory,
         daysLeft: calcDaysLeft(scrappedPolicy.applyEndDate),
         applicationUrl: scrappedPolicy.applicationUrl,
       });
@@ -122,7 +130,13 @@ export async function getPolicyBanner(memberId: string | null): Promise<PolicyBa
       ],
     },
     orderBy: { applyEndDate: 'asc' },
-    select: { id: true, name: true, applyEndDate: true, applicationUrl: true },
+    select: {
+      id: true,
+      name: true,
+      largeCategory: true,
+      applyEndDate: true,
+      applicationUrl: true,
+    },
   });
 
   if (recommendedPolicy) {
@@ -130,6 +144,7 @@ export async function getPolicyBanner(memberId: string | null): Promise<PolicyBa
       id: recommendedPolicy.id,
       conditionType: 'recommended',
       name: recommendedPolicy.name,
+      largeCategory: recommendedPolicy.largeCategory,
       daysLeft: calcDaysLeft(recommendedPolicy.applyEndDate),
       applicationUrl: recommendedPolicy.applicationUrl,
     });
@@ -162,8 +177,7 @@ export async function getRecommendedPolicies(memberId: string | null): Promise<P
 
   const regionFilter = member?.sigunguId ? buildRegionFilter(member.sigunguId) : null;
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getTodayDateOnly();
 
   const rows = await prisma.policy.findMany({
     where: {
@@ -207,8 +221,7 @@ export async function getPolicies(
   const regions = zipCd ? zipCd.split(',').filter(Boolean) : [];
   const supportTypes = supportType ? supportType.split(',').filter(Boolean) : [];
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getTodayDateOnly();
   const in7Days = new Date(today.getTime() + 7 * 86400000);
 
   const andConditions = [
@@ -243,10 +256,12 @@ export async function getPolicies(
   };
 
   // "마감기한순"(0057001) 또는 마감임박 빠른탐색일 때만 마감일 오름차순, 그 외에는 조회수 내림차순
+  // 동점(같은 applyEndDate/viewCount)이 많으면 페이지마다 순서가 안정적이지 않아 항목이 중복/누락될 수 있어
+  // id를 보조 정렬키로 추가해 순서를 고정한다.
   const orderBy =
     applyPeriodType === '0057001' || deadlineOnly
-      ? [{ applyEndDate: 'asc' as const }]
-      : [{ viewCount: 'desc' as const }];
+      ? [{ applyEndDate: 'asc' as const }, { id: 'asc' as const }]
+      : [{ viewCount: 'desc' as const }, { id: 'asc' as const }];
 
   const [rows, total] = await prisma.$transaction([
     prisma.policy.findMany({
@@ -275,8 +290,7 @@ export async function getScrappedPolicies(
 
   const { sortBy, excludeExpired, page, limit } = policyScrapListQuerySchema.parse(query);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getTodayDateOnly();
 
   const where = {
     userId: memberId,
@@ -288,7 +302,11 @@ export async function getScrappedPolicies(
   const [scraps, total] = await prisma.$transaction([
     prisma.policyScrap.findMany({
       where,
-      orderBy: sortBy === 'recent' ? { createdAt: 'desc' } : { policy: { applyEndDate: 'asc' } },
+      // 동점(같은 createdAt/applyEndDate)에서도 페이지 간 순서가 고정되도록 id를 보조 정렬키로 추가
+      orderBy:
+        sortBy === 'recent'
+          ? [{ createdAt: 'desc' }, { id: 'asc' }]
+          : [{ policy: { applyEndDate: 'asc' } }, { id: 'asc' }],
       skip: (page - 1) * limit,
       take: limit,
       include: {
@@ -329,5 +347,38 @@ export async function unscrapPolicy(memberId: string | null, policyId: string): 
 
   await prisma.policyScrap.deleteMany({
     where: { userId: memberId, policyId },
+  });
+}
+
+// 정책 상세 — 콘텐츠는 매 요청마다 온통청년 API를 실시간 호출한다.
+// 예외: 대/중분류·키워드(lclsfNm/mclsfNm/plcyKywdNm)는 plcyNo 단건 필터 조회 시 외부 API가
+// 항상 null로 반환하는 결함이 확인되어(목록 조회 시에는 정상), 크론으로 동기화된 DB Policy
+// 테이블 값으로 보완한다 (POLICY-031, POLICY-033).
+export async function getPolicyDetail(
+  plcyNo: string,
+  memberId: string | null,
+): Promise<PolicyDetail> {
+  const raw = await fetchYouthPolicyDetail(plcyNo);
+  if (!raw) throw errors.notFound('정책을 찾을 수 없습니다.');
+
+  const [isScrappedRow, syncedPolicy] = await Promise.all([
+    memberId
+      ? prisma.policyScrap.findFirst({
+          where: { policyId: plcyNo, userId: memberId },
+          select: { id: true },
+        })
+      : null,
+    prisma.policy.findUnique({
+      where: { id: plcyNo },
+      select: { largeCategory: true, mediumCategory: true, keywords: true },
+    }),
+  ]);
+
+  const sigunguNameMap = await buildSigunguNameMap([{ zipCd: raw.zipCd ?? null }]);
+
+  return toPolicyDetail(raw, sigunguNameMap, isScrappedRow !== null, {
+    largeCategory: syncedPolicy?.largeCategory ?? null,
+    mediumCategory: syncedPolicy?.mediumCategory ?? null,
+    keywords: syncedPolicy?.keywords ?? null,
   });
 }

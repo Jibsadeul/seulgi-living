@@ -8,6 +8,7 @@ export {
   usePolicyScrap,
   useInfinitePolicies,
   useScrappedPolicies,
+  usePolicyDetail,
   type PolicySearchParams,
   type PolicyScrapSortBy,
 } from './model/usePolicy';
@@ -18,6 +19,13 @@ export {
   getAgeLabel,
   getDeadlineLabel,
   isUrgentDeadline,
+  registerPolicyDeadline,
+  splitToBulletLines,
+  PERIOD_LABEL,
+  type FilterSection,
+  type BulletLine,
 } from './model/policies.model';
+export { getCategoryStyle } from './model/policyCategoryStyle';
+export { getBannerIllustration } from './model/policyBannerIllustration';
 export { policyKeys } from './api/keys';
-export type { Policy, PolicyBanner, PolicyListQuery } from './api/policies.schema';
+export type { Policy, PolicyBanner, PolicyListQuery, PolicyDetail } from './api/policies.schema';

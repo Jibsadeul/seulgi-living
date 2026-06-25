@@ -1,17 +1,22 @@
-import { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   Text,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import ScrapIcon from '@assets/icons/scrap.svg';
+import ScrappedIcon from '@assets/icons/scrapped.svg';
 import { Header, SearchBar } from '@/shared/ui';
+import { useDismissBack } from '@/shared/hooks/useDismissBack';
 import {
   useRecipeListInfinite,
   useRecipeScrap,
@@ -19,7 +24,9 @@ import {
   type RecipePreview,
   type RecipeTag,
   type RecipeCategory,
+  type RecipeSort,
   type CookingMethod,
+  type RecipeLevel,
 } from '@/entities/recipes';
 import {
   RecipeFilterModal,
@@ -55,14 +62,31 @@ const FILTER_METHOD_MAP: Record<string, CookingMethod> = {
   기타: 'OTHER',
 };
 
+const FILTER_LEVEL_MAP: Record<string, RecipeLevel> = {
+  초급: 'LOW',
+  중급: 'MEDIUM',
+  상급: 'HIGH',
+};
+
 const TAB_BAR_CONTAINER_HEIGHT = 87;
 
 export function RecipeListAllScreen() {
+  useDismissBack();
   const router = useRouter();
+  const { keyword: initialKeyword } = useLocalSearchParams<{ keyword?: string }>();
   const insets = useSafeAreaInsets();
   const [filters, setFilters] = useState<RecipeFilters>(EMPTY_FILTERS);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [searchText, setSearchText] = useState(initialKeyword ?? '');
+  const [sort, setSort] = useState<RecipeSort>('latest');
   const scrapMutation = useRecipeScrap();
+
+  const SORT_OPTIONS: { value: RecipeSort; label: string }[] = [
+    { value: 'latest', label: '최신순' },
+    { value: 'oldest', label: '오래된순' },
+    { value: 'popular', label: '인기순' },
+  ];
 
   const queryParams = useMemo(() => {
     const params: Record<string, unknown> = {};
@@ -72,8 +96,16 @@ export function RecipeListAllScreen() {
     if (filters.cookMethod !== '전체') {
       params.cookingMethod = FILTER_METHOD_MAP[filters.cookMethod];
     }
+    if (filters.difficulty !== '전체') {
+      params.level = FILTER_LEVEL_MAP[filters.difficulty];
+    }
+    const keyword = searchText.trim();
+    if (keyword) {
+      params.keyword = keyword;
+    }
+    params.sort = sort;
     return params;
-  }, [filters]);
+  }, [filters, searchText, sort]);
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useRecipeListInfinite(queryParams);
@@ -86,21 +118,27 @@ export function RecipeListAllScreen() {
     string,
   ][];
 
-  function handleToggleScrap(recipeId: string, currentlySaved: boolean) {
-    scrapMutation.mutate({ recipeId, isSaved: !currentlySaved });
-  }
+  const handleToggleScrap = useCallback(
+    (recipeId: string, currentlySaved: boolean) => {
+      scrapMutation.mutate({ recipeId, isSaved: !currentlySaved });
+    },
+    [scrapMutation],
+  );
 
   function removeFilter(key: keyof RecipeFilters) {
     setFilters((prev) => ({ ...prev, [key]: '전체' }));
   }
 
-  function handleRecipePress(id: string) {
-    router.push({ pathname: '/(stack)/recipes/[id]', params: { id } } as never);
+  function handleSortPress() {
+    setIsSortOpen(true);
   }
 
-  function handleSearchPress() {
-    console.log('[RecipeListAll] search pressed');
-  }
+  const handleRecipePress = useCallback(
+    (id: string) => {
+      router.push({ pathname: '/(stack)/recipes/[id]', params: { id } } as never);
+    },
+    [router],
+  );
 
   function handleRecipeUploadPress() {
     router.push('/(stack)/recipe-upload' as never);
@@ -112,68 +150,20 @@ export function RecipeListAllScreen() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  function renderRecipeItem({ item, index }: { item: RecipePreview; index: number }) {
-    const tags = getRecipeTags(item.category, item.cookingMethod);
-    const isLeft = index % 2 === 0;
-
-    return (
-      <Pressable
-        onPress={() => handleRecipePress(item.id)}
-        className="bg-surface-default rounded-2xl overflow-hidden"
-        style={{ width: '47.5%', marginRight: isLeft ? '5%' : 0 }}
-      >
-        {item.imageUrl ? (
-          <View className="w-full aspect-square relative">
-            <Image source={{ uri: item.imageUrl }} className="w-full h-full" resizeMode="cover" />
-            <Pressable
-              onPress={() => handleToggleScrap(item.id, item.isSaved)}
-              className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 items-center justify-center"
-              hitSlop={8}
-            >
-              <Ionicons
-                name={item.isSaved ? 'bookmark' : 'bookmark-outline'}
-                size={16}
-                color={item.isSaved ? '#EF7722' : '#8E8E8E'}
-              />
-            </Pressable>
-          </View>
-        ) : (
-          <View className="w-full aspect-square bg-gray-10 relative">
-            <Pressable
-              onPress={() => handleToggleScrap(item.id, item.isSaved)}
-              className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 items-center justify-center"
-              hitSlop={8}
-            >
-              <Ionicons
-                name={item.isSaved ? 'bookmark' : 'bookmark-outline'}
-                size={16}
-                color={item.isSaved ? '#EF7722' : '#8E8E8E'}
-              />
-            </Pressable>
-          </View>
-        )}
-
-        <View className="p-2 gap-1">
-          <Text className="text-sm font-semibold text-gray-90" numberOfLines={1}>
-            {item.name}
-          </Text>
-          <View className="flex-row gap-1 flex-wrap">
-            {tags.map((tag) => {
-              const style = TAG_STYLES[tag.variant];
-              return (
-                <View key={tag.label} className={`px-2 py-0.5 rounded-full ${style.container}`}>
-                  <Text className={`text-[10px] font-medium ${style.text}`}>{tag.label}</Text>
-                </View>
-              );
-            })}
-          </View>
-        </View>
-      </Pressable>
-    );
-  }
+  const renderRecipeItem = useCallback(
+    ({ item, index }: { item: RecipePreview; index: number }) => (
+      <RecipeGridItem
+        item={item}
+        isLeft={index % 2 === 0}
+        onPress={handleRecipePress}
+        onToggleScrap={handleToggleScrap}
+      />
+    ),
+    [handleToggleScrap],
+  );
 
   return (
-    <View className="flex-1 bg-surface-default">
+    <View className="flex-1 bg-surface-card">
       <Header title="모든 레시피" variant="back" />
 
       <FlatList
@@ -181,18 +171,23 @@ export function RecipeListAllScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderRecipeItem}
         numColumns={2}
-        columnWrapperStyle={{ paddingHorizontal: 16 }}
+        columnWrapperStyle={{ paddingHorizontal: 16, marginBottom: 16 }}
         contentContainerStyle={{ paddingBottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 60 }}
         showsVerticalScrollIndicator={false}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.5}
+        initialNumToRender={8}
+        maxToRenderPerBatch={6}
+        windowSize={5}
+        removeClippedSubviews
         ListHeaderComponent={
           <>
             {/* 검색바 */}
-            <View className="mt-3 mb-2">
+            <View className="mt-4 mb-3">
               <SearchBar
                 placeholder="오늘 뭐 먹지? 재료나 레시피 검색"
-                onPress={handleSearchPress}
+                value={searchText}
+                onChangeText={setSearchText}
               />
             </View>
 
@@ -200,7 +195,7 @@ export function RecipeListAllScreen() {
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingVertical: 8 }}
+              contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingVertical: 10 }}
             >
               <Pressable
                 onPress={() => setIsFilterOpen(true)}
@@ -209,32 +204,55 @@ export function RecipeListAllScreen() {
                 <Ionicons name="options-outline" size={18} color="#FFFFFF" />
               </Pressable>
 
-              {activeFilterEntries.length > 0
-                ? activeFilterEntries.map(([key, value]) => (
-                    <Pressable
-                      key={key}
-                      onPress={() => removeFilter(key)}
-                      className="flex-row items-center gap-1 px-4 py-2 rounded-full bg-main-100"
-                    >
-                      <Text className="text-sm font-medium text-white">{value}</Text>
-                      <Ionicons name="close" size={14} color="#FFFFFF" />
-                    </Pressable>
-                  ))
-                : ['음식종류', '요리방법', '난이도'].map((label) => (
-                    <Pressable
-                      key={label}
-                      onPress={() => setIsFilterOpen(true)}
-                      className="flex-row items-center gap-1 px-4 py-2 rounded-full border border-gray-30 bg-surface-default"
-                    >
-                      <Text className="text-sm text-gray-70">{label}</Text>
-                      <Ionicons name="chevron-down" size={14} color="#717171" />
-                    </Pressable>
-                  ))}
+              {(
+                [
+                  ['foodType', '음식종류'],
+                  ['cookMethod', '요리방법'],
+                  ['difficulty', '난이도'],
+                ] as [keyof RecipeFilters, string][]
+              ).map(([key, label]) => {
+                const isActive = filters[key] !== '전체';
+                return isActive ? (
+                  <Pressable
+                    key={key}
+                    onPress={() => removeFilter(key)}
+                    className="flex-row items-center justify-center gap-1 h-10 px-4 rounded-full bg-main-100"
+                  >
+                    <Text className="text-sm font-medium text-white">{filters[key]}</Text>
+                    <Ionicons name="close" size={14} color="#FFFFFF" />
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    key={key}
+                    onPress={() => setIsFilterOpen(true)}
+                    className="flex-row items-center justify-center gap-1 h-10 px-4 rounded-full border border-gray-30 bg-surface-default"
+                  >
+                    <Text className="text-sm text-gray-70">{label}</Text>
+                    <Ionicons name="chevron-down" size={14} color="#717171" />
+                  </Pressable>
+                );
+              })}
             </ScrollView>
 
-            {/* 검색 결과 건수 */}
-            <View className="px-4 mt-2 mb-3">
+            {/* 검색 결과 건수 + 정렬 */}
+            <View className="flex-row items-center justify-between px-4 mt-3 mb-4">
               <Text className="text-xs text-gray-60">검색 결과 {totalCount}건</Text>
+              <Pressable
+                onPress={handleSortPress}
+                className="flex-row items-center gap-1 px-3 py-1.5 bg-surface-default rounded-full border border-gray-20"
+                style={{
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 2,
+                  elevation: 1,
+                }}
+              >
+                <Ionicons name="filter" size={12} color="#474553" />
+                <Text className="text-xs font-semibold text-gray-70">
+                  {SORT_OPTIONS.find((o) => o.value === sort)?.label}
+                </Text>
+              </Pressable>
             </View>
           </>
         }
@@ -263,7 +281,7 @@ export function RecipeListAllScreen() {
       <Pressable
         onPress={handleRecipeUploadPress}
         className="absolute right-4 flex-row items-center gap-1 bg-main-100 rounded-full px-4 py-3"
-        style={{ bottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 16 }}
+        style={{ bottom: TAB_BAR_CONTAINER_HEIGHT + insets.bottom + 4 }}
       >
         <Text className="text-white font-semibold text-sm">+ 레시피 입력</Text>
       </Pressable>
@@ -275,6 +293,163 @@ export function RecipeListAllScreen() {
         onApply={setFilters}
         onClose={() => setIsFilterOpen(false)}
       />
+
+      {/* 정렬 드롭다운 */}
+      <Modal
+        visible={isSortOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsSortOpen(false)}
+      >
+        <Pressable className="flex-1" onPress={() => setIsSortOpen(false)}>
+          <View
+            style={{
+              position: 'absolute',
+              top: 160,
+              right: 16,
+              width: 140,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 12,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.12,
+              shadowRadius: 12,
+              elevation: 8,
+              paddingVertical: 8,
+            }}
+          >
+            {SORT_OPTIONS.map((option) => {
+              const isActive = sort === option.value;
+              return (
+                <Pressable
+                  key={option.value}
+                  className="flex-row items-center justify-between px-4 py-3"
+                  onPress={() => {
+                    setSort(option.value);
+                    setIsSortOpen(false);
+                  }}
+                >
+                  <Text
+                    className={`text-sm font-medium ${isActive ? 'text-main-100' : 'text-gray-70'}`}
+                  >
+                    {option.label}
+                  </Text>
+                  {isActive && <Ionicons name="checkmark" size={16} color="#EF7722" />}
+                </Pressable>
+              );
+            })}
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
+
+function ImageSkeleton() {
+  const opacity = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+      ]),
+    ).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#E4E4E4',
+        opacity,
+      }}
+    />
+  );
+}
+
+type RecipeGridItemProps = {
+  item: RecipePreview;
+  isLeft: boolean;
+  onPress: (id: string) => void;
+  onToggleScrap: (id: string, isSaved: boolean) => void;
+};
+
+const RecipeGridItem = React.memo(function RecipeGridItem({
+  item,
+  isLeft,
+  onPress,
+  onToggleScrap,
+}: RecipeGridItemProps) {
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const tags = getRecipeTags(item.category, item.cookingMethod, item.level);
+
+  return (
+    <Pressable
+      onPress={() => onPress(item.id)}
+      className="bg-surface-default rounded-2xl overflow-hidden"
+      style={{
+        width: '47.5%',
+        marginRight: isLeft ? '5%' : 0,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
+        elevation: 2,
+      }}
+    >
+      <View className="w-full aspect-square overflow-hidden relative">
+        {item.imageUrl ? (
+          <>
+            {!isImageLoaded && <ImageSkeleton />}
+            <Image
+              source={{ uri: item.imageUrl }}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+              onLoad={() => setIsImageLoaded(true)}
+            />
+          </>
+        ) : (
+          <View className="w-full h-full bg-gray-10" />
+        )}
+        <Pressable
+          onPress={() => onToggleScrap(item.id, item.isSaved)}
+          className="absolute top-2 right-2 w-8 h-8 rounded-full items-center justify-center"
+          style={{ backgroundColor: 'rgba(255,255,255,0.7)' }}
+          hitSlop={8}
+        >
+          {item.isSaved ? (
+            <ScrappedIcon width={24} height={24} />
+          ) : (
+            <ScrapIcon width={24} height={24} />
+          )}
+        </Pressable>
+      </View>
+
+      <View className="p-3 gap-1.5">
+        <Text className="text-sm font-semibold text-gray-90" numberOfLines={1}>
+          {item.name}
+        </Text>
+        <View className="flex-row gap-1 flex-wrap">
+          {tags.map((tag, tagIndex) => {
+            const style = TAG_STYLES[tag.variant];
+            return (
+              <View
+                key={`${tag.label}-${tagIndex}`}
+                className={`px-2 py-0.5 rounded-full ${style.container}`}
+              >
+                <Text className={`font-medium ${style.text}`} style={{ fontSize: 9 }}>
+                  {tag.label}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    </Pressable>
+  );
+});

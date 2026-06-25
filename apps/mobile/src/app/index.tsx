@@ -1,7 +1,15 @@
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Linking, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { getCurrentMember, useMemberStore } from '@/entities/members';
+
+function isKakaoCallbackUrl(url: string | null) {
+  if (!url) {
+    return false;
+  }
+
+  return url.includes('auth/kakao') && (url.includes('code=') || url.includes('error='));
+}
 
 export default function Index() {
   const router = useRouter();
@@ -10,9 +18,16 @@ export default function Index() {
   useEffect(() => {
     let isMounted = true;
 
-    getCurrentMember()
+    Linking.getInitialURL()
+      .then((initialUrl) => {
+        if (!isMounted || isKakaoCallbackUrl(initialUrl)) {
+          return null;
+        }
+
+        return getCurrentMember();
+      })
       .then((member) => {
-        if (!isMounted) return;
+        if (!isMounted || !member) return;
         setMemberProfileFromMe(member);
         router.replace(member.isBasicInfoComplete ? '/(tabs)/' : '/(auth)/onboarding');
       })
@@ -25,7 +40,7 @@ export default function Index() {
     return () => {
       isMounted = false;
     };
-  }, [router]);
+  }, [router, setMemberProfileFromMe]);
 
   return (
     <View className="flex-1 items-center justify-center bg-white">

@@ -4,8 +4,10 @@ import { apiRequest } from '@/shared/api/client';
 import {
   type Policy,
   type PolicyBanner,
+  type PolicyDetail,
   type PolicyListResponse,
   policyBannerSchema,
+  policyDetailSchema,
   policyListResponseSchema,
   policySchema,
 } from './policies.schema';
@@ -64,6 +66,14 @@ export function useInfinitePolicies(params: PolicySearchParams, enabled = true) 
     getNextPageParam: (lastPage) =>
       lastPage.page * lastPage.limit < lastPage.total ? lastPage.page + 1 : undefined,
     enabled,
+  });
+}
+
+export function usePolicyDetail(id: string) {
+  return useQuery<PolicyDetail>({
+    queryKey: policyKeys.detail(id),
+    queryFn: () => apiRequest(`/api/policies/${id}`, policyDetailSchema),
+    enabled: id.length > 0,
   });
 }
 

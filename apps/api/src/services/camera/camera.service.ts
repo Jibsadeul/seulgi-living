@@ -1,26 +1,28 @@
+import { errors } from '@/shared/lib/error';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
   cameraAnalyzeRequestSchema,
   cameraAnalyzeResponseSchema,
-  fridgeCategorySchema,
+  cameraResultSaveRequestSchema,
+  ingredientCategorySchema,
   type CameraAnalysisSource,
   type CameraAnalyzeResponse,
 } from '@repo/contract';
+import { prisma } from '@repo/db';
 import { z } from 'zod';
-import { errors } from '@/shared/lib/error';
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 function normalizeCategory(value: unknown) {
-  const parsed = fridgeCategorySchema.safeParse(value);
+  const parsed = ingredientCategorySchema.safeParse(value);
 
   return parsed.success ? parsed.data : 'OTHER';
 }
 
 const looseGeminiItemSchema = z.object({
   name: z.preprocess((value) => (value == null ? '이름 미확인' : value), z.string().trim().min(1)),
-  category: z.preprocess(normalizeCategory, fridgeCategorySchema),
+  category: z.preprocess(normalizeCategory, ingredientCategorySchema),
   quantity: z.preprocess((value) => (value == null ? 1 : value), z.coerce.number().positive()),
   unit: z.preprocess(
     (value) => (value == null || value === '' ? '개' : value),
@@ -189,4 +191,52 @@ export async function analyzeCameraImage(payload: unknown): Promise<CameraAnalyz
   const json = extractJsonObject(text);
 
   return normalizeGeminiResponse(request.source, json);
+}
+
+function parsePurchaseDate(value: string) {
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    throw errors.validation('구매일이 올바르지 않습니다.');
+  }
+
+  return date;
+}
+
+export async function saveCameraResult(memberId: string, payload: unknown): Promise<void> {
+  const request = cameraResultSaveRequestSchema.parse(payload);
+  const savesPurchase = request.destinations.includes('PURCHASE');
+  const savesFridge = request.destinations.includes('FRIDGE');
+  const purchasedAt = savesPurchase ? parsePurchaseDate(request.purchaseDate!) : null;
+
+  await prisma.$transaction(async (tx) => {
+    if (savesPurchase && purchasedAt) {
+      await tx.groceryPurchaseItem.createMany({
+        data: request.items.map((item) => ({
+          userId: memberId,
+          name: item.name,
+          quantityText: `${item.quantity}${item.unit}`,
+          price: item.price!,
+          purchasedAt,
+        })),
+      });
+    }
+
+    if (savesFridge) {
+      await tx.fridgeIngredient.createMany({
+        data: request.items.map((item) => ({
+          userId: memberId,
+          name: item.name,
+          category: item.category!,
+          quantity: item.quantity,
+          unit: item.unit,
+        })),
+      });
+    }
+  });
 }

@@ -1,5 +1,7 @@
-import { Image, Pressable, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Image, Pressable, Text, View } from 'react-native';
+import ScrapIcon from '@assets/icons/scrap.svg';
+import ScrappedIcon from '@assets/icons/scrapped.svg';
 
 export type RecipeTagVariant = 'pink' | 'blue' | 'green' | 'orange' | 'yellow' | 'grey';
 
@@ -16,6 +18,7 @@ export type RecipeCardProps = {
   isScraped?: boolean;
   onPress?: () => void;
   onToggleScrap?: () => void;
+  actionIcon?: React.ReactNode;
 };
 
 const TAG_STYLES: Record<RecipeTagVariant, { container: string; text: string }> = {
@@ -27,6 +30,34 @@ const TAG_STYLES: Record<RecipeTagVariant, { container: string; text: string }> 
   grey: { container: 'bg-tag-grey', text: 'text-tagText-grey' },
 };
 
+function ImageSkeleton() {
+  const opacity = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+      ]),
+    ).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#E4E4E4',
+        borderRadius: 12,
+        opacity,
+      }}
+    />
+  );
+}
+
 export function RecipeCard({
   title,
   description,
@@ -35,16 +66,34 @@ export function RecipeCard({
   isScraped = false,
   onPress,
   onToggleScrap,
+  actionIcon,
 }: RecipeCardProps) {
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row gap-3 bg-surface-default rounded-2xl p-3 border border-gray-10"
+      className="flex-row gap-3 bg-surface-default rounded-2xl p-3 pb-4"
+      style={{
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 12,
+        elevation: 2,
+      }}
     >
       {imageUrl ? (
-        <Image source={{ uri: imageUrl }} className="w-20 h-20 rounded-xl bg-gray-10" />
+        <View className="w-24 h-24 rounded-xl overflow-hidden">
+          {!isImageLoaded && <ImageSkeleton />}
+          <Image
+            source={{ uri: imageUrl }}
+            className="w-24 h-24 rounded-xl"
+            resizeMode="cover"
+            onLoad={() => setIsImageLoaded(true)}
+          />
+        </View>
       ) : (
-        <View className="w-20 h-20 rounded-xl bg-gray-10" />
+        <View className="w-24 h-24 rounded-xl bg-gray-10" />
       )}
 
       <View className="flex-1 gap-1">
@@ -53,24 +102,29 @@ export function RecipeCard({
             {title}
           </Text>
           <Pressable onPress={onToggleScrap} hitSlop={8}>
-            <Ionicons
-              name={isScraped ? 'bookmark' : 'bookmark-outline'}
-              size={18}
-              color={isScraped ? '#EF7722' : '#C6C6C6'}
-            />
+            {actionIcon ??
+              (isScraped ? (
+                <ScrappedIcon width={32} height={32} />
+              ) : (
+                <ScrapIcon width={32} height={32} />
+              ))}
           </Pressable>
         </View>
-
         <Text className="text-xs text-gray-60" numberOfLines={1}>
           {description}
         </Text>
 
         <View className="flex-row gap-1 mt-1">
-          {tags.map((tag) => {
+          {tags.map((tag, tagIndex) => {
             const style = TAG_STYLES[tag.variant];
             return (
-              <View key={tag.label} className={`px-2 py-1 rounded-full ${style.container}`}>
-                <Text className={`text-[11px] font-medium ${style.text}`}>{tag.label}</Text>
+              <View
+                key={`${tag.label}-${tagIndex}`}
+                className={`px-2 py-1 rounded-full ${style.container}`}
+              >
+                <Text className={`font-medium ${style.text}`} style={{ fontSize: 9 }}>
+                  {tag.label}
+                </Text>
               </View>
             );
           })}

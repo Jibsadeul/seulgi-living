@@ -2,8 +2,8 @@ import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePolicySearchEntry } from '@/features/policy-search';
-import { PoliciesSearchHeader } from './components/PoliciesSearchHeader';
-import { PoliciesRecentSearches } from './components/PoliciesRecentSearches';
+import { PoliciesSearchHeader } from './components/search/PoliciesSearchHeader';
+import { PoliciesRecentSearches } from './components/search/PoliciesRecentSearches';
 
 export function PoliciesSearchScreen() {
   const router = useRouter();

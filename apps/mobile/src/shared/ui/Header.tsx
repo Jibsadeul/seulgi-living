@@ -2,13 +2,27 @@ import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import ScrapIcon from '@assets/icons/scrap.svg';
+import ScrappedIcon from '@assets/icons/scrapped.svg';
+import ShareIcon from '@assets/icons/share.svg';
 
 interface HeaderProps {
   title: string;
   variant?: 'default' | 'back' | 'detail';
+  onBackPress?: () => void;
+  isScrapped?: boolean;
+  onBookmarkPress?: () => void;
+  onSharePress?: () => void;
 }
 
-export function Header({ title, variant = 'default' }: HeaderProps) {
+export function Header({
+  title,
+  variant = 'default',
+  onBackPress,
+  isScrapped,
+  onBookmarkPress,
+  onSharePress,
+}: HeaderProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -18,7 +32,7 @@ export function Header({ title, variant = 'default' }: HeaderProps) {
       style={{ paddingTop: insets.top, height: 64 + insets.top }}
     >
       {variant !== 'default' && (
-        <Pressable className="mr-2 p-1" onPress={() => router.back()}>
+        <Pressable className="mr-2 p-1" onPress={onBackPress ?? (() => router.dismiss())}>
           <Ionicons name="arrow-back" size={24} color="#1D1D1D" />
         </Pressable>
       )}
@@ -29,11 +43,15 @@ export function Header({ title, variant = 'default' }: HeaderProps) {
 
       {variant === 'detail' && (
         <View className="flex-row items-center gap-4">
-          <Pressable className="p-1">
-            <Ionicons name="bookmark-outline" size={22} color="#1D1D1D" />
+          <Pressable className="p-1" onPress={onBookmarkPress}>
+            {isScrapped ? (
+              <ScrappedIcon width={30} height={30} />
+            ) : (
+              <ScrapIcon width={30} height={30} />
+            )}
           </Pressable>
-          <Pressable className="p-1">
-            <Ionicons name="share-outline" size={22} color="#1D1D1D" />
+          <Pressable className="p-1" onPress={onSharePress}>
+            <ShareIcon width={28} height={28} />
           </Pressable>
         </View>
       )}

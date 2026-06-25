@@ -1,6 +1,7 @@
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useEffect, useMemo, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import type { SharedValue } from 'react-native-reanimated';
 import type { MapPlace } from '../model/map.model';
 
 interface MapResultBottomSheetProps {
@@ -9,6 +10,7 @@ interface MapResultBottomSheetProps {
   onClose: () => void;
   onSelectPlace: (place: MapPlace) => void;
   bottomInset?: number;
+  animatedPosition?: SharedValue<number>;
 }
 
 function formatDistance(distance?: string): string {
@@ -24,6 +26,7 @@ export function MapResultBottomSheet({
   onClose,
   onSelectPlace,
   bottomInset = 0,
+  animatedPosition,
 }: MapResultBottomSheetProps) {
   const sheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['30%', '60%'], []);
@@ -42,6 +45,7 @@ export function MapResultBottomSheet({
       index={-1}
       snapPoints={snapPoints}
       bottomInset={bottomInset}
+      animatedPosition={animatedPosition}
       enablePanDownToClose
       onClose={onClose}
       backgroundStyle={{

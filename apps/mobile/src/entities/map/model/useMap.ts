@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import Toast from 'react-native-toast-message';
 import type WebView from 'react-native-webview';
 import type { WebViewMessageEvent } from 'react-native-webview';
@@ -9,10 +9,13 @@ import { useMapStore } from './map.store';
 
 export function useMap() {
   const webViewRef = useRef<WebView>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [isMapMoved, setIsMapMoved] = useState(false);
   const {
     setSelectedCategory,
     setSelectedPlace,
     selectedCategory,
+    searchKeyword: currentSearchKeyword,
     setSearchResults,
     setSearchKeyword,
     setZeroResult,
@@ -37,6 +40,9 @@ export function useMap() {
       return;
     }
 
+    // GPS 조회(getCurrentPositionAsync)가 수 초씩 걸릴 수 있어, 버튼에 로딩 상태를 노출해
+    // "눌렀는데 반응이 없다"는 오인을 막는다.
+    setIsLocating(true);
     try {
       // 현재 위치 우선. 실패 시 마지막 알려진 위치로 fallback
       const location = await Location.getCurrentPositionAsync({
@@ -60,6 +66,8 @@ export function useMap() {
           text2: '잠시 후 다시 시도해주세요.',
         });
       }
+    } finally {
+      setIsLocating(false);
     }
   }, [sendToMap]);
 
@@ -86,6 +94,9 @@ export function useMap() {
         case 'SEARCH_ZERO_RESULT':
           setZeroResult();
           break;
+        case 'MAP_MOVED':
+          setIsMapMoved(true);
+          break;
         case 'MAP_ERROR':
           Toast.show({
             type: 'error',
@@ -101,6 +112,7 @@ export function useMap() {
   const selectCategory = useCallback(
     (label: CategoryLabel) => {
       clearSearch(); // 키워드 검색 상태 초기화
+      setIsMapMoved(false);
 
       if (selectedCategory === label) {
         setSelectedCategory(null);
@@ -124,10 +136,30 @@ export function useMap() {
     (keyword: string) => {
       setSelectedCategory(null); // 카테고리 선택 해제
       setSearchKeyword(keyword);
+      setIsMapMoved(false);
       sendToMap({ type: 'SEARCH_KEYWORD', payload: { keyword } });
     },
     [setSelectedCategory, setSearchKeyword, sendToMap],
   );
+
+  // "이 지역에서 재검색" — 직전과 동일한 검색 조건으로, 현재 지도에 보이는 범위 기준 재검색
+  const researchCurrentArea = useCallback(() => {
+    setIsMapMoved(false);
+
+    if (selectedCategory) {
+      const category = CATEGORY_LIST.find((c) => c.label === selectedCategory);
+      if (!category) return;
+      sendToMap({
+        type: 'SEARCH_CATEGORY',
+        payload: { code: category.code ?? null, keyword: category.keyword ?? null },
+      });
+      return;
+    }
+
+    if (currentSearchKeyword) {
+      sendToMap({ type: 'SEARCH_KEYWORD', payload: { keyword: currentSearchKeyword } });
+    }
+  }, [selectedCategory, currentSearchKeyword, sendToMap]);
 
   const focusMarker = useCallback(
     (place: MapPlace) => {
@@ -146,8 +178,11 @@ export function useMap() {
     webViewRef,
     onWebViewMessage,
     moveToCurrentLocation,
+    isLocating,
+    isMapMoved,
     selectCategory,
     searchKeyword,
+    researchCurrentArea,
     focusMarker,
     clearSearchResults,
   };

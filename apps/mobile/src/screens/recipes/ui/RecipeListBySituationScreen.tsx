@@ -1,8 +1,21 @@
-import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  Image,
+  PanResponder,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import ScrapIcon from '@assets/icons/scrap.svg';
+import ScrappedIcon from '@assets/icons/scrapped.svg';
 import { Header } from '@/shared/ui';
+import { useDismissBack } from '@/shared/hooks/useDismissBack';
 import {
   useRecipeList,
   useRecipeScrap,
@@ -71,12 +84,14 @@ const TAG_STYLES: Record<RecipeTag['variant'], { container: string; text: string
 const PAGE_SIZE = 10;
 
 export function RecipeListBySituationScreen() {
+  useDismissBack();
   const router = useRouter();
   const params = useLocalSearchParams<{ category?: string }>();
   const initialCategory = (params.category as SituationCategory) || 'night';
 
   const [activeCategory, setActiveCategory] = useState<SituationCategory>(initialCategory);
   const [page, setPage] = useState(1);
+  const [pageInput, setPageInput] = useState(String(page));
   const scrapMutation = useRecipeScrap();
 
   const currentMeta = CATEGORIES.find((c) => c.value === activeCategory)?.meta;
@@ -92,9 +107,25 @@ export function RecipeListBySituationScreen() {
   const totalCount = data?.totalCount ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
+  function goToPage(next: number) {
+    const clamped = Math.max(1, Math.min(next, totalPages));
+    setPage(clamped);
+    setPageInput(String(clamped));
+  }
+
   function handleCategoryChange(category: SituationCategory) {
     setActiveCategory(category);
     setPage(1);
+    setPageInput('1');
+  }
+
+  function handlePageInputSubmit() {
+    const parsed = parseInt(pageInput, 10);
+    if (Number.isNaN(parsed)) {
+      setPageInput(String(page));
+      return;
+    }
+    goToPage(parsed);
   }
 
   function handleToggleScrap(recipeId: string, currentlySaved: boolean) {
@@ -105,8 +136,34 @@ export function RecipeListBySituationScreen() {
     router.push({ pathname: '/(stack)/recipes/[id]', params: { id } } as never);
   }
 
+  const totalPagesRef = useRef(totalPages);
+  totalPagesRef.current = totalPages;
+
+  const SWIPE_THRESHOLD = 50;
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) =>
+        Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 10,
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx < -SWIPE_THRESHOLD) {
+          setPage((prev) => {
+            const next = Math.min(totalPagesRef.current, prev + 1);
+            setPageInput(String(next));
+            return next;
+          });
+        } else if (gestureState.dx > SWIPE_THRESHOLD) {
+          setPage((prev) => {
+            const next = Math.max(1, prev - 1);
+            setPageInput(String(next));
+            return next;
+          });
+        }
+      },
+    }),
+  ).current;
+
   return (
-    <View className="flex-1 bg-surface-default">
+    <View className="flex-1 bg-surface-card">
       <Header title="상황별 추천 레시피" variant="back" />
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -145,17 +202,34 @@ export function RecipeListBySituationScreen() {
         {/* 검색 결과 + 페이지네이션 */}
         <View className="flex-row items-center justify-between px-4 mt-4 mb-3">
           <Text className="text-xs text-gray-60">검색 결과 {totalCount}건</Text>
-          <View className="flex-row items-center gap-2">
-            <Pressable onPress={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
+          <View className="flex-row items-center gap-1.5">
+            <Pressable onPress={() => goToPage(page - 1)} disabled={page <= 1}>
               <Ionicons name="chevron-back" size={14} color={page <= 1 ? '#C6C6C6' : '#717171'} />
             </Pressable>
-            <Text className="text-xs text-gray-70">
-              {page} / {totalPages}
-            </Text>
-            <Pressable
-              onPress={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-            >
+            <View className="flex-row items-center gap-0.5">
+              <View className="px-1 py-0.5" style={{}}>
+                <TextInput
+                  style={{
+                    fontSize: 11,
+                    fontWeight: '600',
+                    color: '#1D1D1D',
+                    textAlign: 'center',
+                    minWidth: 14,
+                    padding: 0,
+                    includeFontPadding: false,
+                  }}
+                  keyboardType="number-pad"
+                  returnKeyType="done"
+                  value={pageInput}
+                  onChangeText={setPageInput}
+                  onSubmitEditing={handlePageInputSubmit}
+                  onBlur={handlePageInputSubmit}
+                  selectTextOnFocus
+                />
+              </View>
+              <Text style={{ fontSize: 11, color: '#ABABAB' }}> / {totalPages}</Text>
+            </View>
+            <Pressable onPress={() => goToPage(page + 1)} disabled={page >= totalPages}>
               <Ionicons
                 name="chevron-forward"
                 size={14}
@@ -176,47 +250,51 @@ export function RecipeListBySituationScreen() {
             <Text className="text-sm text-gray-50 text-center">다른 카테고리를 선택해보세요.</Text>
           </View>
         ) : (
-          <View className="flex-row flex-wrap px-4 gap-3 pb-32">
+          <View className="flex-row flex-wrap px-4 gap-3 pb-32" {...panResponder.panHandlers}>
             {recipes.map((recipe) => {
-              const tags = getRecipeTags(recipe.category, recipe.cookingMethod);
+              const tags = getRecipeTags(recipe.category, recipe.cookingMethod, recipe.level);
               return (
                 <Pressable
                   key={recipe.id}
                   onPress={() => handleRecipePress(recipe.id)}
                   className="bg-surface-default rounded-2xl overflow-hidden"
-                  style={{ width: '47.5%' }}
+                  style={{
+                    width: '47.5%',
+                    shadowColor: '#000000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 12,
+                    elevation: 2,
+                  }}
                 >
                   {recipe.imageUrl ? (
-                    <View className="w-full aspect-square relative">
-                      <Image
-                        source={{ uri: recipe.imageUrl }}
-                        className="w-full h-full"
-                        resizeMode="cover"
-                      />
+                    <GridImage uri={recipe.imageUrl}>
                       <Pressable
                         onPress={() => handleToggleScrap(recipe.id, recipe.isSaved)}
-                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 items-center justify-center"
+                        className="absolute top-2 right-2 w-8 h-8 rounded-full items-center justify-center"
+                        style={{ backgroundColor: 'rgba(255,255,255,0.7)' }}
                         hitSlop={8}
                       >
-                        <Ionicons
-                          name={recipe.isSaved ? 'bookmark' : 'bookmark-outline'}
-                          size={16}
-                          color={recipe.isSaved ? '#EF7722' : '#8E8E8E'}
-                        />
+                        {recipe.isSaved ? (
+                          <ScrappedIcon width={24} height={24} />
+                        ) : (
+                          <ScrapIcon width={24} height={24} />
+                        )}
                       </Pressable>
-                    </View>
+                    </GridImage>
                   ) : (
                     <View className="w-full aspect-square bg-gray-10 relative">
                       <Pressable
                         onPress={() => handleToggleScrap(recipe.id, recipe.isSaved)}
-                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 items-center justify-center"
+                        className="absolute top-2 right-2 w-8 h-8 rounded-full items-center justify-center"
+                        style={{ backgroundColor: 'rgba(255,255,255,0.7)' }}
                         hitSlop={8}
                       >
-                        <Ionicons
-                          name={recipe.isSaved ? 'bookmark' : 'bookmark-outline'}
-                          size={16}
-                          color={recipe.isSaved ? '#EF7722' : '#8E8E8E'}
-                        />
+                        {recipe.isSaved ? (
+                          <ScrappedIcon width={24} height={24} />
+                        ) : (
+                          <ScrapIcon width={24} height={24} />
+                        )}
                       </Pressable>
                     </View>
                   )}
@@ -226,14 +304,14 @@ export function RecipeListBySituationScreen() {
                       {recipe.name}
                     </Text>
                     <View className="flex-row gap-1 flex-wrap">
-                      {tags.map((tag) => {
+                      {tags.map((tag, tagIndex) => {
                         const style = TAG_STYLES[tag.variant];
                         return (
                           <View
-                            key={tag.label}
+                            key={`${tag.label}-${tagIndex}`}
                             className={`px-2 py-0.5 rounded-full ${style.container}`}
                           >
-                            <Text className={`text-[10px] font-medium ${style.text}`}>
+                            <Text className={`font-medium ${style.text}`} style={{ fontSize: 9 }}>
                               {tag.label}
                             </Text>
                           </View>
@@ -247,6 +325,50 @@ export function RecipeListBySituationScreen() {
           </View>
         )}
       </ScrollView>
+    </View>
+  );
+}
+
+function PulseSkeleton() {
+  const opacity = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+      ]),
+    ).start();
+  }, [opacity]);
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#E4E4E4',
+        opacity,
+      }}
+    />
+  );
+}
+
+function GridImage({ uri, children }: { uri: string; children: React.ReactNode }) {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <View className="w-full aspect-square relative">
+      {!loaded && <PulseSkeleton />}
+      <Image
+        source={{ uri }}
+        className="w-full h-full"
+        resizeMode="cover"
+        onLoad={() => setLoaded(true)}
+      />
+      {children}
     </View>
   );
 }

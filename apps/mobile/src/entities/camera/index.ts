@@ -1,4 +1,13 @@
 export {
+  cameraAnalysisDateSchema,
+  cameraAnalysisItemSchema,
+  cameraAnalysisSourceSchema,
+  cameraAnalyzeRequestSchema,
+  cameraAnalyzeResponseSchema,
+  cameraResultSaveRequestSchema,
+} from './api/camera.schema';
+export { analyzeCameraImage, saveCameraResult } from './api/mutations';
+export {
   CAMERA_ANALYSIS_SOURCE_BY_MODE,
   CAMERA_CAPTURE_LABELS,
   CAMERA_CAPTURE_MODES,
@@ -7,16 +16,6 @@ export {
   getCameraCaptureLabel,
   isCameraCaptureMode,
 } from './model/camera.model';
-export { useCameraStore } from './model/camera.store';
-export {
-  cameraAnalysisDateSchema,
-  cameraAnalysisItemSchema,
-  cameraAnalysisSourceSchema,
-  cameraAnalyzeRequestSchema,
-  cameraAnalyzeResponseSchema,
-  fridgeCategorySchema,
-} from './api/camera.schema';
-export { analyzeCameraImage } from './api/mutations';
 export type {
   CameraAnalysisDate,
   CameraAnalysisItem,
@@ -25,5 +24,6 @@ export type {
   CameraAnalyzeResponse,
   CameraCaptureMode,
   CameraCaptureOption,
-  FridgeCategory,
+  CameraResultSaveRequest,
 } from './model/camera.model';
+export { useCameraStore } from './model/camera.store';
