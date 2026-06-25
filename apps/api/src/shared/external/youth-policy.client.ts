@@ -86,6 +86,7 @@ export async function fetchYouthPolicies(
 }
 
 // 정책 상세 단건 실시간 조회 (plcyNo로 필터링, BFF가 매 요청마다 호출)
+// 온통청년 API가 동일 요청에 간헐적으로 400을 반환하는 현상이 확인되어(POLICY-038) 1회 재시도한다.
 export async function fetchYouthPolicyDetail(plcyNo: string): Promise<YouthPolicyDetailRaw | null> {
   const apiKey = process.env.YOUTH_POLICY_API_KEY;
   if (!apiKey) throw new Error('YOUTH_POLICY_API_KEY is not set');
@@ -99,13 +100,24 @@ export async function fetchYouthPolicyDetail(plcyNo: string): Promise<YouthPolic
     plcyNo,
   });
 
-  const response = await fetch(`${BASE_URL}?${params}`, {
-    next: { revalidate: 1800 }, // 정책 내용은 30분 내 거의 안 바뀜 — 외부 API 호출 횟수를 사용자 수와 무관하게 줄임
-  });
+  const RETRY_DELAY_MS = 500;
+  let lastError: Error | null = null;
 
-  if (!response.ok) throw new Error(`Youth Policy API error: ${response.status}`);
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
 
-  const data = (await response.json()) as YouthPolicyListResponse<YouthPolicyDetailRaw>;
+    const response = await fetch(`${BASE_URL}?${params}`, {
+      next: { revalidate: 1800 }, // 정책 내용은 30분 내 거의 안 바뀜 — 외부 API 호출 횟수를 사용자 수와 무관하게 줄임
+    });
 
-  return data.result?.youthPolicyList?.[0] ?? null;
+    if (response.ok) {
+      const data = (await response.json()) as YouthPolicyListResponse<YouthPolicyDetailRaw>;
+      return data.result?.youthPolicyList?.[0] ?? null;
+    }
+
+    const body = await response.text();
+    lastError = new Error(`Youth Policy API error: ${response.status} ${body}`);
+  }
+
+  throw lastError;
 }
