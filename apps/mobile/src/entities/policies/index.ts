@@ -25,5 +25,7 @@ export {
   type FilterSection,
   type BulletLine,
 } from './model/policies.model';
+export { getCategoryStyle } from './model/policyCategoryStyle';
+export { getBannerIllustration } from './model/policyBannerIllustration';
 export { policyKeys } from './api/keys';
 export type { Policy, PolicyBanner, PolicyListQuery, PolicyDetail } from './api/policies.schema';

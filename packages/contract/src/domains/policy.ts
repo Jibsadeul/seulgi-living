@@ -29,6 +29,7 @@ export const policyBannerSchema = z.object({
   id: z.string(),
   conditionType: z.enum(['scrap', 'recommended']),
   name: z.string(),
+  largeCategory: z.string().nullable().optional(),
   daysLeft: z.number().nullable(),
   applicationUrl: z.string().nullable().optional(),
 });
