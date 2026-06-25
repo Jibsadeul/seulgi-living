@@ -50,6 +50,7 @@ export function useMemberInfoForm(initialMember: MemberMe | null) {
     initialMember?.nickname ? 'available' : 'idle',
   );
   const [message, setMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
   const [isRegionLoading, setIsRegionLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -57,6 +58,7 @@ export function useMemberInfoForm(initialMember: MemberMe | null) {
     setValues(toInitialValues(initialMember));
     setNicknameState(initialMember?.nickname ? 'available' : 'idle');
     setMessage(null);
+    setMessageType(null);
   }, [initialMember]);
 
   useEffect(() => {
@@ -179,6 +181,7 @@ export function useMemberInfoForm(initialMember: MemberMe | null) {
   const updateNickname = (nickname: string) => {
     setValues((current) => ({ ...current, nickname }));
     setMessage(null);
+    setMessageType(null);
     setNicknameState(nickname.trim() === initialMember?.nickname ? 'available' : 'idle');
   };
 
@@ -191,6 +194,7 @@ export function useMemberInfoForm(initialMember: MemberMe | null) {
       return { ...current, [key]: value };
     });
     setMessage(null);
+    setMessageType(null);
   };
 
   const confirmNickname = async () => {
@@ -200,6 +204,7 @@ export function useMemberInfoForm(initialMember: MemberMe | null) {
 
     if (!nicknameParseResult.success) {
       setMessage(nicknameParseResult.error.errors[0]?.message ?? '닉네임을 확인해주세요.');
+      setMessageType('error');
       return;
     }
 
@@ -207,22 +212,26 @@ export function useMemberInfoForm(initialMember: MemberMe | null) {
     const result = await checkNickname(values.nickname, initialMember?.nickname);
     setNicknameState(result.available ? 'available' : 'unavailable');
     setMessage(result.available ? '사용 가능한 닉네임입니다.' : '이미 사용 중인 닉네임입니다.');
+    setMessageType(result.available ? 'success' : 'error');
   };
 
   const submit = async (): Promise<MemberInfoSubmitResult | null> => {
     if (!parsedInfo.success || nicknameState !== 'available') {
       setMessage('입력값과 닉네임 중복 확인을 완료해주세요.');
+      setMessageType('error');
       return null;
     }
 
     setIsSubmitting(true);
     setMessage(null);
+    setMessageType(null);
 
     try {
       const result = await submitMemberInfo(parsedInfo.data);
       return result;
     } catch {
       setMessage('저장에 실패했습니다. 다시 시도해주세요.');
+      setMessageType('error');
       return null;
     } finally {
       setIsSubmitting(false);
@@ -235,6 +244,7 @@ export function useMemberInfoForm(initialMember: MemberMe | null) {
     sigunguList,
     nicknameState,
     message,
+    messageType,
     isRegionLoading,
     isSubmitting,
     canSubmit,

@@ -84,6 +84,17 @@ export const MemberInfoForm = forwardRef<MemberInfoFormHandle, Props>(function M
             </Text>
           </Pressable>
         </View>
+        <View className="h-5 justify-center">
+          {form.message ? (
+            <Text
+              className={`text-xs font-medium ${
+                form.messageType === 'success' ? 'text-green-500' : 'text-red-500'
+              }`}
+            >
+              {form.message}
+            </Text>
+          ) : null}
+        </View>
       </View>
 
       <View>
@@ -136,10 +147,6 @@ export const MemberInfoForm = forwardRef<MemberInfoFormHandle, Props>(function M
           />
         </View>
       </View>
-
-      {form.message ? (
-        <Text className="text-xs font-medium text-main-100">{form.message}</Text>
-      ) : null}
 
       <Pressable
         className={`h-12 items-center justify-center rounded-lg ${

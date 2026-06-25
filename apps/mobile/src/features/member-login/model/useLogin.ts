@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
+import { chatKeys } from '@/entities/chat';
 import type { MemberMe } from '@/entities/members';
 import {
   API_BASE_URL,
@@ -56,6 +58,7 @@ function getQueryParam(url: string, key: string) {
 }
 
 export const useLogin = () => {
+  const queryClient = useQueryClient();
   const [state, setState] = useState<LoginState>('idle');
   const [message, setMessage] = useState<string | null>(null);
   const isLoading = state === 'loading';
@@ -108,6 +111,7 @@ export const useLogin = () => {
       }
 
       const member = await submitKakaoLogin({ code, redirectUri });
+      queryClient.removeQueries({ queryKey: chatKeys.all });
       setState('success');
       return member;
     } catch {
