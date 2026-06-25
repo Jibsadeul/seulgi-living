@@ -103,11 +103,17 @@ export function PoliciesSearchResultList({
         ) : null
       }
       ListEmptyComponent={
-        !isLoading ? (
+        isLoading ? (
+          <View className="px-4 gap-3">
+            {[0, 1, 2, 3].map((i) => (
+              <SkeletonCard key={i} height={120} />
+            ))}
+          </View>
+        ) : (
           <View className="items-center px-5 py-12">
             <Text className="text-sm text-gray-50 text-center">조건에 맞는 정책이 없어요</Text>
           </View>
-        ) : null
+        )
       }
     />
   );
