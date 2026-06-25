@@ -12,6 +12,9 @@ export function GroceryMonthNavigator({
   onPrev: () => void;
   onNext: () => void;
 }) {
+  const now = new Date();
+  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth() + 1;
+
   return (
     <View className="mb-4 flex-row items-center justify-center">
       <Pressable
@@ -27,9 +30,10 @@ export function GroceryMonthNavigator({
       <Pressable
         accessibilityLabel="다음 달"
         className="h-10 w-10 items-center justify-center"
+        disabled={isCurrentMonth}
         onPress={onNext}
       >
-        <Ionicons name="chevron-forward" size={22} color="#2D2D2D" />
+        <Ionicons name="chevron-forward" size={22} color={isCurrentMonth ? '#D8D8D8' : '#2D2D2D'} />
       </Pressable>
     </View>
   );
