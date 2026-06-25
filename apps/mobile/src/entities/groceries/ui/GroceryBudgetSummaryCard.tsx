@@ -24,6 +24,8 @@ type Props = {
   primaryAction: BudgetCardAction;
   onMorePress?: () => void;
   isLoading?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
 };
 
 function formatWon(amount: number) {
@@ -39,6 +41,8 @@ export function GroceryBudgetSummaryCard({
   primaryAction,
   onMorePress,
   isLoading,
+  isError,
+  onRetry,
 }: Props) {
   const { budget, spent } = summary ?? EMPTY_BUDGET_SUMMARY;
   const hasBudget = budget !== null;
@@ -66,7 +70,17 @@ export function GroceryBudgetSummaryCard({
         )}
       </View>
 
-      {isLoading ? (
+      {isError ? (
+        <View className="items-center py-4">
+          <Text className="text-sm text-gray-60">장보기 요약을 불러오지 못했습니다.</Text>
+          <Pressable
+            className="mt-3 h-9 items-center justify-center rounded-md bg-gray-10 px-4"
+            onPress={onRetry}
+          >
+            <Text className="text-sm font-semibold text-gray-80">다시 시도</Text>
+          </Pressable>
+        </View>
+      ) : isLoading ? (
         <>
           <View className="mb-2.5 flex-row items-end justify-between">
             <View>
