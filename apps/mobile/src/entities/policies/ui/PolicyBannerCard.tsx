@@ -1,4 +1,4 @@
-import { Linking, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { PolicyBanner } from '@repo/contract';
@@ -18,12 +18,10 @@ export function PolicyBannerCard({ banner, nickname }: Props) {
       ? `${nickname ?? ''}님이 스크랩한 정책\n지금 신청하세요.`
       : `놓치면 올해 끝! 마감이 ${banner.daysLeft}일 남았어요.`;
 
+  // 배너는 신청 URL이 있어도 상세 페이지를 거치게 한다 — 외부로 바로 보내면
+  // 어떤 정책이었는지 맥락 없이 이동해 사용자가 헷갈릴 수 있다.
   function handleOpen() {
-    if (banner.applicationUrl) {
-      Linking.openURL(banner.applicationUrl);
-    } else {
-      router.push(`/(stack)/policies/${banner.id}`);
-    }
+    router.push(`/(stack)/policies/${banner.id}`);
   }
 
   return (
@@ -77,7 +75,7 @@ export function PolicyBannerCard({ banner, nickname }: Props) {
         </Text>
       </View>
 
-      {/* 바로가기/자세히보기 버튼 — 우하단 */}
+      {/* 자세히보기 버튼 — 우하단, 항상 상세 페이지로 이동 */}
       <Pressable
         onPress={handleOpen}
         className="flex-row items-center gap-1"
@@ -91,14 +89,8 @@ export function PolicyBannerCard({ banner, nickname }: Props) {
           paddingVertical: 8,
         }}
       >
-        <Text style={{ fontSize: 13, fontWeight: '600', color: '#FFFFFF' }}>
-          {banner.applicationUrl ? '바로가기' : '자세히보기'}
-        </Text>
-        <Ionicons
-          name={banner.applicationUrl ? 'open-outline' : 'chevron-forward'}
-          size={16}
-          color="#FFFFFF"
-        />
+        <Text style={{ fontSize: 13, fontWeight: '600', color: '#FFFFFF' }}>자세히보기</Text>
+        <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />
       </Pressable>
     </View>
   );
