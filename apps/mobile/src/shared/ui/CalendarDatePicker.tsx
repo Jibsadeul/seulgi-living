@@ -102,7 +102,8 @@ export function CalendarDatePicker({
       <Modal animationType="fade" transparent visible={isOpen} onRequestClose={close}>
         <Pressable className="flex-1 justify-center bg-black/35 px-6" onPress={close}>
           <Pressable
-            className="rounded-2xl bg-surface-default p-4"
+            className="w-full rounded-2xl bg-surface-default p-4"
+            style={{ maxWidth: 384, alignSelf: 'center' }}
             onPress={(event) => event.stopPropagation()}
           >
             <View className="mb-4 flex-row items-center justify-between">
