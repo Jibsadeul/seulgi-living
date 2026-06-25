@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 import type { PolicyDetail } from '@repo/contract';
-import { getCategoryStyle, isUrgentDeadline } from '@/entities/policies';
+import { getCategoryStyle, getDeadlineLabel, isUrgentDeadline } from '@/entities/policies';
 import AlarmTagIcon from '@assets/icons/policy/alarm-tag.svg';
 
 type Props = {
@@ -51,15 +51,7 @@ function getDeadlineColors(daysLeft: number | null) {
 }
 
 export function PolicyDetailHero({ policy }: Props) {
-  const isClosed = policy.daysLeft !== null && policy.daysLeft < 0;
-  const dayLabel =
-    policy.daysLeft === null
-      ? '상시'
-      : isClosed
-        ? '마감'
-        : policy.daysLeft === 0
-          ? '오늘마감'
-          : `D-${policy.daysLeft}`;
+  const dayLabel = getDeadlineLabel(policy.daysLeft);
   const deadlineColors = getDeadlineColors(policy.daysLeft);
 
   const largeCategory = firstOf(policy.largeCategory);

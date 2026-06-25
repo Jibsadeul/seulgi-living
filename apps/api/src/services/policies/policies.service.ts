@@ -78,7 +78,13 @@ export async function getPolicyBanner(memberId: string | null): Promise<PolicyBa
         applyEndDate: { gte: today, lte: in30Days },
       },
       orderBy: { applyEndDate: 'asc' },
-      select: { id: true, name: true, applyEndDate: true, applicationUrl: true },
+      select: {
+        id: true,
+        name: true,
+        largeCategory: true,
+        applyEndDate: true,
+        applicationUrl: true,
+      },
     });
 
     if (scrappedPolicy) {
@@ -86,6 +92,7 @@ export async function getPolicyBanner(memberId: string | null): Promise<PolicyBa
         id: scrappedPolicy.id,
         conditionType: 'scrap',
         name: scrappedPolicy.name,
+        largeCategory: scrappedPolicy.largeCategory,
         daysLeft: calcDaysLeft(scrappedPolicy.applyEndDate),
         applicationUrl: scrappedPolicy.applicationUrl,
       });
@@ -123,7 +130,13 @@ export async function getPolicyBanner(memberId: string | null): Promise<PolicyBa
       ],
     },
     orderBy: { applyEndDate: 'asc' },
-    select: { id: true, name: true, applyEndDate: true, applicationUrl: true },
+    select: {
+      id: true,
+      name: true,
+      largeCategory: true,
+      applyEndDate: true,
+      applicationUrl: true,
+    },
   });
 
   if (recommendedPolicy) {
@@ -131,6 +144,7 @@ export async function getPolicyBanner(memberId: string | null): Promise<PolicyBa
       id: recommendedPolicy.id,
       conditionType: 'recommended',
       name: recommendedPolicy.name,
+      largeCategory: recommendedPolicy.largeCategory,
       daysLeft: calcDaysLeft(recommendedPolicy.applyEndDate),
       applicationUrl: recommendedPolicy.applicationUrl,
     });
@@ -242,10 +256,12 @@ export async function getPolicies(
   };
 
   // "마감기한순"(0057001) 또는 마감임박 빠른탐색일 때만 마감일 오름차순, 그 외에는 조회수 내림차순
+  // 동점(같은 applyEndDate/viewCount)이 많으면 페이지마다 순서가 안정적이지 않아 항목이 중복/누락될 수 있어
+  // id를 보조 정렬키로 추가해 순서를 고정한다.
   const orderBy =
     applyPeriodType === '0057001' || deadlineOnly
-      ? [{ applyEndDate: 'asc' as const }]
-      : [{ viewCount: 'desc' as const }];
+      ? [{ applyEndDate: 'asc' as const }, { id: 'asc' as const }]
+      : [{ viewCount: 'desc' as const }, { id: 'asc' as const }];
 
   const [rows, total] = await prisma.$transaction([
     prisma.policy.findMany({
@@ -286,7 +302,11 @@ export async function getScrappedPolicies(
   const [scraps, total] = await prisma.$transaction([
     prisma.policyScrap.findMany({
       where,
-      orderBy: sortBy === 'recent' ? { createdAt: 'desc' } : { policy: { applyEndDate: 'asc' } },
+      // 동점(같은 createdAt/applyEndDate)에서도 페이지 간 순서가 고정되도록 id를 보조 정렬키로 추가
+      orderBy:
+        sortBy === 'recent'
+          ? [{ createdAt: 'desc' }, { id: 'asc' }]
+          : [{ policy: { applyEndDate: 'asc' } }, { id: 'asc' }],
       skip: (page - 1) * limit,
       take: limit,
       include: {

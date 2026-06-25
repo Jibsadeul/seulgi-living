@@ -3,8 +3,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import type { PolicyBanner } from '@repo/contract';
 import AlarmClockIcon from '@assets/icons/alarm-clock.svg';
-// TODO: PolicyBanner에 largeCategory가 추가되면 카테고리별 일러스트로 교체 — 지금은 디자인 확인용 더미
-import DummyBannerIcon from '@assets/icons/policy-banner/house.svg';
+import { getBannerIllustration } from '../model/policyBannerIllustration';
 
 type Props = {
   banner: PolicyBanner;
@@ -13,6 +12,7 @@ type Props = {
 
 export function PolicyBannerCard({ banner, nickname }: Props) {
   const router = useRouter();
+  const BannerIllustration = getBannerIllustration(banner.largeCategory);
   const copy =
     banner.conditionType === 'scrap'
       ? `${nickname ?? ''}님이 스크랩한 정책\n지금 신청하세요.`
@@ -45,7 +45,7 @@ export function PolicyBannerCard({ banner, nickname }: Props) {
     >
       {/* 우측 배경 일러스트 — 카드 모서리에 걸치도록 우하단에 크게 배치, 색은 FFEBDC로 통일 */}
       <View style={{ position: 'absolute', right: -24, bottom: -24 }}>
-        <DummyBannerIcon width={170} height={170} />
+        <BannerIllustration width={190} height={190} />
       </View>
 
       {/* 좌측 콘텐츠 */}

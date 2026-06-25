@@ -38,6 +38,7 @@ export function getTagLabels(tags: Policy['tags']): string[] {
 export function getDeadlineLabel(daysLeft: number | null): string {
   if (daysLeft === null) return '상시';
   if (daysLeft < 0) return '마감';
+  if (daysLeft === 0) return '오늘마감';
   return `D-${daysLeft}`;
 }
 
