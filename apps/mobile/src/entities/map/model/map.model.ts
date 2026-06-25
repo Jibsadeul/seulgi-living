@@ -14,6 +14,7 @@ export type CategoryLabel = (typeof CATEGORY_LIST)[number]['label'];
 export interface MapPlace {
   id: string; // 카카오 Places API 고유 식별자 — FlatList key로 사용
   place_name: string;
+  category_name: string; // 전체 카테고리 경로 (예: "음식점 > 한식 > 육류,고기")
   address_name: string;
   road_address_name: string;
   phone: string;
@@ -35,4 +36,5 @@ export type WebViewToRNMessage =
   | { type: 'MARKER_CLICK'; payload: MapPlace }
   | { type: 'SEARCH_RESULT'; payload: { places: MapPlace[] } }
   | { type: 'SEARCH_ZERO_RESULT'; payload: { keyword: string } }
+  | { type: 'MAP_MOVED' }
   | { type: 'MAP_ERROR'; payload: { message: string } };
