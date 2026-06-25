@@ -35,7 +35,7 @@ type Props = {
 export function PoliciesQuickCategories({ onCategoryPress }: Props) {
   return (
     <View className="px-5 mb-5">
-      <Text style={{ fontSize: 16, fontWeight: '600', color: '#24252C', marginBottom: 14 }}>
+      <Text className="text-base font-bold text-gray-90" style={{ marginBottom: 14 }}>
         빠른 탐색
       </Text>
 
