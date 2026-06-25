@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, {
+  BottomSheetBackdrop,
   BottomSheetFooter,
   BottomSheetScrollView,
   BottomSheetTextInput,
   BottomSheetView,
+  type BottomSheetBackdropProps,
   type BottomSheetFooterProps,
 } from '@gorhom/bottom-sheet';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -69,6 +71,19 @@ export function GroceryBudgetEditSheet({ isOpen, query, currentBudget, onClose }
     putBudget.mutate({ query, body: { budget } }, { onSuccess: handleClose });
   };
 
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        opacity={0.45}
+        pressBehavior="close"
+      />
+    ),
+    [],
+  );
+
   const renderFooter = useCallback(
     (props: BottomSheetFooterProps) => (
       <BottomSheetFooter {...props} bottomInset={0}>
@@ -103,6 +118,7 @@ export function GroceryBudgetEditSheet({ isOpen, query, currentBudget, onClose }
       keyboardBehavior="extend"
       keyboardBlurBehavior="none"
       android_keyboardInputMode="adjustResize"
+      backdropComponent={renderBackdrop}
       footerComponent={renderFooter}
       onClose={onClose}
       backgroundStyle={{
