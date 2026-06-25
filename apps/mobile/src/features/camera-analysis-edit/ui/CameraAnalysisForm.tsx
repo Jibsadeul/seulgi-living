@@ -33,6 +33,7 @@ type CameraAnalysisFormProps = {
 };
 
 const DEFAULT_CATEGORY: IngredientCategory = 'OTHER';
+const MAX_PRICE = 99_999_999;
 
 function createEditableItem(item: CameraAnalysisItem, index: number): EditableCameraAnalysisItem {
   return {
@@ -225,6 +226,18 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
         });
       }
 
+      if (!Number.isInteger(item.quantity)) {
+        itemErrors.quantity = '수량은 정수여야 합니다.';
+      } else if (item.quantity > 999999) {
+        itemErrors.quantity = '수량은 999,999 이하여야 합니다.';
+      }
+
+      if (item.price !== null && !Number.isInteger(item.price)) {
+        itemErrors.price = '가격은 정수여야 합니다.';
+      } else if (item.price !== null && item.price > MAX_PRICE) {
+        itemErrors.price = '가격은 99,999,999 이하여야 합니다.';
+      }
+
       if (isPriceRequired && item.price === null) {
         itemErrors.price = '가격을 입력해주세요.';
       }
@@ -346,6 +359,7 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
               <View>
                 <FieldLabel>품목명</FieldLabel>
                 <FormInput
+                  maxLength={50}
                   onChangeText={(value) => updateItem(item.id, { name: value })}
                   placeholder="품목명을 입력하세요"
                   value={item.name}
@@ -383,6 +397,7 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
                 <View className="w-[104px]">
                   <FieldLabel>단위</FieldLabel>
                   <FormInput
+                    maxLength={10}
                     onChangeText={(value) => updateItem(item.id, { unit: value })}
                     value={item.unit}
                     errorMessage={itemErrors.unit}
