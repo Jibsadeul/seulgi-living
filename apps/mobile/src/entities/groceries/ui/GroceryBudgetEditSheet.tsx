@@ -155,7 +155,9 @@ export function GroceryBudgetEditSheet({ isOpen, query, currentBudget, onClose }
       >
         <View className="rounded-xl bg-gray-5 p-4">
           <Text className="text-xs font-medium text-gray-60">현재 예산</Text>
-          <Text className="mt-2 text-lg font-bold text-gray-90">
+          <Text
+            className={`mt-2 text-lg font-bold ${currentBudget === null ? 'text-gray-40' : 'text-gray-90'}`}
+          >
             {currentBudget === null ? '미설정' : formatWon(currentBudget)}
           </Text>
         </View>
