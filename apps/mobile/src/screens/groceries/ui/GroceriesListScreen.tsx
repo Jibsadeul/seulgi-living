@@ -10,7 +10,7 @@ import {
   type GroceryListItem,
   type MonthState,
 } from '@/entities/groceries';
-import { GroceryDirectInputSheet, GroceryInputFab } from '@/features/groceries-input';
+import { GroceryInputSheet, GroceryInputFab } from '@/features/groceries-input';
 import { Header } from '@/shared/ui';
 import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -96,7 +96,7 @@ export function GroceriesListScreen() {
         onDirectInputPress={() => setIsDirectInputOpen(true)}
       />
 
-      <GroceryDirectInputSheet
+      <GroceryInputSheet
         isOpen={isDirectInputOpen}
         selectedMonth={selectedMonth}
         editItem={editItem ?? undefined}

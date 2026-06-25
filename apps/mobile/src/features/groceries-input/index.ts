@@ -1,2 +1,2 @@
 export { GroceryInputFab } from './ui/GroceryInputFab';
-export { GroceryDirectInputSheet } from './ui/GroceryDirectInputSheet';
+export { GroceryInputSheet } from './ui/GroceryInputSheet';

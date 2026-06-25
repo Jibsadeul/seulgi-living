@@ -25,7 +25,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const HEADER_HEIGHT = 56;
 const HEADER_GAP = 8;
 
-export function GroceryDirectInputSheet({
+export function GroceryInputSheet({
   isOpen,
   selectedMonth,
   editItem,
