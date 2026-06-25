@@ -104,7 +104,9 @@ function parsePrice(value: string) {
 
 export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: CameraAnalysisFormProps) {
   const isReceipt = analysis.source === 'RECEIPT';
-  const [purchaseDate, setPurchaseDate] = useState(formatDate(analysis.date));
+  const [purchaseDate, setPurchaseDate] = useState(
+    formatDate(analysis.date ?? new Date().toISOString()),
+  );
   const [saveTargets, setSaveTargets] = useState<SaveTarget[]>(
     isReceipt ? ['PURCHASE', 'FRIDGE'] : ['FRIDGE'],
   );
