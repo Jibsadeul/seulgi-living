@@ -12,7 +12,7 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
     <View className="rounded-2xl border border-gray-20 bg-surface-default p-6">
       <Text className="text-center text-base font-semibold text-gray-90">
-        장보기 내역을 불러오지 못했어요.
+        장보기 내역을 불러오지 못했습니다.
       </Text>
       <Text className="mt-2 text-center text-sm text-gray-50">잠시 후 다시 시도해주세요.</Text>
       <Pressable
@@ -31,9 +31,9 @@ function EmptyListState() {
       <View className="mb-3 h-12 w-12 items-center justify-center rounded-full bg-main-10">
         <Ionicons name="receipt-outline" size={24} color="#EF7722" />
       </View>
-      <Text className="text-base font-semibold text-gray-90">이번 달 장보기 내역이 없어요.</Text>
+      <Text className="text-base font-semibold text-gray-90">이번 달 장보기 내역이 없습니다.</Text>
       <Text className="mt-2 text-center text-sm leading-5 text-gray-50">
-        영수증을 저장하거나 장보기 내역을 추가하면 이곳에서 확인할 수 있어요.
+        영수증을 등록하거나 장보기 내역을 추가하면 이곳에서 확인할 수 있습니다.
       </Text>
     </View>
   );
