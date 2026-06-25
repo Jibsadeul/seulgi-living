@@ -1,13 +1,21 @@
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import { Linking, Text, TouchableOpacity, View } from 'react-native';
 import { useEffect, useRef } from 'react';
+import type { SharedValue } from 'react-native-reanimated';
 import type { MapPlace } from '../model/map.model';
+
+function getCategoryLabel(categoryName: string): string {
+  // category_name은 "음식점 > 한식 > 육류,고기"처럼 전체 경로로 와서, 마지막(가장 구체적인) segment만 보여준다.
+  const segments = categoryName.split('>').map((segment) => segment.trim());
+  return segments[segments.length - 1] || '';
+}
 
 interface MapPlaceBottomSheetProps {
   place: MapPlace | null;
   isOpen: boolean;
   onClose: () => void;
   bottomInset?: number;
+  animatedPosition?: SharedValue<number>;
 }
 
 export function MapPlaceBottomSheet({
@@ -15,6 +23,7 @@ export function MapPlaceBottomSheet({
   isOpen,
   onClose,
   bottomInset = 0,
+  animatedPosition,
 }: MapPlaceBottomSheetProps) {
   const sheetRef = useRef<BottomSheet>(null);
 
@@ -40,6 +49,7 @@ export function MapPlaceBottomSheet({
       index={-1}
       snapPoints={['40%']}
       bottomInset={bottomInset}
+      animatedPosition={animatedPosition}
       enablePanDownToClose
       onClose={onClose}
       backgroundStyle={{
@@ -55,6 +65,12 @@ export function MapPlaceBottomSheet({
             <Text className="text-[17px] font-bold text-gray-90" numberOfLines={1}>
               {place.place_name}
             </Text>
+
+            {!!place.category_name && (
+              <Text className="text-[11px] font-medium text-main-100" numberOfLines={1}>
+                {getCategoryLabel(place.category_name)}
+              </Text>
+            )}
 
             <Text className="text-[11px] text-gray-60 leading-4" numberOfLines={2}>
               {place.road_address_name || place.address_name}
