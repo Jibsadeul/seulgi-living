@@ -9,7 +9,7 @@ import { CalendarDatePicker, showAppToast } from '@/shared/ui';
 import { Ionicons } from '@expo/vector-icons';
 import { IngredientCategory } from '@repo/contract';
 import { useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { FieldLabel, FormInput } from './CameraAnalysisFields';
 import { CategoryDropdown } from './CategoryDropdown';
 
@@ -123,7 +123,7 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
 
   const selectedCount = items.length;
   const isMissingSaveTarget = isReceipt && saveTargets.length === 0;
-  const isSaveDisabled = isSaving || isMissingSaveTarget;
+  const isSaveDisabled = isSaving || isMissingSaveTarget || items.length === 0;
   const hasFormError = Boolean(errors.purchaseDate) || Object.keys(errors.items).length > 0;
   const isFridgeOnlySelected =
     isReceipt && saveTargets.length === 1 && saveTargets.includes('FRIDGE');
@@ -496,9 +496,13 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
             <Text className="text-base font-bold text-white">
               {isSaving ? '저장 중' : '저장하기'}
             </Text>
-            <View className="min-w-7 items-center rounded-full bg-white/20 px-2 py-0.5">
-              <Text className="text-xs font-bold text-white">{selectedCount}</Text>
-            </View>
+            {isSaving ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <View className="min-w-7 items-center rounded-full bg-white/20 px-2 py-0.5">
+                <Text className="text-xs font-bold text-white">{selectedCount}</Text>
+              </View>
+            )}
           </Pressable>
         </View>
       </View>
