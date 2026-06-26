@@ -76,14 +76,9 @@ function FilterChip({
   return (
     <Pressable
       onPress={onPress}
-      style={{
-        backgroundColor: selected ? '#EF7722' : '#FFEBDC',
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-      }}
+      className={`px-5 py-2 rounded-full ${selected ? 'bg-main-100' : 'bg-gray-5'}`}
     >
-      <Text style={{ fontSize: 12, fontWeight: '600', color: selected ? '#FFFFFF' : '#EF7722' }}>
+      <Text className={`text-sm font-medium ${selected ? 'text-white' : 'text-gray-70'}`}>
         {label}
       </Text>
     </Pressable>
