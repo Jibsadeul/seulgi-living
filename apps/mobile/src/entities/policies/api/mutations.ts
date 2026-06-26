@@ -32,6 +32,9 @@ export function usePolicyScrap() {
 
       const previousRecommended = queryClient.getQueryData<Policy[]>(policyKeys.recommended());
       const previousDetail = queryClient.getQueryData<PolicyDetail>(policyKeys.detail(policyId));
+      const previousScraps = queryClient.getQueriesData<InfinitePolicyListData>({
+        queryKey: [...policyKeys.all, 'scraps'],
+      });
 
       queryClient.setQueryData<Policy[]>(policyKeys.recommended(), (old) =>
         old?.map(patchIsScrapped(policyId, isScrapped)),
@@ -41,25 +44,37 @@ export function usePolicyScrap() {
         (old) => old && { ...old, isScrapped },
       );
 
-      // 검색 결과/스크랩 목록(둘 다 무한스크롤) 캐시는 params별로 여러 개 존재할 수 있어, list·scraps로 시작하는 쿼리를 전부 갱신한다.
-      const patchInfinitePages = (old: InfinitePolicyListData | undefined) =>
-        old && {
-          ...old,
-          pages: old.pages.map((page) => ({
-            ...page,
-            items: page.items.map(patchIsScrapped(policyId, isScrapped)),
-          })),
-        };
+      // 검색 결과(무한스크롤) 캐시는 params별로 여러 개 존재할 수 있어, list로 시작하는 쿼리를 전부 갱신한다.
       queryClient.setQueriesData<InfinitePolicyListData>(
         { queryKey: [...policyKeys.all, 'list'] },
-        patchInfinitePages,
-      );
-      queryClient.setQueriesData<InfinitePolicyListData>(
-        { queryKey: [...policyKeys.all, 'scraps'] },
-        patchInfinitePages,
+        (old) =>
+          old && {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              items: page.items.map(patchIsScrapped(policyId, isScrapped)),
+            })),
+          },
       );
 
-      return { previousRecommended, previousDetail };
+      // 즐겨찾기 목록은 "스크랩한 것만 모아보는" 화면이라, 해제 시 응답을 기다리지 않고
+      // 즉시 목록에서 빼야 체감 지연이 없다(invalidate+refetch까지 기다리면 버튼이 안 눌린 것처럼 보임).
+      if (!isScrapped) {
+        queryClient.setQueriesData<InfinitePolicyListData>(
+          { queryKey: [...policyKeys.all, 'scraps'] },
+          (old) =>
+            old && {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                items: page.items.filter((policy) => policy.id !== policyId),
+                total: page.total - 1,
+              })),
+            },
+        );
+      }
+
+      return { previousRecommended, previousDetail, previousScraps };
     },
 
     onError: (_err, { policyId }, context) => {
@@ -69,6 +84,9 @@ export function usePolicyScrap() {
       if (context?.previousDetail) {
         queryClient.setQueryData(policyKeys.detail(policyId), context.previousDetail);
       }
+      context?.previousScraps?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       showAppToast({ type: 'error', text: '스크랩 처리에 실패했습니다.' });
     },
 
