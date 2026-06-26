@@ -30,6 +30,8 @@ export function GroceryListScreen() {
   const [selectedMonth, setSelectedMonth] = useState<MonthState>(() => getCurrentMonth());
   const [isDirectInputOpen, setIsDirectInputOpen] = useState(false);
   const [isBudgetEditOpen, setIsBudgetEditOpen] = useState(false);
+  const [hasEverOpenedInput, setHasEverOpenedInput] = useState(false);
+  const [hasEverOpenedBudgetEdit, setHasEverOpenedBudgetEdit] = useState(false);
   const [editItem, setEditItem] = useState<GroceryListItem | null>(null);
   const [actionMenu, setActionMenu] = useState<{
     item: GroceryListItem;
@@ -52,6 +54,7 @@ export function GroceryListScreen() {
   const handleEdit = (item: GroceryListItem) => {
     setActionMenu(null);
     setEditItem(item);
+    setHasEverOpenedInput(true);
     setIsDirectInputOpen(true);
   };
 
@@ -78,7 +81,10 @@ export function GroceryListScreen() {
           primaryAction={{
             label: '예산 수정',
             iconName: 'create-outline',
-            onPress: () => setIsBudgetEditOpen(true),
+            onPress: () => {
+              setHasEverOpenedBudgetEdit(true);
+              setIsBudgetEditOpen(true);
+            },
           }}
           isLoading={summaryQuery.isLoading}
           isError={summaryQuery.isError}
@@ -95,25 +101,32 @@ export function GroceryListScreen() {
 
       <GroceryInputFab
         fabBottomOffset={fabBottomOffset}
-        onDirectInputPress={() => setIsDirectInputOpen(true)}
-      />
-
-      <GroceryInputSheet
-        isOpen={isDirectInputOpen}
-        selectedMonth={selectedMonth}
-        editItem={editItem ?? undefined}
-        onClose={() => {
-          setIsDirectInputOpen(false);
-          setEditItem(null);
+        onDirectInputPress={() => {
+          setHasEverOpenedInput(true);
+          setIsDirectInputOpen(true);
         }}
       />
 
-      <GroceryBudgetEditSheet
-        isOpen={isBudgetEditOpen}
-        query={query}
-        currentBudget={summaryQuery.data?.budget ?? null}
-        onClose={() => setIsBudgetEditOpen(false)}
-      />
+      {hasEverOpenedInput && (
+        <GroceryInputSheet
+          isOpen={isDirectInputOpen}
+          selectedMonth={selectedMonth}
+          editItem={editItem ?? undefined}
+          onClose={() => {
+            setIsDirectInputOpen(false);
+            setEditItem(null);
+          }}
+        />
+      )}
+
+      {hasEverOpenedBudgetEdit && (
+        <GroceryBudgetEditSheet
+          isOpen={isBudgetEditOpen}
+          query={query}
+          currentBudget={summaryQuery.data?.budget ?? null}
+          onClose={() => setIsBudgetEditOpen(false)}
+        />
+      )}
 
       <GroceryItemDropdown
         item={actionMenu?.item ?? null}

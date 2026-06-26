@@ -38,6 +38,7 @@ export function GroceryInputSheet({
 }) {
   const sheetRef = useRef<BottomSheet>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const initialIndex = useRef(isOpen ? 0 : -1);
   const insets = useSafeAreaInsets();
   const snapPoints = useMemo(() => ['75%', '100%'], []);
   const createGrocery = useCreateGroceryMutation();
@@ -55,21 +56,23 @@ export function GroceryInputSheet({
   };
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (isOpen) {
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollTo({ y: 0, animated: false });
+      });
 
-    requestAnimationFrame(() => {
-      scrollRef.current?.scrollTo({ y: 0, animated: false });
-    });
-
-    if (editItem) {
-      setName(editItem.name);
-      setPriceText(String(editItem.price));
-      setPurchaseDate(editItem.purchaseDate);
-      setQuantityText(editItem.quantityText ?? '');
+      if (editItem) {
+        setName(editItem.name);
+        setPriceText(String(editItem.price));
+        setPurchaseDate(editItem.purchaseDate);
+        setQuantityText(editItem.quantityText ?? '');
+      } else {
+        resetForm();
+      }
+      sheetRef.current?.snapToIndex(0);
     } else {
-      resetForm();
+      sheetRef.current?.close();
     }
-    sheetRef.current?.snapToIndex(0);
   }, [isOpen, selectedMonth.month, selectedMonth.year, editItem?.id]);
 
   const handleClose = () => {
@@ -159,8 +162,7 @@ export function GroceryInputSheet({
   return (
     <BottomSheet
       ref={sheetRef}
-      index={-1}
-      animateOnMount={false}
+      index={initialIndex.current}
       snapPoints={snapPoints}
       enableDynamicSizing={false}
       enablePanDownToClose
