@@ -160,6 +160,7 @@ export function GroceryInputSheet({
     <BottomSheet
       ref={sheetRef}
       index={-1}
+      animateOnMount={false}
       snapPoints={snapPoints}
       enableDynamicSizing={false}
       enablePanDownToClose

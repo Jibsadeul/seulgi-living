@@ -112,6 +112,7 @@ export function GroceryBudgetEditSheet({ isOpen, query, currentBudget, onClose }
     <BottomSheet
       ref={sheetRef}
       index={-1}
+      animateOnMount={false}
       snapPoints={snapPoints}
       enableDynamicSizing={false}
       enablePanDownToClose

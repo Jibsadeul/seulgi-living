@@ -15,15 +15,27 @@ function buildMultiLabel(values: string[] | undefined, placeholder: string): str
   return `${values[0]} 외 ${values.length - 1}`;
 }
 
-function FilterChipButton({ label, onPress }: { label: string; onPress: () => void }) {
+function FilterChipButton({
+  label,
+  isActive,
+  onPress,
+}: {
+  label: string;
+  isActive: boolean;
+  onPress: () => void;
+}) {
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row items-center bg-surface-default border border-gray-30 rounded-full"
+      className={`flex-row items-center rounded-full ${
+        isActive ? 'bg-main-100' : 'bg-surface-default border border-gray-30'
+      }`}
       style={{ paddingHorizontal: 9, paddingVertical: 6, gap: 3 }}
     >
-      <Text style={{ fontSize: 11, fontWeight: '500', color: '#8F9098' }}>{label}</Text>
-      <Ionicons name="chevron-down" size={11} color="#8F9098" />
+      <Text style={{ fontSize: 11, fontWeight: '500', color: isActive ? '#FFFFFF' : '#8F9098' }}>
+        {label}
+      </Text>
+      <Ionicons name="chevron-down" size={11} color={isActive ? '#FFFFFF' : '#8F9098'} />
     </Pressable>
   );
 }
@@ -44,18 +56,22 @@ export function PoliciesSearchFilterChips({ filterValues, regionLabels, onOpenSe
       </Pressable>
       <FilterChipButton
         label={buildMultiLabel(filterValues.largeCategory, '카테고리')}
+        isActive={Boolean(filterValues.largeCategory?.length)}
         onPress={() => onOpenSection('category')}
       />
       <FilterChipButton
         label={buildMultiLabel(regionLabels, '지역')}
+        isActive={Boolean(regionLabels?.length)}
         onPress={() => onOpenSection('region')}
       />
       <FilterChipButton
         label={buildMultiLabel(filterValues.supportType, '지원유형')}
+        isActive={Boolean(filterValues.supportType?.length)}
         onPress={() => onOpenSection('supportType')}
       />
       <FilterChipButton
         label={filterValues.applyPeriodType ? PERIOD_LABEL[filterValues.applyPeriodType] : '인기순'}
+        isActive={Boolean(filterValues.applyPeriodType)}
         onPress={() => onOpenSection('period')}
       />
     </ScrollView>

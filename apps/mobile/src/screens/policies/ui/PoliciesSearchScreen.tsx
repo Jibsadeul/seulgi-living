@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePolicySearchEntry } from '@/features/policy-search';
-import { PoliciesSearchHeader } from './components/search/PoliciesSearchHeader';
+import { PoliciesSearchEntryHeader } from './components/search/PoliciesSearchEntryHeader';
 import { PoliciesRecentSearches } from './components/search/PoliciesRecentSearches';
 
 export function PoliciesSearchScreen() {
@@ -20,8 +20,8 @@ export function PoliciesSearchScreen() {
   } = usePolicySearchEntry();
 
   return (
-    <View className="flex-1 bg-surface-card" style={{ paddingTop: insets.top }}>
-      <PoliciesSearchHeader
+    <View className="flex-1 bg-surface-default" style={{ paddingTop: insets.top }}>
+      <PoliciesSearchEntryHeader
         inputRef={inputRef}
         keyword={keyword}
         onChangeKeyword={setKeyword}

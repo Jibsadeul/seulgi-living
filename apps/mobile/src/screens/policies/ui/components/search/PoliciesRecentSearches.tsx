@@ -10,12 +10,12 @@ type Props = {
 
 export function PoliciesRecentSearches({ items, onTapItem, onRemoveItem, onClearAll }: Props) {
   return (
-    <View className="flex-1 px-5 pt-2">
+    <View className="flex-1 px-5 pt-4">
       <View className="flex-row items-center justify-between mb-2">
-        <Text className="text-base font-medium text-gray-90">최근 검색어</Text>
+        <Text className="text-base font-semibold text-gray-80">최근 검색어</Text>
         {items.length > 0 && (
           <Pressable onPress={onClearAll} hitSlop={8}>
-            <Text className="text-xs font-medium text-gray-60">모두 지우기</Text>
+            <Text className="text-xs font-medium text-gray-50">전체 삭제</Text>
           </Pressable>
         )}
       </View>
@@ -23,21 +23,25 @@ export function PoliciesRecentSearches({ items, onTapItem, onRemoveItem, onClear
       <FlatList
         data={items}
         keyExtractor={(item) => item}
-        renderItem={({ item, index }) => (
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item }) => (
           <Pressable
             onPress={() => onTapItem(item)}
-            className="flex-row items-center justify-between py-4"
-            style={{
-              borderTopWidth: index === 0 ? 0 : 1,
-              borderTopColor: 'rgba(223,192,177,0.3)',
-            }}
+            className="flex-row items-center py-4"
+            style={{ gap: 12 }}
           >
-            <Text className="text-sm font-medium text-gray-90">{item}</Text>
+            <Ionicons name="time-outline" size={20} color="#8E8E8E" />
+            <Text className="flex-1 text-sm text-gray-80">{item}</Text>
             <Pressable onPress={() => onRemoveItem(item)} hitSlop={8}>
-              <Ionicons name="close" size={15} color="#8E8E8E" />
+              <Ionicons name="close" size={16} color="#C6C6C6" />
             </Pressable>
           </Pressable>
         )}
+        ListEmptyComponent={
+          <View className="items-center pt-16">
+            <Text className="text-sm text-gray-50">최근 검색어가 없습니다</Text>
+          </View>
+        }
       />
     </View>
   );
