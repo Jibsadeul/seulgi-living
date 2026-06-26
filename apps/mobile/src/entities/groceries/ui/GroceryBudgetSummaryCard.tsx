@@ -24,6 +24,8 @@ type Props = {
   primaryAction: BudgetCardAction;
   onMorePress?: () => void;
   isLoading?: boolean;
+  isError?: boolean;
+  onRetry?: () => void;
 };
 
 function formatWon(amount: number) {
@@ -39,6 +41,8 @@ export function GroceryBudgetSummaryCard({
   primaryAction,
   onMorePress,
   isLoading,
+  isError,
+  onRetry,
 }: Props) {
   const { budget, spent } = summary ?? EMPTY_BUDGET_SUMMARY;
   const hasBudget = budget !== null;
@@ -66,7 +70,17 @@ export function GroceryBudgetSummaryCard({
         )}
       </View>
 
-      {isLoading ? (
+      {isError ? (
+        <View className="items-center py-4">
+          <Text className="text-sm text-gray-60">장보기 요약을 불러오지 못했습니다.</Text>
+          <Pressable
+            className="mt-3 h-9 items-center justify-center rounded-md bg-gray-10 px-4"
+            onPress={onRetry}
+          >
+            <Text className="text-sm font-semibold text-gray-80">다시 시도</Text>
+          </Pressable>
+        </View>
+      ) : isLoading ? (
         <>
           <View className="mb-2.5 flex-row items-end justify-between">
             <View>
@@ -98,16 +112,20 @@ export function GroceryBudgetSummaryCard({
         <>
           <View className="mb-2.5 flex-row items-start justify-between">
             <View>
-              <Text className="mb-2 text-xs font-medium text-gray-70">예산</Text>
+              <Text className="text-xs font-medium text-gray-70">예산</Text>
               {hasBudget ? (
-                <Text className="text-base font-bold text-gray-50">{formatWon(budget)}</Text>
+                <Text className="mt-0.5 text-lg font-bold text-gray-90">
+                  {formatCurrency(budget)}
+                </Text>
               ) : (
-                <Text className="text-xs font-medium text-gray-40">미설정</Text>
+                <Text className="mt-2 text-sm font-medium text-gray-40">미설정</Text>
               )}
             </View>
             <View className="items-end">
-              <Text className="mb-0.5 text-xs font-medium text-gray-70">사용 금액</Text>
-              <Text className="text-lg font-bold text-main-100">{formatCurrency(spent)}</Text>
+              <Text className="text-xs font-medium text-gray-70">사용 금액</Text>
+              <Text className="mt-0.5 text-lg font-bold text-main-100">
+                {formatCurrency(spent)}
+              </Text>
             </View>
           </View>
 

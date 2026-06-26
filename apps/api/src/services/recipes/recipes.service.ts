@@ -235,7 +235,7 @@ export async function getRecipeList(queryInput: unknown, context: ListRecipesCon
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
         ${LEVEL_SELECT_EXPR},
-        COALESCE(r.main_image_url, r.thumbnail_url) AS "imageUrl",
+        r.main_image_url AS "imageUrl",
         COUNT(rs.recipe_id)::int AS "scrapCount",
         ${isSavedExpression} AS "isSaved"
       FROM recipes r
@@ -284,7 +284,7 @@ export async function getScrappedRecipeList(queryInput: unknown, memberId: strin
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
         ${LEVEL_SELECT_EXPR},
-        COALESCE(r.main_image_url, r.thumbnail_url) AS "imageUrl",
+        r.main_image_url AS "imageUrl",
         COUNT(all_scraps.recipe_id)::int AS "scrapCount",
         TRUE AS "isSaved"
       FROM recipe_scraps user_scrap
@@ -336,7 +336,7 @@ export async function getMyRecipeList(queryInput: unknown, memberId: string) {
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
         ${LEVEL_SELECT_EXPR},
-        COALESCE(r.main_image_url, r.thumbnail_url) AS "imageUrl",
+        r.main_image_url AS "imageUrl",
         COUNT(all_scraps.recipe_id)::int AS "scrapCount",
         EXISTS (
           SELECT 1
@@ -426,12 +426,10 @@ export async function getRecipeDetail(
 
   const stepCount = recipe.recipeSteps.length;
   const ingredientArray = Array.isArray(recipe.ingredients) ? recipe.ingredients : [];
-  const ingredientCount = ingredientArray.reduce((sum: number, section) => {
-    if (typeof section === 'object' && section !== null && !Array.isArray(section)) {
-      const items = Array.isArray(section.items) ? section.items : [];
-      return sum + items.length;
-    }
-    return sum;
+  const ingredientCount = ingredientArray.reduce<number>((sum, section) => {
+    if (typeof section !== 'object' || section === null || Array.isArray(section)) return sum;
+    const items = Array.isArray(section['items']) ? section['items'] : [];
+    return sum + items.length;
   }, 0);
   const score = stepCount + ingredientCount;
   const level = score <= 15 ? 'LOW' : score <= 20 ? 'MEDIUM' : 'HIGH';
@@ -772,7 +770,7 @@ async function getSimpleRecommendations(
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
         ${LEVEL_SELECT_EXPR},
-        COALESCE(r.main_image_url, r.thumbnail_url) AS "imageUrl",
+        r.main_image_url AS "imageUrl",
         COUNT(rs.recipe_id)::int AS "scrapCount",
         EXISTS (
           SELECT 1 FROM recipe_scraps saved
@@ -864,7 +862,7 @@ async function getFridgeRecommendations(userId: string, page: number, size: numb
         r.category::text AS category,
         r.cooking_method::text AS "cookingMethod",
         ${LEVEL_SELECT_EXPR},
-        COALESCE(r.main_image_url, r.thumbnail_url) AS "imageUrl",
+        r.main_image_url AS "imageUrl",
         COUNT(rs.recipe_id)::int AS "scrapCount",
         EXISTS (
           SELECT 1 FROM recipe_scraps saved

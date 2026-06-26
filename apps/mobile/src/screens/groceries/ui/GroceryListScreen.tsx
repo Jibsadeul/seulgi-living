@@ -81,6 +81,8 @@ export function GroceryListScreen() {
             onPress: () => setIsBudgetEditOpen(true),
           }}
           isLoading={summaryQuery.isLoading}
+          isError={summaryQuery.isError}
+          onRetry={() => void summaryQuery.refetch()}
         />
         <GroceryListContent
           isLoading={listQuery.isLoading}

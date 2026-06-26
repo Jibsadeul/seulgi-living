@@ -57,7 +57,7 @@ export const cameraResultSaveItemSchema = z
     category: ingredientCategorySchema.optional(),
     quantity: z.number().int().min(1).max(999999),
     unit: z.string().trim().min(1).max(10),
-    price: z.number().int().nonnegative().optional(),
+    price: z.number().int().nonnegative().max(99_999_999).optional(),
   })
   .strict();
 

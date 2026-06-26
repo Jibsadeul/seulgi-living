@@ -33,6 +33,7 @@ type CameraAnalysisFormProps = {
 };
 
 const DEFAULT_CATEGORY: IngredientCategory = 'OTHER';
+const MAX_PRICE = 99_999_999;
 
 function createEditableItem(item: CameraAnalysisItem, index: number): EditableCameraAnalysisItem {
   return {
@@ -104,7 +105,9 @@ function parsePrice(value: string) {
 
 export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: CameraAnalysisFormProps) {
   const isReceipt = analysis.source === 'RECEIPT';
-  const [purchaseDate, setPurchaseDate] = useState(formatDate(analysis.date));
+  const [purchaseDate, setPurchaseDate] = useState(
+    formatDate(analysis.date ?? new Date().toISOString()),
+  );
   const [saveTargets, setSaveTargets] = useState<SaveTarget[]>(
     isReceipt ? ['PURCHASE', 'FRIDGE'] : ['FRIDGE'],
   );
@@ -121,7 +124,8 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
 
   const selectedCount = items.length;
   const isMissingSaveTarget = isReceipt && saveTargets.length === 0;
-  const isSaveDisabled = isSaving || isMissingSaveTarget;
+  const isSaveDisabled = isSaving || isMissingSaveTarget || items.length === 0;
+  const hasFormError = Boolean(errors.purchaseDate) || Object.keys(errors.items).length > 0;
   const isFridgeOnlySelected =
     isReceipt && saveTargets.length === 1 && saveTargets.includes('FRIDGE');
   const isCategoryRequired = !isReceipt || saveTargets.includes('FRIDGE');
@@ -133,7 +137,21 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
   };
 
   const updateItem = (id: string, nextItem: Partial<CameraAnalysisItem>) => {
-    clearErrors();
+    setErrors((prev) => {
+      const prevItemErrors = prev.items[id];
+      if (!prevItemErrors) return prev;
+      const nextItemErrors = { ...prevItemErrors };
+      (Object.keys(nextItem) as (keyof CameraAnalysisItem)[]).forEach((field) => {
+        delete nextItemErrors[field];
+      });
+      const nextItems = { ...prev.items };
+      if (Object.keys(nextItemErrors).length === 0) {
+        delete nextItems[id];
+      } else {
+        nextItems[id] = nextItemErrors;
+      }
+      return { ...prev, items: nextItems };
+    });
     setItems((currentItems) =>
       currentItems.map((item) => (item.id === id ? { ...item, ...nextItem } : item)),
     );
@@ -148,7 +166,10 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
   };
 
   const removeItem = (id: string) => {
-    clearErrors();
+    setErrors((prev) => {
+      const { [id]: _, ...nextItems } = prev.items;
+      return { ...prev, items: nextItems };
+    });
     setItems((currentItems) => currentItems.filter((item) => item.id !== id));
   };
 
@@ -164,7 +185,7 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
   };
 
   const updatePurchaseDate = (value: string) => {
-    clearErrors();
+    setErrors((prev) => ({ ...prev, purchaseDate: undefined }));
     setPurchaseDate(value);
   };
 
@@ -203,6 +224,18 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
             itemErrors[field] = issue.message;
           }
         });
+      }
+
+      if (!Number.isInteger(item.quantity)) {
+        itemErrors.quantity = '수량은 정수여야 합니다.';
+      } else if (item.quantity > 999999) {
+        itemErrors.quantity = '수량은 999,999 이하여야 합니다.';
+      }
+
+      if (item.price !== null && !Number.isInteger(item.price)) {
+        itemErrors.price = '가격은 정수여야 합니다.';
+      } else if (item.price !== null && item.price > MAX_PRICE) {
+        itemErrors.price = '가격은 99,999,999 이하여야 합니다.';
       }
 
       if (isPriceRequired && item.price === null) {
@@ -249,10 +282,10 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
 
     try {
       await saveCameraResult(buildSaveRequest());
-      showAppToast({ type: 'success', text: 'AI 분석 결과를 저장했어요.' });
+      showAppToast({ type: 'success', text: 'AI 분석 결과를 저장했습니다.' });
       onSaveSuccess();
     } catch {
-      showAppToast({ type: 'error', text: '저장하지 못했어요. 잠시 후 다시 시도해주세요.' });
+      showAppToast({ type: 'error', text: '저장에 실패했습니다.' });
     } finally {
       setIsSaving(false);
     }
@@ -326,6 +359,7 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
               <View>
                 <FieldLabel>품목명</FieldLabel>
                 <FormInput
+                  maxLength={50}
                   onChangeText={(value) => updateItem(item.id, { name: value })}
                   placeholder="품목명을 입력하세요"
                   value={item.name}
@@ -363,6 +397,7 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
                 <View className="w-[104px]">
                   <FieldLabel>단위</FieldLabel>
                   <FormInput
+                    maxLength={10}
                     onChangeText={(value) => updateItem(item.id, { unit: value })}
                     value={item.unit}
                     errorMessage={itemErrors.unit}
@@ -453,6 +488,12 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
           </View>
         )}
 
+        {hasFormError && (
+          <Text className="text-center text-sm font-medium text-point-100">
+            입력하지 않은 항목이 있습니다.
+          </Text>
+        )}
+
         <View className="flex-row gap-3">
           <Pressable
             className="min-h-[52px] w-[108px] items-center justify-center rounded-xl bg-gray-10"
@@ -470,9 +511,11 @@ export function CameraAnalysisForm({ analysis, onCancel, onSaveSuccess }: Camera
             <Text className="text-base font-bold text-white">
               {isSaving ? '저장 중' : '저장하기'}
             </Text>
-            <View className="min-w-7 items-center rounded-full bg-white/20 px-2 py-0.5">
-              <Text className="text-xs font-bold text-white">{selectedCount}</Text>
-            </View>
+            {!isSaving && (
+              <View className="min-w-7 items-center rounded-full bg-white/20 px-2 py-0.5">
+                <Text className="text-xs font-bold text-white">{selectedCount}</Text>
+              </View>
+            )}
           </Pressable>
         </View>
       </View>

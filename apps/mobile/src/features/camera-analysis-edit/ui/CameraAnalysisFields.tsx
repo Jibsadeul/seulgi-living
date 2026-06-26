@@ -9,6 +9,7 @@ export function FormInput({
   value,
   placeholder,
   keyboardType,
+  maxLength,
   onChangeText,
   errorMessage,
 }: {
@@ -16,6 +17,7 @@ export function FormInput({
   value: string;
   placeholder?: string;
   keyboardType?: 'default' | 'numeric';
+  maxLength?: number;
   onChangeText: (value: string) => void;
   errorMessage?: string;
 }) {
@@ -27,6 +29,7 @@ export function FormInput({
         } ${errorMessage ? 'border border-point-100' : ''}`}
         editable={editable}
         keyboardType={keyboardType}
+        maxLength={maxLength}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor="#8E8E8E"
