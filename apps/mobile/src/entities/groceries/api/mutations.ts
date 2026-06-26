@@ -30,11 +30,10 @@ export function useDeleteGroceryMutation() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: groceryKeys.all });
-      showAppToast({ type: 'success', text: '장보기 내역을 삭제했어요.' });
+      showAppToast({ type: 'success', text: '장보기 내역을 삭제했습니다.' });
     },
-
     onError: () => {
-      showAppToast({ type: 'error', text: '삭제에 실패했어요. 잠시 후 다시 시도해주세요.' });
+      showAppToast({ type: 'error', text: '장보기 내역 삭제에 실패했습니다.' });
     },
   });
 }
@@ -51,11 +50,11 @@ export function useUpdateGroceryMutation() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: groceryKeys.all });
-      showAppToast({ type: 'success', text: '장보기 내역을 수정했어요.' });
+      showAppToast({ type: 'success', text: '장보기 내역을 수정했습니다.' });
     },
 
     onError: () => {
-      showAppToast({ type: 'error', text: '수정에 실패했어요. 잠시 후 다시 시도해주세요.' });
+      showAppToast({ type: 'error', text: '장보기 내역 수정에 실패했습니다.' });
     },
   });
 }
@@ -72,11 +71,11 @@ export function useCreateGroceryMutation() {
 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: groceryKeys.all });
-      showAppToast({ type: 'success', text: '장보기 내역을 추가했어요.' });
+      showAppToast({ type: 'success', text: '장보기 내역을 추가했습니다.' });
     },
 
     onError: () => {
-      showAppToast({ type: 'error', text: '장보기 내역 추가에 실패했어요.' });
+      showAppToast({ type: 'error', text: '장보기 내역 추가에 실패했습니다.' });
     },
   });
 }
@@ -93,11 +92,11 @@ export function usePutGroceryBudgetMutation() {
 
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: groceryKeys.summary(variables.query) });
-      showAppToast({ type: 'success', text: '예산을 저장했어요.' });
+      showAppToast({ type: 'success', text: '예산을 저장했습니다.' });
     },
 
     onError: () => {
-      showAppToast({ type: 'error', text: '예산 저장에 실패했어요. 잠시 후 다시 시도해주세요.' });
+      showAppToast({ type: 'error', text: '예산 저장에 실패했습니다.' });
     },
   });
 }

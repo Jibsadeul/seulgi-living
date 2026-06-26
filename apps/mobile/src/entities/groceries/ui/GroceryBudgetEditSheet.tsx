@@ -169,13 +169,11 @@ export function GroceryBudgetEditSheet({ isOpen, query, currentBudget, onClose }
               className="flex-1 text-sm text-gray-90"
               style={{ height: 52 }}
               keyboardType="number-pad"
+              maxLength={String(MAX_BUDGET).length}
               placeholder="예: 600000"
               placeholderTextColor="#C8C4D4"
               value={budgetText}
-              onChangeText={(value) => {
-                const nextValue = value.replace(/[^0-9]/g, '');
-                setBudgetText(nextValue.slice(0, String(MAX_BUDGET).length));
-              }}
+              onChangeText={(value) => setBudgetText(value.replace(/[^0-9]/g, ''))}
             />
             <Text className="ml-2 text-sm font-medium text-gray-60">원</Text>
           </View>

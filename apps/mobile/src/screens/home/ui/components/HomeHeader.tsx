@@ -1,7 +1,7 @@
+import { GroceryBudgetSummaryCard, useGrocerySummaryQuery } from '@/entities/groceries';
+import SettingsIcon from '@assets/icons/settings.svg';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import SettingsIcon from '@assets/icons/settings.svg';
-import { GroceryBudgetSummaryCard, useGrocerySummaryQuery } from '@/entities/groceries';
 
 const now = new Date();
 const CURRENT_YEAR = now.getFullYear();
@@ -20,7 +20,10 @@ export function HomeHeader({
   onBudgetMorePress,
   onSettingsPress,
 }: Props) {
-  const { data, isLoading } = useGrocerySummaryQuery({ year: CURRENT_YEAR, month: CURRENT_MONTH });
+  const { data, isLoading, isError, refetch } = useGrocerySummaryQuery({
+    year: CURRENT_YEAR,
+    month: CURRENT_MONTH,
+  });
   const budgetSummary = {
     budget: data?.budget ?? null,
     spent: data?.spent ?? 0,
@@ -50,6 +53,8 @@ export function HomeHeader({
           }}
           onMorePress={onBudgetMorePress}
           isLoading={isLoading}
+          isError={isError}
+          onRetry={() => void refetch()}
         />
       </View>
     </View>

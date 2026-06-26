@@ -1,13 +1,14 @@
 import { useCameraStore, type CameraAnalyzeResponse } from '@/entities/camera';
 import { CameraAnalysisForm } from '@/features/camera-analysis-edit';
-import { Header } from '@/shared/ui';
+import { Header, showAppToast } from '@/shared/ui';
 import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const MOCK_ANALYSIS: CameraAnalyzeResponse = {
   source: 'RECEIPT',
-  date: '2024-05-20T00:00:00.000Z',
+  date: null,
   items: [
     {
       name: '양파',
@@ -39,10 +40,21 @@ export function CameraAnalysisEditScreen() {
   const analysisResult = useCameraStore((state) => state.analysisResult);
   const clearAnalysisResult = useCameraStore((state) => state.clearAnalysisResult);
 
+  useEffect(() => {
+    if (!analysisResult && !__DEV__) {
+      showAppToast({ type: 'error', text: '분석에 실패했습니다.' });
+      router.replace('/camera');
+    }
+  }, [analysisResult, router]);
+
   const handleSaveSuccess = () => {
     clearAnalysisResult();
     router.replace('/');
   };
+
+  if (!analysisResult && !__DEV__) {
+    return null;
+  }
 
   return (
     <View className="flex-1 bg-surface-card">
