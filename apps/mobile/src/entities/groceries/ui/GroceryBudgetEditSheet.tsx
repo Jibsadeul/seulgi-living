@@ -32,21 +32,20 @@ function formatWon(amount: number) {
 export function GroceryBudgetEditSheet({ isOpen, query, currentBudget, onClose }: Props) {
   const sheetRef = useRef<BottomSheet>(null);
   const scrollRef = useRef<ScrollView>(null);
-  const wasOpenRef = useRef(false);
+  const initialIndex = useRef(isOpen ? 0 : -1);
   const insets = useSafeAreaInsets();
   const snapPoints = useMemo(() => ['60%', '90%'], []);
   const putBudget = usePutGroceryBudgetMutation();
   const [budgetText, setBudgetText] = useState('');
 
   useEffect(() => {
-    const shouldOpen = isOpen && !wasOpenRef.current;
-    wasOpenRef.current = isOpen;
-
-    if (!shouldOpen) return;
-
-    setBudgetText(currentBudget === null ? '' : String(currentBudget));
-    sheetRef.current?.snapToIndex(0);
-  }, [currentBudget, isOpen, query.month, query.year]);
+    if (isOpen) {
+      setBudgetText(currentBudget === null ? '' : String(currentBudget));
+      sheetRef.current?.snapToIndex(0);
+    } else {
+      sheetRef.current?.close();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const sub = Keyboard.addListener('keyboardDidHide', () => {
@@ -111,8 +110,7 @@ export function GroceryBudgetEditSheet({ isOpen, query, currentBudget, onClose }
   return (
     <BottomSheet
       ref={sheetRef}
-      index={-1}
-      animateOnMount={false}
+      index={initialIndex.current}
       snapPoints={snapPoints}
       enableDynamicSizing={false}
       enablePanDownToClose
